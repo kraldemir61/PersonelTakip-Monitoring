@@ -3,6 +3,7 @@
 Bu proje, WPF ve MVVM mimarisi kullanılarak geliştirilmiş bir Personel Takip uygulamasıdır.
 
 ## Güncelleme Notları (Son Push)
+- **Hata Düzeltmesi (PostgreSQL Syntax):** Bildirim gönderimi sırasında oluşan `42601: syntax error at or near "$1"` hatası giderildi. `NOTIFY` komutu parametresiz yapıya güncellenerek veritabanı uyumluluğu sağlandı.
 - **UI Modernizasyonu & Dark Theme:** Tüm giriş (Edit) ve tanımlama (Lookup) pencereleri Login ekranıyla uyumlu "Dark Theme" tasarımına geçirildi. İçerikler modern beyaz kartlar içine alındı.
 - **Pencere Düzenlemeleri:** Dialog pencereleri için yeniden boyutlandırma (Resize) kapatıldı ve `CustomTitleBar` üzerinden maximize butonu gizlendi.
 - **Navigasyon İyileştirmesi:** 'Çıkış' butonu daha erişilebilir olması için sekme alanının en sağına taşındı. Sol menü (Sidebar) daha kompakt bir görünüm için daraltıldı.
