@@ -68,7 +68,7 @@ public partial class PersonelEditViewModel : BaseViewModel
         _currentUser = currentUser;
         _personelId = personel?.Id;
         IsAdmin = isAdmin;
-        IsSuperAdmin = IsAdmin && currentUser?.KullaniciAdi?.Equals("admin", StringComparison.OrdinalIgnoreCase) == true;
+        IsSuperAdmin = IsAdmin && currentUser?.KullaniciAdi?.Equals("Roujin61", StringComparison.OrdinalIgnoreCase) == true;
 
         if (personel != null)
         {
