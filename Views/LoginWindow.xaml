@@ -1,9 +1,10 @@
 <Window x:Class="PersonelTakip.Views.LoginWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:PersonelTakip.Controls"
         Title="Personel Takip Sistemi - Giriş" Height="580" Width="440"
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
-        Background="#EEF2F6"
+        Style="{StaticResource ModernWindowStyle}"
         Loaded="Window_Loaded">
     <Window.Resources>
         <!-- Modern Input Styles -->
@@ -171,7 +172,14 @@
     </Window.Resources>
 
     <Grid>
-        <Border Background="White" CornerRadius="12" Margin="25" Padding="25">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <controls:CustomTitleBar Grid.Row="0"/>
+
+        <Border Grid.Row="1" Background="White" CornerRadius="12" Margin="25" Padding="25">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.1"/>
             </Border.Effect>

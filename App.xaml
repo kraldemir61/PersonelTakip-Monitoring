@@ -9,6 +9,19 @@
             <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
             <converters:InverseBoolToFontWeightConverter x:Key="InverseBoolToFontWeightConverter"/>
             <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
+            
+            <Style x:Key="ModernWindowStyle" TargetType="Window">
+                <Setter Property="WindowStyle" Value="None"/>
+                <Setter Property="Background" Value="#FF04132B"/>
+                <Setter Property="WindowChrome.WindowChrome">
+                    <Setter.Value>
+                        <WindowChrome CaptionHeight="35" CornerRadius="0" GlassFrameThickness="0" UseAeroCaptionButtons="False" ResizeBorderThickness="5" />
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="ModernDialogStyle" TargetType="Window" BasedOn="{StaticResource ModernWindowStyle}">
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

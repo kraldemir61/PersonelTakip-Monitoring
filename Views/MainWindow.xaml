@@ -6,11 +6,12 @@
         xmlns:local="clr-namespace:PersonelTakip.Views"
         xmlns:vm="clr-namespace:PersonelTakip.ViewModels"
         xmlns:conv="clr-namespace:PersonelTakip.Converters"
+        xmlns:controls="clr-namespace:PersonelTakip.Controls"
         mc:Ignorable="d"
         Title="{Binding PageTitle}" MinHeight="640" MinWidth="980" Height="640" Width="980"
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized"
-        Background="#F3F4F6"
+        Style="{StaticResource ModernWindowStyle}"
         d:DataContext="{d:DesignInstance vm:MainViewModel}">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
@@ -24,9 +25,9 @@
         <!-- Sidebar Button Style -->
         <Style x:Key="SidebarFilterButton" TargetType="Button">
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="MinWidth" Value="130"/>
+            <Setter Property="MinWidth" Value="100"/>
             <Setter Property="Height" Value="35"/>
-            <Setter Property="Margin" Value="5,2,5,1"/>
+            <Setter Property="Margin" Value="0,2,10,1"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -52,7 +53,7 @@
         </Style>
 
         <Style x:Key="HeaderButton" TargetType="Button">
-            <Setter Property="Padding" Value="15,8"/>
+            <Setter Property="Padding" Value="0"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -133,96 +134,97 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Top Bar -->
-        <Border Grid.Row="0" Height="45" Background="#FF26306B" Padding="20,0" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1">
-            <Grid>
+        <controls:CustomTitleBar Grid.Row="0">
+            <controls:CustomTitleBar.AdditionalContent>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Ellipse Width="10" Height="10" Fill="#10B981" Margin="0,0,10,0"/>
-                    <TextBlock Text="{Binding CurrentUser.KullaniciAdi}" FontWeight="Bold" Foreground="White" FontSize="15"/>
-                    <TextBlock Text=" / " Foreground="Red" Margin="6,2,0,2"/>
-                    <TextBlock Text="{Binding CurrentUser.Rol}" Foreground="Red" Margin="0,2,2,2"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <!-- Bildirim Zili -->
-                    <Grid Margin="0,0,15,0">
-                        <Button x:Name="BtnBildirim" Background="Transparent" BorderThickness="0" Command="{Binding ToggleBildirimPopupCommand}" Cursor="Hand" Padding="8,4">
-                            <Button.Template>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="Transparent" CornerRadius="4">
-                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                    <ControlTemplate.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Opacity" Value="0.7"/>
-                                        </Trigger>
-                                        <Trigger Property="IsPressed" Value="True">
-                                            <Setter Property="Opacity" Value="0.5"/>
-                                        </Trigger>
-                                    </ControlTemplate.Triggers>
-                                </ControlTemplate>
-                            </Button.Template>
-                            <TextBlock Text="🔔" FontSize="18" Foreground="White" VerticalAlignment="Center"/>
-                        </Button>
-                        
-                        <!-- Kırmızı Nokta (Unread Count) -->
-                        <Border Background="#EF4444" CornerRadius="10" MinWidth="18" Height="18" 
-                                HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-2,-2,0"
-                                Visibility="{Binding HasUnreadBildirimler, Converter={StaticResource BoolToVisibilityConverter}}"
-                                IsHitTestVisible="False">
-                            <TextBlock Text="{Binding UnreadBildirimCount}" Foreground="White" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3,0"/>
-                        </Border>
-                        
-                        <!-- Popup -->
-                        <Popup IsOpen="{Binding IsBildirimPopupOpen}" StaysOpen="False" PlacementTarget="{Binding ElementName=BtnBildirim}" Placement="Bottom" HorizontalOffset="-260" VerticalOffset="8" AllowsTransparency="True" PopupAnimation="Fade">
-                            <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Width="320" MaxHeight="450" Padding="15" Margin="5,5,5,15">
-                                <Border.Effect>
-                                    <DropShadowEffect Color="Black" Opacity="0.15" BlurRadius="15" ShadowDepth="4" Direction="270"/>
-                                </Border.Effect>
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="*"/>
-                                    </Grid.RowDefinitions>
-                                    
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                        <TextBlock Text="Bildirim Merkezi" FontWeight="Bold" FontSize="15" Foreground="#111827" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                    
-                                    <Rectangle Grid.Row="1" Height="1" Fill="#F3F4F6" Margin="-15,0,-15,10"/>
-                                    
-                                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                                        <ItemsControl ItemsSource="{Binding BildirimlerListesi}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <Border BorderBrush="#F3F4F6" BorderThickness="0,0,0,1" Padding="5,10" Background="Transparent">
-                                                        <Grid>
-                                                            <Grid.RowDefinitions>
-                                                                <RowDefinition Height="Auto"/>
-                                                                <RowDefinition Height="Auto"/>
-                                                            </Grid.RowDefinitions>
-                                                            <TextBlock Text="{Binding Mesaj}" TextWrapping="Wrap" FontSize="12" Foreground="#374151" FontWeight="{Binding OkunduMu, Converter={StaticResource InverseBoolToFontWeightConverter}}" LineHeight="18"/>
-                                                            <TextBlock Grid.Row="1" Text="{Binding Tarih, StringFormat=dd.MM.yyyy HH:mm}" Foreground="#9CA3AF" FontSize="10" Margin="0,6,0,0" HorizontalAlignment="Right"/>
-                                                        </Grid>
-                                                    </Border>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </ScrollViewer>
-                                </Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0">
+                        <Ellipse Width="8" Height="8" Fill="#10B981" Margin="0,0,8,0"/>
+                        <TextBlock Text="{Binding CurrentUser.KullaniciAdi}" FontWeight="Bold" Foreground="White" FontSize="13"/>
+                        <TextBlock Text=" / " Foreground="#9CA3AF" Margin="4,0,4,0"/>
+                        <TextBlock Text="{Binding CurrentUser.Rol}" Foreground="#9CA3AF" FontSize="11" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <!-- Bildirim Zili -->
+                        <Grid Margin="0,0,10,0">
+                            <Button Background="Transparent" BorderThickness="0" Command="{Binding ToggleBildirimPopupCommand}" Cursor="Hand" Padding="4,2" WindowChrome.IsHitTestVisibleInChrome="True">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="Transparent" CornerRadius="4">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Opacity" Value="0.7"/>
+                                            </Trigger>
+                                            <Trigger Property="IsPressed" Value="True">
+                                                <Setter Property="Opacity" Value="0.5"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                <TextBlock Text="🔔" FontSize="14" Foreground="White" VerticalAlignment="Center"/>
+                            </Button>
+                            
+                            <!-- Kırmızı Nokta (Unread Count) -->
+                            <Border Background="#EF4444" CornerRadius="8" MinWidth="14" Height="14" 
+                                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-2,-2,0"
+                                    Visibility="{Binding HasUnreadBildirimler, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    IsHitTestVisible="False">
+                                <TextBlock Text="{Binding UnreadBildirimCount}" Foreground="White" FontSize="8" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="2,0"/>
                             </Border>
-                        </Popup>
-                    </Grid>
+                            
+                            <!-- Popup -->
+                            <Popup IsOpen="{Binding IsBildirimPopupOpen}" StaysOpen="False" Placement="Bottom" HorizontalOffset="0" VerticalOffset="8" AllowsTransparency="True" PopupAnimation="Fade">
+                                <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Width="320" MaxHeight="450" Padding="15" Margin="5,5,5,15">
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="Black" Opacity="0.15" BlurRadius="15" ShadowDepth="4" Direction="270"/>
+                                    </Border.Effect>
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+                                        
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                            <TextBlock Text="Bildirim Merkezi" FontWeight="Bold" FontSize="15" Foreground="#111827" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        
+                                        <Rectangle Grid.Row="1" Height="1" Fill="#F3F4F6" Margin="-15,0,-15,10"/>
+                                        
+                                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                            <ItemsControl ItemsSource="{Binding BildirimlerListesi}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border BorderBrush="#F3F4F6" BorderThickness="0,0,0,1" Padding="5,10" Background="Transparent">
+                                                            <Grid>
+                                                                <Grid.RowDefinitions>
+                                                                    <RowDefinition Height="Auto"/>
+                                                                    <RowDefinition Height="Auto"/>
+                                                                </Grid.RowDefinitions>
+                                                                <TextBlock Text="{Binding Mesaj}" TextWrapping="Wrap" FontSize="12" Foreground="#374151" FontWeight="{Binding OkunduMu, Converter={StaticResource InverseBoolToFontWeightConverter}}" LineHeight="18"/>
+                                                                <TextBlock Grid.Row="1" Text="{Binding Tarih, StringFormat=dd.MM.yyyy HH:mm}" Foreground="#9CA3AF" FontSize="10" Margin="0,6,0,0" HorizontalAlignment="Right"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </ScrollViewer>
+                                    </Grid>
+                                </Border>
+                            </Popup>
+                        </Grid>
 
-                    <Button Content="Excel'e Aktar" Width="100" Height="30" Command="{Binding ExportExcelCommand}" Margin="0,0,10,0" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}"/>
-                    <Button Content="Şifre Değiştir" Width="100" Height="30" Command="{Binding ParolaDegistirCommand}" Margin="0,0,10,0" Background="#FF5D0BF5" Foreground="White" Style="{StaticResource HeaderButton}"/>
-                    <Button Content="Çıkış" Height="30" Width="60" Command="{Binding LogoutCommand}" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
+                        <Button Content="Excel'e Aktar" Width="90" Height="24" FontSize="11" Padding="0" Command="{Binding ExportExcelCommand}" Margin="0,0,8,0" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" WindowChrome.IsHitTestVisibleInChrome="True"/>
+                        <Button Content="Şifre Değiştir" Width="90" Height="24" FontSize="11" Padding="0" Command="{Binding ParolaDegistirCommand}" Margin="0,0,8,0" Background="#FF5D0BF5" Foreground="White" Style="{StaticResource HeaderButton}" WindowChrome.IsHitTestVisibleInChrome="True"/>
+                    </StackPanel>
                 </StackPanel>
-            </Grid>
-        </Border>
+            </controls:CustomTitleBar.AdditionalContent>
+        </controls:CustomTitleBar>
 
         <!-- Main Content Area -->
-        <TabControl Grid.Row="1" Margin="15,5,20,15" Background="#FF04132B" BorderThickness="0">
+        <TabControl Grid.Row="1" Margin="10,5,20,15" Background="#FF04132B" BorderThickness="0">
             <TabControl.Resources>
                 <Style TargetType="TabItem">
                     <Setter Property="Template">
@@ -353,7 +355,10 @@
 
                             <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="Transparent" ShowsPreview="True" Cursor="SizeWE" Margin="0,0,5,0"/>
 
-                            <Border Grid.Row="1" Grid.Column="2" Background="#F9FAFB" CornerRadius="8" BorderBrush="#E5E7EB" BorderThickness="1" Padding="10">
+                            <Border Grid.Row="1" Grid.Column="2" Background="#FFFFFF" CornerRadius="12" BorderBrush="#E2E8F0" BorderThickness="1" Padding="15" Margin="5,0,0,0">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="15" ShadowDepth="2" Opacity="0.05" Direction="270" Color="#000000"/>
+                                </Border.Effect>
                                 <Grid>
                                     <StackPanel Visibility="{Binding SelectedPersonel, Converter={StaticResource NullToVisibilityConverter}, ConverterParameter=Invert}">
                                         <Border Width="60" Height="60" Background="#DBEAFE" CornerRadius="40" Margin="0,0,0,5">
@@ -383,10 +388,19 @@
                                         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                                             <StackPanel>
                                                 <!-- Toplam Personel -->
-                                                <Border Background="#EEF2FF" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                                                <Border CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                                                    <Border.Background>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                            <GradientStop Color="#EEF2FF" Offset="0.0"/>
+                                                            <GradientStop Color="#E0E7FF" Offset="1.0"/>
+                                                        </LinearGradientBrush>
+                                                    </Border.Background>
+                                                    <Border.Effect>
+                                                        <DropShadowEffect BlurRadius="5" ShadowDepth="1" Opacity="0.05" Color="#4F46E5"/>
+                                                    </Border.Effect>
                                                     <StackPanel>
-                                                        <TextBlock Text="Toplam Aktif Personel" FontSize="12" FontWeight="SemiBold" Foreground="#4F46E5"/>
-                                                        <TextBlock Text="{Binding ToplamPersonel}" FontSize="24" FontWeight="Bold" Foreground="#312E81"/>
+                                                        <TextBlock Text="Toplam Aktif Personel" FontSize="13" FontWeight="SemiBold" Foreground="#4338CA"/>
+                                                        <TextBlock Text="{Binding ToplamPersonel}" FontSize="28" FontWeight="Bold" Foreground="#312E81" Margin="0,5,0,0"/>
                                                     </StackPanel>
                                                 </Border>
 
@@ -813,6 +827,11 @@
                 </TabItem>
 
             </TabControl>
+            
+            <Button Grid.Row="1" Content="Çıkış" Height="28" Width="70" FontSize="11" FontWeight="SemiBold" 
+                    Command="{Binding LogoutCommand}" Background="#EF4444" Foreground="White" 
+                    Style="{StaticResource HeaderButton}" HorizontalAlignment="Right" VerticalAlignment="Top" 
+                    Margin="0,8,30,0" Panel.ZIndex="10"/>
 
 
         <!-- Status Bar -->
@@ -828,7 +847,7 @@
         <!-- Global Notification Snackbar -->
         <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,20,40"
                 Background="#3B82F6" CornerRadius="6" Padding="15,10"
-                Grid.RowSpan="3" Panel.ZIndex="999" IsHitTestVisible="False">
+                Grid.RowSpan="2" Panel.ZIndex="999" IsHitTestVisible="False">
             <Border.Style>
                 <Style TargetType="Border">
                     <Setter Property="Opacity" Value="0"/>
