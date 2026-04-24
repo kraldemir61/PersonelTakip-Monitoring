@@ -671,9 +671,11 @@ public class DatabaseService
             VALUES (@Mesaj, @TetikleyenId, @Tarih)", 
             new { Mesaj = mesaj, TetikleyenId = tetikleyenKullaniciId, Tarih = DateTime.UtcNow });
             
-        // Postgres pub/sub - NOTIFY komutu parametre desteklemez, literal string kullanılmalı
+        // Postgres pub/sub - NOTIFY komutu parametre desteklemez. 
+        // Dapper bazen string içindeki karakterleri parametre sanabildiği için doğrudan NpgsqlCommand kullanıyoruz.
         var payload = $"{tetikleyenKullaniciId}|{mesaj}".Replace("'", "''");
-        await conn.ExecuteAsync($"NOTIFY personel_bildirim, '{payload}'");
+        using var cmd = new NpgsqlCommand($"NOTIFY personel_bildirim, '{payload}';", conn);
+        await cmd.ExecuteNonQueryAsync();
     }
 
     public async Task<List<Bildirim>> GetSonBildirimlerAsync(int limit = 20)

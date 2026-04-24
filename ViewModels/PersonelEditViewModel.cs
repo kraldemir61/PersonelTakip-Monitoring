@@ -129,7 +129,7 @@ public partial class PersonelEditViewModel : BaseViewModel
                 var santiye = SantiyeIdList?.FirstOrDefault(s => s.Id == SantiyeId);
                 var santiyeAdi = santiye?.Adi ?? "Bilinmeyen Şantiye";
                 var santiyeKodu = santiye?.Kod ?? "???";
-                var mesaj = $"{_currentUser.KullaniciAdi}, {santiyeKodu}, {AdiSoyadi.Trim()}, adlı personeli {santiyeAdi} şantiyesine ekledi.";
+                var mesaj = $"{santiyeKodu} {_currentUser.KullaniciAdi}, {AdiSoyadi.Trim()} kişisini şantiyesine ekledi.";
                 
                 await _databaseService.BildirimEkleAsync(mesaj, _currentUser.Id);
             }

@@ -278,17 +278,17 @@ public partial class MainViewModel : BaseViewModel
             {
                 if (Guid.TryParse(tetikleyenIdStr, out var tetikleyenId))
                 {
-                    // Eğer tetikleyen kişi ben değilsem ekranda snackbar göster ve listeyi güncelle
+                    // Her durumda listeyi güncelle ve işlemi yapan kişi ben değilsem snackbar göster
                     if (CurrentUser?.Id != tetikleyenId)
                     {
                         Application.Current.Dispatcher.Invoke(() => 
                         {
                             ShowSnackbarNotification(mesaj);
                         });
-                        
-                        // Listeyi arka planda tekrar çek (yeni bildirim eklendi)
-                        await LoadBildirimlerAsync();
                     }
+                    
+                    // Listeyi her halükarda güncelle (anında düşmesi için)
+                    await LoadBildirimlerAsync();
                 }
             }, _notificationCts.Token);
         });
