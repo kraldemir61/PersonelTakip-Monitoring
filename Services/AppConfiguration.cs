@@ -1,0 +1,53 @@
+using Microsoft.Extensions.Configuration;
+
+namespace PersonelTakip.Services;
+
+public class AppConfiguration
+{
+    public DatabaseConfig Database { get; set; } = new();
+    public EmailConfig Email { get; set; } = new();
+    public AppConfig App { get; set; } = new();
+
+    private static AppConfiguration? _instance;
+    public static AppConfiguration Instance => _instance ??= Load();
+
+    private static AppConfiguration Load()
+    {
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            .Build();
+
+        var config = new AppConfiguration();
+        configuration.Bind(config);
+        return config;
+    }
+}
+
+public class DatabaseConfig
+{
+    public string Host { get; set; } = string.Empty;
+    public int Port { get; set; } = 5432;
+    public string Database { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+
+    public string ConnectionString =>
+        $"Host={Host};Port={Port};Database={Database};Username={Username};Password={Password};SSL Mode=Require;Trust Server Certificate=true;Timeout=15;Connection Idle Lifetime=60;";
+}
+
+public class EmailConfig
+{
+    public string SmtpServer { get; set; } = string.Empty;
+    public int Port { get; set; } = 587;
+    public string Username { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+    public string FromEmail { get; set; } = string.Empty;
+    public string FromName { get; set; } = string.Empty;
+}
+
+public class AppConfig
+{
+    public int TokenExpiryHours { get; set; } = 24;
+    public int MinPasswordLength { get; set; } = 6;
+}
