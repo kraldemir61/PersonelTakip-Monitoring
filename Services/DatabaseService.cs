@@ -691,6 +691,20 @@ public class DatabaseService
         await conn.OpenAsync();
         await conn.ExecuteAsync("UPDATE bildirimler SET okundu_mu = true WHERE id = @Id", new { Id = bildirimId });
     }
+
+    public async Task BildirimSilAsync(int bildirimId)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await conn.ExecuteAsync("DELETE FROM bildirimler WHERE id = @Id", new { Id = bildirimId });
+    }
+
+    public async Task TumBildirimleriSilAsync()
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await conn.ExecuteAsync("DELETE FROM bildirimler");
+    }
     
     public async Task StartListeningNotifications(Action<string, string> onNotificationReceived, CancellationToken cancellationToken)
     {

@@ -217,6 +217,48 @@ public partial class MainViewModel : BaseViewModel
         }
     }
 
+    [RelayCommand]
+    private async Task BildirimSilAsync(Bildirim? bildirim)
+    {
+        if (bildirim == null) return;
+        
+        try
+        {
+            await _databaseService.BildirimSilAsync(bildirim.Id);
+            BildirimlerListesi.Remove(bildirim);
+            
+            // Eğer silinen okunmamışsa sayacı güncelle
+            if (!bildirim.OkunduMu)
+            {
+                UnreadBildirimCount = Math.Max(0, UnreadBildirimCount - 1);
+                HasUnreadBildirimler = UnreadBildirimCount > 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Bildirim silinirken hata: {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    private async Task TumBildirimleriSilAsync()
+    {
+        if (BildirimlerListesi.Count == 0) return;
+        if (!Confirm("Tüm bildirimler silinecek. Onaylıyor musunuz?")) return;
+
+        try
+        {
+            await _databaseService.TumBildirimleriSilAsync();
+            BildirimlerListesi.Clear();
+            UnreadBildirimCount = 0;
+            HasUnreadBildirimler = false;
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Bildirimler temizlenirken hata: {ex.Message}");
+        }
+    }
+
     private async Task LoadBildirimlerAsync()
     {
         var liste = await _databaseService.GetSonBildirimlerAsync(20);
