@@ -100,6 +100,42 @@ public partial class PersonelEditViewModel : BaseViewModel
             return;
         }
 
+        if (SantiyeId == null)
+        {
+            ShowError("Şantiye seçimi zorunludur.");
+            return;
+        }
+
+        if (Bolumu == null)
+        {
+            ShowError("Bölüm seçimi zorunludur.");
+            return;
+        }
+
+        if (Gorevi == null)
+        {
+            ShowError("Görev seçimi zorunludur.");
+            return;
+        }
+
+        if (Uyrugu == null)
+        {
+            ShowError("Uyruk seçimi zorunludur.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(TelefonNumarasi))
+        {
+            ShowError("Telefon numarası zorunludur.");
+            return;
+        }
+
+        if (Maas.HasValue && Maas.Value > 0 && ParaBirimi == null)
+        {
+            ShowError("Maaş girilmişse para birimi seçimi zorunludur.");
+            return;
+        }
+
         IsBusy = true;
         try
         {

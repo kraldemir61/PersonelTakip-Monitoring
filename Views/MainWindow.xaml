@@ -404,7 +404,21 @@
                                         <TextBlock Text="{Binding SelectedPersonel.AdiSoyadi}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
                                             <TextBlock Text="{Binding SelectedPersonel.GoreviDisplay}" Foreground="#6B7280"/>
-                                            <TextBlock Text=" • " Foreground="#9CA3AF" Margin="5,0"/>
+                                            <TextBlock Text=" • " Foreground="#9CA3AF" Margin="5,0">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding SelectedPersonel.UyruguDisplay}" Value="{x:Null}">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding SelectedPersonel.UyruguDisplay}" Value="">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
                                             <TextBlock Text="{Binding SelectedPersonel.UyruguDisplay}" Foreground="#6B7280"/>
                                         </StackPanel>
                                         <Separator Margin="0,0,0,20"/>
