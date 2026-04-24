@@ -567,6 +567,12 @@ public partial class MainViewModel : BaseViewModel
     {
         if (SelectedPersonel == null) return;
 
+        if (SelectedPersonel.IsSystemUser)
+        {
+            ShowError("Bu bir sistem kullanıcısıdır. Kullanıcı düzenlemek için 'Kullanıcılar' sekmesini kullanınız.");
+            return;
+        }
+
         var vm = new PersonelEditViewModel(_databaseService, CurrentUser!, IsAdmin, SelectedPersonel)
         {
             Bolumler = Bolumler,
@@ -588,6 +594,12 @@ public partial class MainViewModel : BaseViewModel
     public async Task SilPersonelAsync()
     {
         if (SelectedPersonel == null) return;
+
+        if (SelectedPersonel.IsSystemUser)
+        {
+            ShowError("Sistem kullanıcıları bu sekmeden silinemez. 'Kullanıcılar' sekmesini kullanınız.");
+            return;
+        }
 
         if (!Confirm($"'{SelectedPersonel.AdiSoyadi}' işten çıkarılacak. Onaylıyor musunuz?")) return;
 
