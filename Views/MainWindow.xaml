@@ -231,10 +231,11 @@
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="320"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="320" MinWidth="250" MaxWidth="600"/>
                             </Grid.ColumnDefinitions>
 
-                            <Grid Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,20">
+                            <Grid Grid.Row="0" Grid.ColumnSpan="3" Margin="0,0,0,20">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
@@ -270,7 +271,7 @@
                             </Grid>
 
                             <DataGrid Grid.Row="1" Grid.Column="0" ItemsSource="{Binding PersonellerView}" SelectedItem="{Binding SelectedPersonel}"
-                                      AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" Margin="0,0,20,0" BorderThickness="1" BorderBrush="#E5E7EB">
+                                      AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" Margin="0,0,5,0" BorderThickness="1" BorderBrush="#E5E7EB">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Adı Soyadı" Binding="{Binding AdiSoyadi}" Width="*"/>
                                     <DataGridTextColumn Header="Şantiye" Binding="{Binding SantiyeKod}" Width="100"/>
@@ -279,7 +280,9 @@
                                 </DataGrid.Columns>
                             </DataGrid>
 
-                            <Border Grid.Row="1" Grid.Column="1" Background="#F9FAFB" CornerRadius="8" BorderBrush="#E5E7EB" BorderThickness="1" Padding="10">
+                            <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="Transparent" ShowsPreview="True" Cursor="SizeWE" Margin="0,0,5,0"/>
+
+                            <Border Grid.Row="1" Grid.Column="2" Background="#F9FAFB" CornerRadius="8" BorderBrush="#E5E7EB" BorderThickness="1" Padding="10">
                                 <Grid>
                                     <StackPanel Visibility="{Binding SelectedPersonel, Converter={StaticResource NullToVisibilityConverter}, ConverterParameter=Invert}">
                                         <Border Width="60" Height="60" Background="#DBEAFE" CornerRadius="40" Margin="0,0,0,5">
@@ -316,44 +319,53 @@
                                                     </StackPanel>
                                                 </Border>
 
-                                                <!-- Şantiye Dağılımı -->
-                                                <TextBlock Text="Şantiye Dağılımı" FontSize="14" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,10"/>
+                                                <!-- Şantiye / Bölüm / Uyruk Dağılımı -->
+                                                <TextBlock Text="Şantiye / Bölüm / Uyruk Dağılımı" FontSize="14" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,10"/>
                                                 <ItemsControl ItemsSource="{Binding SantiyeStats}" Margin="0,0,0,15">
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
-                                                            <Grid Margin="0,0,0,5">
-                                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                                                <TextBlock Text="{Binding Name}" Foreground="#374151" TextTrimming="CharacterEllipsis"/>
-                                                                <TextBlock Grid.Column="1" Text="{Binding Count}" FontWeight="Bold" Foreground="#111827"/>
-                                                            </Grid>
-                                                        </DataTemplate>
-                                                    </ItemsControl.ItemTemplate>
-                                                </ItemsControl>
-
-                                                <!-- Bölüm Dağılımı -->
-                                                <TextBlock Text="Bölüm Dağılımı" FontSize="14" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,10"/>
-                                                <ItemsControl ItemsSource="{Binding BolumStats}" Margin="0,0,0,15">
-                                                    <ItemsControl.ItemTemplate>
-                                                        <DataTemplate>
-                                                            <Grid Margin="0,0,0,5">
-                                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                                                <TextBlock Text="{Binding Name}" Foreground="#374151" TextTrimming="CharacterEllipsis"/>
-                                                                <TextBlock Grid.Column="1" Text="{Binding Count}" FontWeight="Bold" Foreground="#111827"/>
-                                                            </Grid>
-                                                        </DataTemplate>
-                                                    </ItemsControl.ItemTemplate>
-                                                </ItemsControl>
-
-                                                <!-- Uyruk Dağılımı -->
-                                                <TextBlock Text="Uyruk Dağılımı" FontSize="14" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,10"/>
-                                                <ItemsControl ItemsSource="{Binding UyrukStats}" Margin="0,0,0,15">
-                                                    <ItemsControl.ItemTemplate>
-                                                        <DataTemplate>
-                                                            <Grid Margin="0,0,0,5">
-                                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                                                <TextBlock Text="{Binding Name}" Foreground="#374151" TextTrimming="CharacterEllipsis"/>
-                                                                <TextBlock Grid.Column="1" Text="{Binding Count}" FontWeight="Bold" Foreground="#111827"/>
-                                                            </Grid>
+                                                            <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="6" Margin="0,0,0,10">
+                                                                <StackPanel>
+                                                                    <!-- Şantiye Başlığı -->
+                                                                    <Border Background="#F3F4F6" CornerRadius="6,6,0,0" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1">
+                                                                        <Grid>
+                                                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                                            <TextBlock Text="{Binding Name}" Foreground="#1F2937" FontWeight="Bold" Padding="10,8"/>
+                                                                            <TextBlock Grid.Column="1" Text="{Binding Count}" FontWeight="Bold" Foreground="#111827" Padding="10,8"/>
+                                                                        </Grid>
+                                                                    </Border>
+                                                                    
+                                                                    <!-- Bölüm Listesi -->
+                                                                    <ItemsControl ItemsSource="{Binding SubItems}" Margin="10,8,10,8">
+                                                                        <ItemsControl.ItemTemplate>
+                                                                            <DataTemplate>
+                                                                                <StackPanel Margin="0,0,0,8">
+                                                                                    <Grid Margin="0,0,0,4">
+                                                                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                                                        <TextBlock Text="{Binding Name}" Foreground="#4B5563" FontWeight="SemiBold"/>
+                                                                                        <TextBlock Grid.Column="1" Text="{Binding Count}" FontWeight="SemiBold" Foreground="#4B5563"/>
+                                                                                    </Grid>
+                                                                                    
+                                                                                    <!-- Uyruk Listesi -->
+                                                                                    <ItemsControl ItemsSource="{Binding SubItems}" Margin="12,0,0,0">
+                                                                                        <ItemsControl.ItemTemplate>
+                                                                                            <DataTemplate>
+                                                                                                <Border BorderThickness="1" BorderBrush="#E5E7EB" CornerRadius="4" Padding="6,3" Margin="0,0,0,4" Background="#F9FAFB">
+                                                                                                    <Grid>
+                                                                                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                                                                        <TextBlock Text="{Binding Name}" Foreground="#6B7280" FontSize="11" FontWeight="SemiBold"/>
+                                                                                                        <TextBlock Grid.Column="1" Text="{Binding Count}" Foreground="#6B7280" FontSize="11" FontWeight="Bold"/>
+                                                                                                    </Grid>
+                                                                                                </Border>
+                                                                                            </DataTemplate>
+                                                                                        </ItemsControl.ItemTemplate>
+                                                                                    </ItemsControl>
+                                                                                </StackPanel>
+                                                                            </DataTemplate>
+                                                                        </ItemsControl.ItemTemplate>
+                                                                    </ItemsControl>
+                                                                </StackPanel>
+                                                            </Border>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>

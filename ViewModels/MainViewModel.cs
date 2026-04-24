@@ -48,12 +48,6 @@ public partial class MainViewModel : BaseViewModel
     private ObservableCollection<StatItem> _santiyeStats = new();
 
     [ObservableProperty]
-    private ObservableCollection<StatItem> _bolumStats = new();
-
-    [ObservableProperty]
-    private ObservableCollection<StatItem> _uyrukStats = new();
-
-    [ObservableProperty]
     private int _toplamPersonel;
 
     [ObservableProperty]
@@ -115,6 +109,7 @@ public partial class MainViewModel : BaseViewModel
     {
         SelectedFilterSantiye = SelectedFilterSantiye == santiyeKod ? null : santiyeKod;
         PersonellerView?.Refresh();
+        CalculateDashboardStats();
     }
 
     private void UpdateSidebarSantiyeler()
@@ -169,6 +164,8 @@ public partial class MainViewModel : BaseViewModel
         GorevlerView?.Refresh();
         UyruklarView?.Refresh();
         ParaBirimleriView?.Refresh();
+        
+        CalculateDashboardStats();
     }
 
     public MainViewModel()
@@ -223,28 +220,35 @@ public partial class MainViewModel : BaseViewModel
 
     private void CalculateDashboardStats()
     {
-        if (Personeller == null) return;
+        if (PersonellerView == null) return;
 
-        var aktifPersoneller = Personeller.Where(p => p.Aktif).ToList();
+        var aktifPersoneller = PersonellerView.Cast<Personel>().Where(p => p.Aktif).ToList();
         ToplamPersonel = aktifPersoneller.Count;
 
         var santiyeGrup = aktifPersoneller
             .GroupBy(p => string.IsNullOrWhiteSpace(p.SantiyeKod) ? "Bilinmiyor" : p.SantiyeKod)
-            .Select(g => new StatItem { Name = g.Key, Count = g.Count() })
+            .Select(g => new StatItem 
+            { 
+                Name = g.Key, 
+                Count = g.Count(),
+                SubItems = new System.Collections.ObjectModel.ObservableCollection<StatItem>(
+                    g.GroupBy(p => string.IsNullOrWhiteSpace(p.BolumuDisplay) ? "Bilinmiyor" : p.BolumuDisplay)
+                     .Select(bg => new StatItem 
+                     {
+                         Name = bg.Key,
+                         Count = bg.Count(),
+                         SubItems = new System.Collections.ObjectModel.ObservableCollection<StatItem>(
+                             bg.GroupBy(p => string.IsNullOrWhiteSpace(p.UyruguDisplay) ? "Bilinmiyor" : p.UyruguDisplay)
+                               .Select(ug => new StatItem { Name = ug.Key, Count = ug.Count() })
+                               .OrderByDescending(x => x.Count)
+                         )
+                     })
+                     .OrderByDescending(x => x.Count)
+                )
+            })
             .OrderByDescending(x => x.Count);
+            
         SantiyeStats = new ObservableCollection<StatItem>(santiyeGrup);
-
-        var bolumGrup = aktifPersoneller
-            .GroupBy(p => string.IsNullOrWhiteSpace(p.BolumuDisplay) ? "Bilinmiyor" : p.BolumuDisplay)
-            .Select(g => new StatItem { Name = g.Key, Count = g.Count() })
-            .OrderByDescending(x => x.Count);
-        BolumStats = new ObservableCollection<StatItem>(bolumGrup);
-
-        var uyrukGrup = aktifPersoneller
-            .GroupBy(p => string.IsNullOrWhiteSpace(p.UyruguDisplay) ? "Bilinmiyor" : p.UyruguDisplay)
-            .Select(g => new StatItem { Name = g.Key, Count = g.Count() })
-            .OrderByDescending(x => x.Count);
-        UyrukStats = new ObservableCollection<StatItem>(uyrukGrup);
     }
 
     [RelayCommand]
