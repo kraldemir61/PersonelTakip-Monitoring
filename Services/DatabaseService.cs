@@ -478,7 +478,7 @@ public class DatabaseService
         await conn.OpenAsync();
 
         var sql = @"
-            SELECT p.id, p.santiye_id, p.adi_soyadi, p.santiye_adi, p.bolumu, p.gorevi, p.uyrugu, p.ise_giris_tarihi, p.telefon_numarasi, p.maas, p.para_birimi, p.aktif, p.created_at,
+            SELECT p.id, p.santiye_id, p.adi_soyadi, p.bolumu, p.gorevi, p.uyrugu, p.ise_giris_tarihi, p.telefon_numarasi, p.maas, p.para_birimi, p.aktif, p.created_at,
                    s.adi AS SantiyeAdiDisplay, s.kod AS SantiyeKod, b.adi AS BolumuDisplay, g.adi AS GoreviDisplay, u.adi AS UyruguDisplay, pb.adi AS ParaBirimiDisplay,
                    FALSE as IsSystemUser
             FROM personeller p
@@ -493,7 +493,10 @@ public class DatabaseService
 
         sql += @"
             UNION ALL
-            SELECT k.id, k.santiye_id, k.kullanici_adi as adi_soyadi, NULL as santiye_adi, NULL as bolumu, NULL as gorevi, NULL as uyrugu, k.son_giris as ise_giris_tarihi, k.email as telefon_numarasi, NULL as maas, NULL as para_birimi, k.aktif, k.created_at,
+            SELECT k.id, k.santiye_id, k.kullanici_adi as adi_soyadi, 
+                   NULL::integer as bolumu, NULL::integer as gorevi, NULL::integer as uyrugu, 
+                   k.son_giris as ise_giris_tarihi, k.email as telefon_numarasi, 
+                   NULL::numeric as maas, NULL::integer as para_birimi, k.aktif, k.created_at,
                    s.adi AS SantiyeAdiDisplay, s.kod AS SantiyeKod, 'Yönetim' AS BolumuDisplay, 
                    (CASE WHEN k.rol = 'Admin' THEN 'Sistem Yöneticisi' ELSE 'Sistem Kullanıcısı' END) AS GoreviDisplay, 
                    NULL AS UyruguDisplay, NULL AS ParaBirimiDisplay,
