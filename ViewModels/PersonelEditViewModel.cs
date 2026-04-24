@@ -124,6 +124,13 @@ public partial class PersonelEditViewModel : BaseViewModel
             else
             {
                 await _databaseService.PersonelOlusturAsync(personel);
+                
+                // Sadece yeni kayıt eklenirken bildirim yolla (isteğe bağlı güncellemelerde de eklenebilir)
+                var santiyeAdi = SantiyeIdList?.FirstOrDefault(s => s.Id == SantiyeId)?.Adi ?? "Bilinmeyen Şantiye";
+                var bolumAdi = Bolumler?.FirstOrDefault(b => b.Id == Bolumu)?.Adi ?? "Bilinmeyen Bölüm";
+                var mesaj = $"{_currentUser.KullaniciAdi}, {AdiSoyadi.Trim()} ({bolumAdi} - {santiyeAdi}) adlı personeli sisteme ekledi.";
+                
+                await _databaseService.BildirimEkleAsync(mesaj, _currentUser.Id);
             }
 
             var window = Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w is Views.PersonelEditWindow);

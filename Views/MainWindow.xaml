@@ -143,6 +143,77 @@
                     <TextBlock Text="{Binding CurrentUser.Rol}" Foreground="Red" Margin="0,2,2,2"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <!-- Bildirim Zili -->
+                    <Grid Margin="0,0,15,0">
+                        <Button x:Name="BtnBildirim" Background="Transparent" BorderThickness="0" Command="{Binding ToggleBildirimPopupCommand}" Cursor="Hand" Padding="8,4">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="Transparent" CornerRadius="4">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Opacity" Value="0.7"/>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter Property="Opacity" Value="0.5"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                            <TextBlock Text="🔔" FontSize="18" Foreground="White" VerticalAlignment="Center"/>
+                        </Button>
+                        
+                        <!-- Kırmızı Nokta (Unread Count) -->
+                        <Border Background="#EF4444" CornerRadius="10" MinWidth="18" Height="18" 
+                                HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-2,-2,0"
+                                Visibility="{Binding HasUnreadBildirimler, Converter={StaticResource BoolToVisibilityConverter}}"
+                                IsHitTestVisible="False">
+                            <TextBlock Text="{Binding UnreadBildirimCount}" Foreground="White" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="3,0"/>
+                        </Border>
+                        
+                        <!-- Popup -->
+                        <Popup IsOpen="{Binding IsBildirimPopupOpen}" StaysOpen="False" PlacementTarget="{Binding ElementName=BtnBildirim}" Placement="Bottom" HorizontalOffset="-260" VerticalOffset="8" AllowsTransparency="True" PopupAnimation="Fade">
+                            <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Width="320" MaxHeight="450" Padding="15" Margin="5,5,5,15">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="Black" Opacity="0.15" BlurRadius="15" ShadowDepth="4" Direction="270"/>
+                                </Border.Effect>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                        <TextBlock Text="Bildirim Merkezi" FontWeight="Bold" FontSize="15" Foreground="#111827" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    
+                                    <Rectangle Grid.Row="1" Height="1" Fill="#F3F4F6" Margin="-15,0,-15,10"/>
+                                    
+                                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                        <ItemsControl ItemsSource="{Binding BildirimlerListesi}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border BorderBrush="#F3F4F6" BorderThickness="0,0,0,1" Padding="5,10" Background="Transparent">
+                                                        <Grid>
+                                                            <Grid.RowDefinitions>
+                                                                <RowDefinition Height="Auto"/>
+                                                                <RowDefinition Height="Auto"/>
+                                                            </Grid.RowDefinitions>
+                                                            <TextBlock Text="{Binding Mesaj}" TextWrapping="Wrap" FontSize="12" Foreground="#374151" FontWeight="{Binding OkunduMu, Converter={StaticResource InverseBoolToFontWeightConverter}}" LineHeight="18"/>
+                                                            <TextBlock Grid.Row="1" Text="{Binding Tarih, StringFormat=dd.MM.yyyy HH:mm}" Foreground="#9CA3AF" FontSize="10" Margin="0,6,0,0" HorizontalAlignment="Right"/>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </Grid>
+                            </Border>
+                        </Popup>
+                    </Grid>
+
                     <Button Content="Excel'e Aktar" Width="100" Height="30" Command="{Binding ExportExcelCommand}" Margin="0,0,10,0" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}"/>
                     <Button Content="Şifre Değiştir" Width="100" Height="30" Command="{Binding ParolaDegistirCommand}" Margin="0,0,10,0" Background="#FF5D0BF5" Foreground="White" Style="{StaticResource HeaderButton}"/>
                     <Button Content="Çıkış" Height="30" Width="60" Command="{Binding LogoutCommand}" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
@@ -754,5 +825,53 @@
                 <TextBlock Text="Test@system.local" Foreground="#94A3B8" FontSize="11" HorizontalAlignment="Right"/>
             </Grid>
         </Border>
+        <!-- Global Notification Snackbar -->
+        <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,20,40"
+                Background="#3B82F6" CornerRadius="6" Padding="15,10"
+                Grid.RowSpan="3" Panel.ZIndex="999" IsHitTestVisible="False">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Opacity" Value="0"/>
+                    <Setter Property="RenderTransform">
+                        <Setter.Value>
+                            <TranslateTransform Y="20"/>
+                        </Setter.Value>
+                    </Setter>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsNotificationVisible}" Value="True">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.3"/>
+                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Y" To="0" Duration="0:0:0.3">
+                                            <DoubleAnimation.EasingFunction>
+                                                <QuadraticEase EasingMode="EaseOut"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.3"/>
+                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Y" To="20" Duration="0:0:0.3">
+                                            <DoubleAnimation.EasingFunction>
+                                                <QuadraticEase EasingMode="EaseIn"/>
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="🔔" Foreground="White" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBlock Text="{Binding NotificationMessage}" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
     </Grid>
 </Window>

@@ -27,6 +27,18 @@ public class DatabaseService
         {
             using var conn = CreateConnection();
             await conn.OpenAsync();
+            
+            // Bildirim tablosunu kontrol et ve yoksa oluştur
+            await conn.ExecuteAsync(@"
+                CREATE TABLE IF NOT EXISTS bildirimler (
+                    id SERIAL PRIMARY KEY,
+                    mesaj TEXT NOT NULL,
+                    tetikleyen_kullanici_id UUID NOT NULL,
+                    tarih TIMESTAMP NOT NULL DEFAULT NOW(),
+                    okundu_mu BOOLEAN NOT NULL DEFAULT FALSE
+                );
+            ");
+            
             return true;
         }
         catch
@@ -647,5 +659,66 @@ public class DatabaseService
             await transaction.RollbackAsync();
             throw;
         }
+    }
+
+    public async Task BildirimEkleAsync(string mesaj, Guid tetikleyenKullaniciId)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        
+        await conn.ExecuteAsync(@"
+            INSERT INTO bildirimler (mesaj, tetikleyen_kullanici_id, tarih) 
+            VALUES (@Mesaj, @TetikleyenId, @Tarih)", 
+            new { Mesaj = mesaj, TetikleyenId = tetikleyenKullaniciId, Tarih = DateTime.UtcNow });
+            
+        // Postgres pub/sub
+        await conn.ExecuteAsync("NOTIFY personel_bildirim, @Payload", new { Payload = $"{tetikleyenKullaniciId}|{mesaj}" });
+    }
+
+    public async Task<List<Bildirim>> GetSonBildirimlerAsync(int limit = 20)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        return (await conn.QueryAsync<Bildirim>(
+            "SELECT * FROM bildirimler ORDER BY tarih DESC LIMIT @Limit", 
+            new { Limit = limit })).ToList();
+    }
+
+    public async Task OkunmadiIseOkunduYapAsync(int bildirimId)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await conn.ExecuteAsync("UPDATE bildirimler SET okundu_mu = true WHERE id = @Id", new { Id = bildirimId });
+    }
+    
+    public async Task StartListeningNotifications(Action<string, string> onNotificationReceived, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var conn = CreateConnection();
+            await conn.OpenAsync(cancellationToken);
+            
+            conn.Notification += (o, e) => 
+            {
+                if (e.Channel == "personel_bildirim" && !string.IsNullOrEmpty(e.Payload))
+                {
+                    var parts = e.Payload.Split('|', 2);
+                    if (parts.Length == 2)
+                    {
+                        onNotificationReceived?.Invoke(parts[0], parts[1]);
+                    }
+                }
+            };
+            
+            await using var cmd = new NpgsqlCommand("LISTEN personel_bildirim;", conn);
+            await cmd.ExecuteNonQueryAsync(cancellationToken);
+            
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await conn.WaitAsync(cancellationToken);
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch { }
     }
 }

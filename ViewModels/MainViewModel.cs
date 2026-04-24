@@ -60,6 +60,26 @@ public partial class MainViewModel : BaseViewModel
     private Kullanici? _selectedKullanici;
 
     [ObservableProperty]
+    private ObservableCollection<Bildirim> _bildirimlerListesi = new();
+
+    [ObservableProperty]
+    private int _unreadBildirimCount;
+
+    [ObservableProperty]
+    private bool _hasUnreadBildirimler;
+
+    [ObservableProperty]
+    private bool _isBildirimPopupOpen;
+
+    [ObservableProperty]
+    private string _notificationMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool _isNotificationVisible;
+
+    private CancellationTokenSource? _notificationCts;
+
+    [ObservableProperty]
     private ObservableCollection<Santiye> _santiyeList = new();
 
     [ObservableProperty]
@@ -177,6 +197,67 @@ public partial class MainViewModel : BaseViewModel
         IsAdmin = CurrentUser?.Rol == "Admin";
         // 'Roujin61' kullanıcı adına sahip olan kişi Süper Admin kabul edilir (büyük/küçük harf duyarsız)
         IsSuperAdmin = IsAdmin && CurrentUser?.KullaniciAdi?.Equals("Roujin61", StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    [RelayCommand]
+    private async Task ToggleBildirimPopupAsync()
+    {
+        IsBildirimPopupOpen = !IsBildirimPopupOpen;
+        
+        if (IsBildirimPopupOpen && HasUnreadBildirimler)
+        {
+            // Okundu işaretle
+            foreach (var b in BildirimlerListesi.Where(x => !x.OkunduMu))
+            {
+                await _databaseService.OkunmadiIseOkunduYapAsync(b.Id);
+                b.OkunduMu = true;
+            }
+            HasUnreadBildirimler = false;
+            UnreadBildirimCount = 0;
+        }
+    }
+
+    private async Task LoadBildirimlerAsync()
+    {
+        var liste = await _databaseService.GetSonBildirimlerAsync(20);
+        BildirimlerListesi = new ObservableCollection<Bildirim>(liste);
+        UnreadBildirimCount = BildirimlerListesi.Count(x => !x.OkunduMu);
+        HasUnreadBildirimler = UnreadBildirimCount > 0;
+    }
+
+    private void StartNotificationListener()
+    {
+        _notificationCts?.Cancel();
+        _notificationCts = new CancellationTokenSource();
+        
+        _ = Task.Run(async () =>
+        {
+            await _databaseService.StartListeningNotifications(async (tetikleyenIdStr, mesaj) => 
+            {
+                if (Guid.TryParse(tetikleyenIdStr, out var tetikleyenId))
+                {
+                    // Eğer tetikleyen kişi ben değilsem ekranda snackbar göster ve listeyi güncelle
+                    if (CurrentUser?.Id != tetikleyenId)
+                    {
+                        Application.Current.Dispatcher.Invoke(() => 
+                        {
+                            ShowSnackbarNotification(mesaj);
+                        });
+                        
+                        // Listeyi arka planda tekrar çek (yeni bildirim eklendi)
+                        await LoadBildirimlerAsync();
+                    }
+                }
+            }, _notificationCts.Token);
+        });
+    }
+
+    private async void ShowSnackbarNotification(string message)
+    {
+        NotificationMessage = message;
+        IsNotificationVisible = true;
+        await Task.Delay(4000);
+        IsNotificationVisible = false;
     }
 
     [RelayCommand]
@@ -398,6 +479,9 @@ public partial class MainViewModel : BaseViewModel
             await LoadPersonellerAsync();
             await LoadLookupsAsync();
             await LoadSantiyelerAsync();
+            await LoadBildirimlerAsync();
+            
+            StartNotificationListener();
 
             if (IsAdmin)
             {
