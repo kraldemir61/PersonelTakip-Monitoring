@@ -164,8 +164,8 @@ public partial class MainViewModel : BaseViewModel
 
         CurrentUser = Application.Current.Properties["Kullanici"] as Kullanici;
         IsAdmin = CurrentUser?.Rol == "Admin";
-        // 'admin' kullanıcı adına sahip olan kişi Süper Admin kabul edilir
-        IsSuperAdmin = IsAdmin && CurrentUser?.KullaniciAdi == "admin";
+        // 'admin' kullanıcı adına sahip olan kişi Süper Admin kabul edilir (büyük/küçük harf duyarsız)
+        IsSuperAdmin = IsAdmin && CurrentUser?.KullaniciAdi?.Equals("admin", StringComparison.OrdinalIgnoreCase) == true;
     }
 
     [RelayCommand]
