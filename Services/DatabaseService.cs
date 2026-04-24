@@ -254,9 +254,9 @@ public class DatabaseService
 
         var id = Guid.NewGuid();
         await conn.ExecuteAsync(
-            @"INSERT INTO santiyeler (id, adi, kod, adres, telefon, aktif, created_at, updated_at)
-              VALUES (@Id, @Adi, @Kod, @Adres, @Telefon, true, @Now, @Now)",
-            new { Id = id, santiye.Adi, santiye.Kod, santiye.Adres, santiye.Telefon, Now = DateTime.UtcNow });
+            @"INSERT INTO santiyeler (id, adi, kod, adres, aktif, created_at, updated_at)
+              VALUES (@Id, @Adi, @Kod, @Adres, true, @Now, @Now)",
+            new { Id = id, santiye.Adi, santiye.Kod, santiye.Adres, Now = DateTime.UtcNow });
 
         return id;
     }
@@ -267,9 +267,9 @@ public class DatabaseService
         await conn.OpenAsync();
 
         await conn.ExecuteAsync(
-            @"UPDATE santiyeler SET adi = @Adi, kod = @Kod, adres = @Adres, telefon = @Telefon, updated_at = @Now
+            @"UPDATE santiyeler SET adi = @Adi, kod = @Kod, adres = @Adres, updated_at = @Now
               WHERE id = @Id",
-            new { santiye.Id, santiye.Adi, santiye.Kod, santiye.Adres, santiye.Telefon, Now = DateTime.UtcNow });
+            new { santiye.Id, santiye.Adi, santiye.Kod, santiye.Adres, Now = DateTime.UtcNow });
 
         await AuditLogAsync(adminId, "santiyeler", santiye.Id.ToString(), "Guncelle",
             null, JsonSerializer.Serialize(new { santiye.Adi, santiye.Kod }), "Şantiye güncellendi");

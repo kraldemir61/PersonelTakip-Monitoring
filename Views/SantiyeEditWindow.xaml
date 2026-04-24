@@ -1,7 +1,7 @@
 <Window x:Class="PersonelTakip.Views.SantiyeEditWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="{Binding WindowTitle}" Height="490" Width="450"
+        Title="{Binding WindowTitle}" Height="360" Width="450"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         Background="#F5F5F5">
     <Window.Resources>
@@ -78,17 +78,14 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0">
-            <TextBlock Text="{Binding WindowTitle}" FontSize="24" FontWeight="Bold" Foreground="#111827" Margin="0,0,0,10"/>
-            <TextBlock Text="Şantiye bilgilerini kutu içindeki ipuçlarını takip ederek güncelleyin." FontSize="14" Foreground="#6B7280" Margin="0,0,0,30"/>
-        </StackPanel>
+       
 
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,0">
             <StackPanel>
                 <TextBox Text="{Binding Adi, UpdateSourceTrigger=PropertyChanged}" Tag="Şantiye Adı" Style="{StaticResource ModernTextBox}"/>
                 <TextBox Text="{Binding Kod, UpdateSourceTrigger=PropertyChanged}" Tag="Kod" Style="{StaticResource ModernTextBox}"/>
                 <TextBox Text="{Binding Adres, UpdateSourceTrigger=PropertyChanged}" Tag="Adres" Style="{StaticResource ModernTextBox}"/>
-                <TextBox Text="{Binding Telefon, UpdateSourceTrigger=PropertyChanged}" Tag="Telefon" Style="{StaticResource ModernTextBox}"/>
+
             </StackPanel>
         </ScrollViewer>
 

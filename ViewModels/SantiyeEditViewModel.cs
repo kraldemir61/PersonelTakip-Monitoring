@@ -22,9 +22,6 @@ public partial class SantiyeEditViewModel : BaseViewModel
     private string _adres = string.Empty;
 
     [ObservableProperty]
-    private string _telefon = string.Empty;
-
-    [ObservableProperty]
     private string _windowTitle = "Yeni Şantiye";
 
     public bool IsEditMode => _santiyeId.HasValue;
@@ -41,7 +38,6 @@ public partial class SantiyeEditViewModel : BaseViewModel
             Adi = santiye.Adi;
             Kod = santiye.Kod;
             Adres = santiye.Adres ?? string.Empty;
-            Telefon = santiye.Telefon ?? string.Empty;
         }
         else
         {
@@ -72,8 +68,7 @@ public partial class SantiyeEditViewModel : BaseViewModel
                 Id = _santiyeId ?? Guid.Empty,
                 Adi = Adi.Trim(),
                 Kod = Kod.Trim().ToUpper(),
-                Adres = string.IsNullOrWhiteSpace(Adres) ? null : Adres.Trim(),
-                Telefon = string.IsNullOrWhiteSpace(Telefon) ? null : Telefon.Trim()
+                Adres = string.IsNullOrWhiteSpace(Adres) ? null : Adres.Trim()
             };
 
             if (IsEditMode)

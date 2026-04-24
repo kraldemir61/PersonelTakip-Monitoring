@@ -255,7 +255,7 @@
 
                 <!-- 4. Status Section -->
                 <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,0">
-                    <Ellipse x:Name="ConnStatus" Width="8" Height="8" Margin="0,0,6,0">
+                    <Ellipse x:Name="ConnStatus" Width="12" Height="12" Margin="0,0,6,0">
                         <Ellipse.Style>
                             <Style TargetType="Ellipse">
                                 <Setter Property="Fill" Value="#EF4444"/>
@@ -271,7 +271,7 @@
                             </Style>
                         </Ellipse.Style>
                     </Ellipse>
-                    <TextBlock Text="{Binding ConnectionStatus}" FontSize="10" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding ConnectionStatus}" FontSize="12" Foreground="#9CA3AF" VerticalAlignment="Center"/>
                 </StackPanel>
             </Grid>
         </Border>

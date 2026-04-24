@@ -255,7 +255,7 @@ public partial class MainViewModel : BaseViewModel
             SantiyeListView.Filter = (obj) =>
             {
                 if (obj is not Santiye s) return false;
-                var combined = $"{s.Adi} {s.Kod} {s.Adres} {s.Telefon}";
+                var combined = $"{s.Adi} {s.Kod} {s.Adres}";
                 return StringHelper.SmartSearch(combined, SearchText);
             };
             OnPropertyChanged(nameof(SantiyeListView));
