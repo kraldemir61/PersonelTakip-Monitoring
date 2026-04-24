@@ -671,8 +671,9 @@ public class DatabaseService
             VALUES (@Mesaj, @TetikleyenId, @Tarih)", 
             new { Mesaj = mesaj, TetikleyenId = tetikleyenKullaniciId, Tarih = DateTime.UtcNow });
             
-        // Postgres pub/sub
-        await conn.ExecuteAsync("NOTIFY personel_bildirim, @Payload", new { Payload = $"{tetikleyenKullaniciId}|{mesaj}" });
+        // Postgres pub/sub - NOTIFY komutu parametre desteklemez, literal string kullanılmalı
+        var payload = $"{tetikleyenKullaniciId}|{mesaj}".Replace("'", "''");
+        await conn.ExecuteAsync($"NOTIFY personel_bildirim, '{payload}'");
     }
 
     public async Task<List<Bildirim>> GetSonBildirimlerAsync(int limit = 20)
