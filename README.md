@@ -3,9 +3,9 @@
 Bu proje, WPF ve MVVM mimarisi kullanılarak geliştirilmiş bir Personel Takip uygulamasıdır.
 
 ## Güncelleme Notları (Son Push)
-- **Bildirim Merkezi Geliştirmeleri:** Bildirimleri tek tek silme ve tümünü temizleme özellikleri eklendi.
-- **Bildirim Mesaj Formatı:** Yeni personel ekleme bildirimi `"kullanıcı adı, şantiye kodu, personel adı, adlı personeli şantiye adı şantiyesine ekledi"` şeklinde güncellendi.
-- **Hata Düzeltmesi (PostgreSQL Syntax):** Bildirim gönderimi sırasında oluşan syntax hatası giderildi.
+- **Bildirim Merkezi Geliştirmeleri:** Bildirimleri tek tek silme ve tümünü temizleme özellikleri eklendi. Bildirimlerin işlemi yapan kullanıcıya da anında düşmesi sağlandı (Anlık Takip).
+- **Bildirim Mesaj Formatı:** Yeni personel ekleme bildirimi `"şantiye kodu kullanıcı adı, personel adı kişisini şantiyesine ekledi"` şeklinde güncellendi.
+- **Hata Düzeltmesi (PostgreSQL Syntax):** Bildirim gönderimi sırasında oluşan `42601` syntax hatası, Dapper bypass edilerek doğrudan `NpgsqlCommand` kullanımıyla kökten çözüldü.
 - **UI Modernizasyonu & Dark Theme:** Tüm giriş (Edit) ve tanımlama (Lookup) pencereleri Login ekranıyla uyumlu "Dark Theme" tasarımına geçirildi.
 - **Pencere Düzenlemeleri:** Dialog pencereleri için yeniden boyutlandırma (Resize) kapatıldı ve `CustomTitleBar` üzerinden maximize butonu gizlendi.
 - **Navigasyon İyileştirmesi:** 'Çıkış' butonu daha erişilebilir olması için sekme alanının en sağına taşındı. Sol menü (Sidebar) daha kompakt bir görünüm için daraltıldı.
