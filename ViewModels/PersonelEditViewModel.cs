@@ -60,6 +60,7 @@ public partial class PersonelEditViewModel : BaseViewModel
 
     public bool IsEditMode => _personelId.HasValue;
     public bool IsAdmin { get; }
+    public bool IsSuperAdmin { get; }
 
     public PersonelEditViewModel(DatabaseService databaseService, Kullanici currentUser, bool isAdmin, Personel? personel = null)
     {
@@ -67,6 +68,7 @@ public partial class PersonelEditViewModel : BaseViewModel
         _currentUser = currentUser;
         _personelId = personel?.Id;
         IsAdmin = isAdmin;
+        IsSuperAdmin = IsAdmin && currentUser.KullaniciAdi == "admin";
 
         if (personel != null)
         {

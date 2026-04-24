@@ -281,9 +281,10 @@
             <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding TelefonNumarasi, UpdateSourceTrigger=PropertyChanged}" Tag="Telefon Numarası" Style="{StaticResource ModernTextBox}" Background="#FFD4D4D4"/>
 
             <!-- Row 4: Maaş, PB -->
-            <TextBox Grid.Row="3" Grid.Column="0" x:Name="TxtMaas" Text="{Binding Maas, UpdateSourceTrigger=PropertyChanged}" Tag="Maaş" Style="{StaticResource ModernTextBox}" PreviewTextInput="NumberValidationTextBox" Background="#FFD4D4D4"/>
+            <TextBox Grid.Row="3" Grid.Column="0" x:Name="TxtMaas" Text="{Binding Maas, UpdateSourceTrigger=PropertyChanged}" Tag="Maaş" Style="{StaticResource ModernTextBox}" PreviewTextInput="NumberValidationTextBox" Background="#FFD4D4D4" Visibility="{Binding IsSuperAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
             <ComboBox Grid.Row="3" Grid.Column="2" ItemsSource="{Binding ParaBirimleri}" SelectedValue="{Binding ParaBirimi}" 
-                      SelectedValuePath="Id" Tag="Para Birimi" Style="{StaticResource ModernComboBox}">
+                      SelectedValuePath="Id" Tag="Para Birimi" Style="{StaticResource ModernComboBox}"
+                      Visibility="{Binding IsSuperAdmin, Converter={StaticResource BoolToVisibilityConverter}}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding Adi}"/>
