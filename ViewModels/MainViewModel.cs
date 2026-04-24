@@ -456,33 +456,6 @@ public partial class MainViewModel : BaseViewModel
         }
     }
 
-    [RelayCommand]
-    public async Task RolDegistirAsync()
-    {
-        if (!IsAdmin || SelectedKullanici == null) return;
-
-        var yeniRol = SelectedKullanici.Rol == "Admin" ? "User" : "Admin";
-        var mesaj = $"'{SelectedKullanici.KullaniciAdi}' kullanıcısının rolünü {yeniRol} olarak değiştirmek istediğinizden emin misiniz?";
-
-        if (!Confirm(mesaj)) return;
-
-        IsBusy = true;
-        try
-        {
-            await _databaseService.KullaniciRolGuncelleAsync(CurrentUser!.Id, SelectedKullanici.Id, yeniRol);
-            await _emailService.RolDegistirmeBildirimiGonderAsync(SelectedKullanici.Email, SelectedKullanici.KullaniciAdi, yeniRol);
-            ShowSuccess("Rol güncellendi.");
-            await LoadKullanicilarAsync();
-        }
-        catch (Exception ex)
-        {
-            ShowError($"İşlem sırasında hata: {TranslateExceptionMessage(ex.Message)}");
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-    }
 
     [RelayCommand]
     public async Task DuzenleKullaniciAsync()
@@ -506,6 +479,12 @@ public partial class MainViewModel : BaseViewModel
     public async Task SilKullaniciAsync()
     {
         if (!IsAdmin || SelectedKullanici == null) return;
+
+        if (SelectedKullanici.KullaniciAdi.Equals("Roujin61", StringComparison.OrdinalIgnoreCase))
+        {
+            ShowError("Süper Admin hesabı (Roujin61) silinemez.");
+            return;
+        }
 
         if (!Confirm($"'{SelectedKullanici.KullaniciAdi}' kullanıcısı silinecek. Onaylıyor musunuz?")) return;
 

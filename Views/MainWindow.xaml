@@ -353,7 +353,6 @@
                                 <StackPanel Grid.Column="0" Orientation="Horizontal">
                                     <Button Content="Ekle" Command="{Binding YeniKullaniciCommand}" Width="100" Height="40" Background="#3B82F6" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                                     <Button Content="Düzenle" Command="{Binding DuzenleKullaniciCommand}" Width="100" Height="40" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
-                                    <Button Content="Rol Değiştir" Command="{Binding RolDegistirCommand}" Width="100" Height="40" Background="#8B5CF6" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                                     <Button Content="Sil" Command="{Binding SilKullaniciCommand}" Width="60" Height="40" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                                     <Button Content="Şifre Sıfırla" Command="{Binding SifreSifirlaCommand}" Width="110" Height="40" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Visibility="{Binding IsSuperAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
                                 </StackPanel>

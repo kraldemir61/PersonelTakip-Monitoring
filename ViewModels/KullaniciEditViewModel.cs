@@ -13,6 +13,7 @@ public partial class KullaniciEditViewModel : BaseViewModel
     private readonly EmailService _emailService;
     private readonly Kullanici _currentUser;
     private readonly Guid? _kullaniciId;
+    private readonly string? _orijinalKullaniciAdi;
 
     [ObservableProperty]
     private string _kullaniciAdi = string.Empty;
@@ -48,6 +49,7 @@ public partial class KullaniciEditViewModel : BaseViewModel
         _emailService = emailService;
         _currentUser = currentUser;
         _kullaniciId = kullanici?.Id;
+        _orijinalKullaniciAdi = kullanici?.KullaniciAdi;
 
         if (kullanici != null)
         {
@@ -71,6 +73,25 @@ public partial class KullaniciEditViewModel : BaseViewModel
         {
             ShowError("Kullanıcı adı gereklidir.");
             return;
+        }
+
+        // Eğer düzenlenen kişi orijinalde "Roujin61" ise:
+        if (!string.IsNullOrEmpty(_orijinalKullaniciAdi) && 
+            _orijinalKullaniciAdi.Equals("Roujin61", StringComparison.OrdinalIgnoreCase))
+        {
+            // Kullanıcı adı değişmişse izin verme
+            if (!KullaniciAdi.Equals("Roujin61", StringComparison.OrdinalIgnoreCase))
+            {
+                ShowError("Süper Admin hesabının (Roujin61) kullanıcı adı değiştirilemez.");
+                return;
+            }
+
+            // Rolü User yapılmışsa izin verme
+            if (Rol != "Admin")
+            {
+                ShowError("Süper Admin hesabının (Roujin61) yetkisi 'User' olarak düşürülemez.");
+                return;
+            }
         }
 
 

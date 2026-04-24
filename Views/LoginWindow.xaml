@@ -210,7 +210,7 @@
                             <PasswordBox x:Name="TxtPassword" Grid.Column="1" Style="{StaticResource ModernPasswordBox}"/>
                         </Grid>
                         <CheckBox Content="Beni Hatırla" IsChecked="{Binding RememberMe}" Margin="80,0,0,15" FontSize="12" Foreground="#6B7280"/>
-                        <Button Content="Giriş Yap" Click="BtnGiris_Click" Style="{StaticResource PrimaryButton}" Height="42"/>
+                        <Button Content="Giriş Yap" IsDefault="True" Click="BtnGiris_Click" Style="{StaticResource PrimaryButton}" Height="42"/>
                     </StackPanel>
 
                     <!-- REGISTER PANEL -->
