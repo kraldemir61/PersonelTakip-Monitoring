@@ -143,6 +143,7 @@
                     <TextBlock Text="{Binding CurrentUser.Rol}" Foreground="Red" Margin="0,2,2,2"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Excel'e Aktar" Width="100" Height="30" Command="{Binding ExportExcelCommand}" Margin="0,0,10,0" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}"/>
                     <Button Content="Şifre Değiştir" Width="100" Height="30" Command="{Binding ParolaDegistirCommand}" Margin="0,0,10,0" Background="#FF5D0BF5" Foreground="White" Style="{StaticResource HeaderButton}"/>
                     <Button Content="Çıkış" Height="30" Width="60" Command="{Binding LogoutCommand}" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
                 </StackPanel>
@@ -298,7 +299,67 @@
                                             <TextBlock Text="{Binding SelectedPersonel.Maas, StringFormat=N2}" FontSize="16" FontWeight="Bold" Foreground="#10B981" Visibility="{Binding IsSuperAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
                                         </StackPanel>
                                     </StackPanel>
-                                    <TextBlock Text="Detay için personel seçin" Visibility="{Binding SelectedPersonel, Converter={StaticResource NullToVisibilityConverter}}" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="#9CA3AF"/>
+                                    <Grid Visibility="{Binding SelectedPersonel, Converter={StaticResource NullToVisibilityConverter}}">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Text="Genel Durum Özeti" FontSize="18" FontWeight="Bold" Foreground="#1F2937" Margin="0,0,0,15"/>
+                                        
+                                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                            <StackPanel>
+                                                <!-- Toplam Personel -->
+                                                <Border Background="#EEF2FF" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                                                    <StackPanel>
+                                                        <TextBlock Text="Toplam Aktif Personel" FontSize="12" FontWeight="SemiBold" Foreground="#4F46E5"/>
+                                                        <TextBlock Text="{Binding ToplamPersonel}" FontSize="24" FontWeight="Bold" Foreground="#312E81"/>
+                                                    </StackPanel>
+                                                </Border>
+
+                                                <!-- Şantiye Dağılımı -->
+                                                <TextBlock Text="Şantiye Dağılımı" FontSize="14" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,10"/>
+                                                <ItemsControl ItemsSource="{Binding SantiyeStats}" Margin="0,0,0,15">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid Margin="0,0,0,5">
+                                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                                <TextBlock Text="{Binding Name}" Foreground="#374151" TextTrimming="CharacterEllipsis"/>
+                                                                <TextBlock Grid.Column="1" Text="{Binding Count}" FontWeight="Bold" Foreground="#111827"/>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+
+                                                <!-- Bölüm Dağılımı -->
+                                                <TextBlock Text="Bölüm Dağılımı" FontSize="14" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,10"/>
+                                                <ItemsControl ItemsSource="{Binding BolumStats}" Margin="0,0,0,15">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid Margin="0,0,0,5">
+                                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                                <TextBlock Text="{Binding Name}" Foreground="#374151" TextTrimming="CharacterEllipsis"/>
+                                                                <TextBlock Grid.Column="1" Text="{Binding Count}" FontWeight="Bold" Foreground="#111827"/>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+
+                                                <!-- Uyruk Dağılımı -->
+                                                <TextBlock Text="Uyruk Dağılımı" FontSize="14" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,10"/>
+                                                <ItemsControl ItemsSource="{Binding UyrukStats}" Margin="0,0,0,15">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid Margin="0,0,0,5">
+                                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                                <TextBlock Text="{Binding Name}" Foreground="#374151" TextTrimming="CharacterEllipsis"/>
+                                                                <TextBlock Grid.Column="1" Text="{Binding Count}" FontWeight="Bold" Foreground="#111827"/>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </ScrollViewer>
+                                    </Grid>
                                 </Grid>
                             </Border>
                         </Grid>

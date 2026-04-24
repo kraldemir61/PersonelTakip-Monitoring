@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Personel Takip Sistemi - Giriş" Height="580" Width="440"
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
-        Background="#EEF2F6">
+        Background="#EEF2F6"
+        Loaded="Window_Loaded">
     <Window.Resources>
         <!-- Modern Input Styles -->
         <Style x:Key="ModernInput" TargetType="Control">

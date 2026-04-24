@@ -22,6 +22,11 @@ public partial class LoginWindow : Window
         RbGiris.IsChecked = true;
     }
 
+    private void Window_Loaded(object sender, RoutedEventArgs e)
+    {
+        TxtPassword.Focus();
+    }
+
     private void RbGiris_Checked(object sender, RoutedEventArgs e)
     {
         if (PanelGiris != null && PanelKayit != null)

@@ -7,6 +7,8 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Data;
 using PersonelTakip.Helpers;
+using ClosedXML.Excel;
+using Microsoft.Win32;
 
 namespace PersonelTakip.ViewModels;
 
@@ -41,6 +43,18 @@ public partial class MainViewModel : BaseViewModel
 
     [ObservableProperty]
     private ObservableCollection<Personel> _personeller = new();
+
+    [ObservableProperty]
+    private ObservableCollection<StatItem> _santiyeStats = new();
+
+    [ObservableProperty]
+    private ObservableCollection<StatItem> _bolumStats = new();
+
+    [ObservableProperty]
+    private ObservableCollection<StatItem> _uyrukStats = new();
+
+    [ObservableProperty]
+    private int _toplamPersonel;
 
     [ObservableProperty]
     private Personel? _selectedPersonel;
@@ -192,6 +206,7 @@ public partial class MainViewModel : BaseViewModel
                 return StringHelper.SmartSearch(combined, SearchText);
             };
             UpdateSidebarSantiyeler();
+            CalculateDashboardStats();
             OnPropertyChanged(nameof(PersonellerView));
         }
         catch (Exception ex)
@@ -204,6 +219,32 @@ public partial class MainViewModel : BaseViewModel
         {
             IsBusy = false;
         }
+    }
+
+    private void CalculateDashboardStats()
+    {
+        if (Personeller == null) return;
+
+        var aktifPersoneller = Personeller.Where(p => p.Aktif).ToList();
+        ToplamPersonel = aktifPersoneller.Count;
+
+        var santiyeGrup = aktifPersoneller
+            .GroupBy(p => string.IsNullOrWhiteSpace(p.SantiyeKod) ? "Bilinmiyor" : p.SantiyeKod)
+            .Select(g => new StatItem { Name = g.Key, Count = g.Count() })
+            .OrderByDescending(x => x.Count);
+        SantiyeStats = new ObservableCollection<StatItem>(santiyeGrup);
+
+        var bolumGrup = aktifPersoneller
+            .GroupBy(p => string.IsNullOrWhiteSpace(p.BolumuDisplay) ? "Bilinmiyor" : p.BolumuDisplay)
+            .Select(g => new StatItem { Name = g.Key, Count = g.Count() })
+            .OrderByDescending(x => x.Count);
+        BolumStats = new ObservableCollection<StatItem>(bolumGrup);
+
+        var uyrukGrup = aktifPersoneller
+            .GroupBy(p => string.IsNullOrWhiteSpace(p.UyruguDisplay) ? "Bilinmiyor" : p.UyruguDisplay)
+            .Select(g => new StatItem { Name = g.Key, Count = g.Count() })
+            .OrderByDescending(x => x.Count);
+        UyrukStats = new ObservableCollection<StatItem>(uyrukGrup);
     }
 
     [RelayCommand]
@@ -532,6 +573,87 @@ public partial class MainViewModel : BaseViewModel
         }
     }
 
+    [RelayCommand]
+    public async Task ExportExcelAsync()
+    {
+        if (PersonellerView == null) return;
+
+        var sfd = new SaveFileDialog
+        {
+            Filter = "Excel Dosyası|*.xlsx",
+            Title = "Personel Listesini Kaydet",
+            FileName = $"PersonelListesi_{DateTime.Now:yyyyMMdd_HHmm}.xlsx"
+        };
+
+        if (sfd.ShowDialog() != true)
+            return;
+
+        // UI thread üzerinde koleksiyonu listeye çevirelim ki arka planda cross-thread hatası almayalım.
+        var personellerList = PersonellerView.Cast<Personel>().ToList();
+        var isSuperAdmin = IsSuperAdmin;
+
+        IsBusy = true;
+        try
+        {
+            await Task.Run(() =>
+            {
+                using var workbook = new XLWorkbook();
+                var worksheet = workbook.Worksheets.Add("Personeller");
+
+                // Headers
+                string[] headers = { "Adı Soyadı", "Şantiye", "Bölümü", "Görevi", "Uyruğu", "İşe Giriş Tarihi", "Telefon Numarası", "Maaş", "Para Birimi", "Durum" };
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    var cell = worksheet.Cell(1, i + 1);
+                    cell.Value = headers[i];
+                    cell.Style.Font.Bold = true;
+                    cell.Style.Fill.BackgroundColor = XLColor.LightGray;
+                    cell.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+                }
+
+                // Data
+                int row = 2;
+                foreach (var p in personellerList)
+                {
+                    worksheet.Cell(row, 1).Value = p.AdiSoyadi;
+                    worksheet.Cell(row, 2).Value = p.SantiyeKod;
+                    worksheet.Cell(row, 3).Value = p.BolumuDisplay;
+                    worksheet.Cell(row, 4).Value = p.GoreviDisplay;
+                    worksheet.Cell(row, 5).Value = p.UyruguDisplay;
+                    worksheet.Cell(row, 6).Value = p.IseGirisTarihi?.ToString("dd.MM.yyyy");
+                    worksheet.Cell(row, 7).Value = p.TelefonNumarasi;
+
+                    if (isSuperAdmin)
+                    {
+                        worksheet.Cell(row, 8).Value = p.Maas;
+                        worksheet.Cell(row, 8).Style.NumberFormat.Format = "#,##0.00";
+                        worksheet.Cell(row, 9).Value = p.ParaBirimiDisplay;
+                    }
+                    else
+                    {
+                        worksheet.Cell(row, 8).Value = "Gizli";
+                        worksheet.Cell(row, 9).Value = "-";
+                    }
+
+                    worksheet.Cell(row, 10).Value = p.Aktif ? "Aktif" : "Pasif";
+                    row++;
+                }
+
+                worksheet.Columns().AdjustToContents();
+                workbook.SaveAs(sfd.FileName);
+            });
+
+            ShowSuccess("Excel dosyası başarıyla kaydedildi.");
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Excel oluşturulurken hata: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
 
     [RelayCommand]
     public async Task YeniSantiyeAsync()
