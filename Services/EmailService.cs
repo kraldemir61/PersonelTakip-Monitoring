@@ -76,6 +76,34 @@ public class EmailService
         await SendEmailAsync(toEmail, "Hesabınız Oluşturuldu", htmlContent);
     }
 
+    public async Task CihazHareketBildirimiGonderAsync(string toEmail, string cihazAdi, string seriNo, string nereden, string nereye, string aciklama, string yapanKullanici)
+    {
+        var htmlContent = $@"
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb;'>
+                <div style='background-color: #3b82f6; padding: 20px; text-align: center;'>
+                    <h1 style='color: white; margin: 0;'>Cihaz Hareket Bildirimi</h1>
+                </div>
+                <div style='padding: 30px; background-color: #ffffff;'>
+                    <h2 style='color: #1f2937;'>Cihaz Transferi / Hareket Kaydı</h2>
+                    <p style='color: #4b5563; font-size: 16px;'>Aşağıdaki cihaz için yeni bir hareket kaydı oluşturulmuştur:</p>
+                    
+                    <div style='background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;'>
+                        <p style='margin: 5px 0;'><strong>Cihaz:</strong> {cihazAdi} ({seriNo})</p>
+                        <p style='margin: 5px 0;'><strong>Nereden:</strong> {nereden}</p>
+                        <p style='margin: 5px 0;'><strong>Nereye:</strong> {nereye}</p>
+                        <p style='margin: 5px 0;'><strong>İşlem Yapan:</strong> {yapanKullanici}</p>
+                        <p style='margin: 5px 0;'><strong>Açıklama:</strong> {aciklama}</p>
+                        <p style='margin: 5px 0;'><strong>Tarih:</strong> {DateTime.Now:dd.MM.yyyy HH:mm}</p>
+                    </div>
+                </div>
+                <div style='padding: 20px; text-align: center; background-color: #f9fafb; font-size: 12px; color: #6b7280;'>
+                    © {DateTime.Now.Year} Personel Takip Sistemi - Zimmet Yönetimi
+                </div>
+            </div>";
+
+        await SendEmailAsync(toEmail, $"Cihaz Hareket Bildirimi: {seriNo}", htmlContent);
+    }
+
     private async Task SendEmailAsync(string to, string subject, string htmlBody)
     {
         try

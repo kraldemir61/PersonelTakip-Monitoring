@@ -9,6 +9,7 @@ using System.Windows.Data;
 using PersonelTakip.Helpers;
 using ClosedXML.Excel;
 using Microsoft.Win32;
+using System.Linq;
 
 namespace PersonelTakip.ViewModels;
 
@@ -116,14 +117,58 @@ public partial class MainViewModel : BaseViewModel
     [ObservableProperty]
     private LookupItem? _selectedParaBirimi;
 
+    private int _selectedTabIndex;
+    public int SelectedTabIndex
+    {
+        get => _selectedTabIndex;
+        set
+        {
+            if (SetProperty(ref _selectedTabIndex, value))
+            {
+                SearchText = string.Empty;
+            }
+        }
+    }
+
+    private int _selectedSubTabIndex;
+    public int SelectedSubTabIndex
+    {
+        get => _selectedSubTabIndex;
+        set
+        {
+            if (SetProperty(ref _selectedSubTabIndex, value))
+            {
+                SearchText = string.Empty;
+            }
+        }
+    }
+
     [ObservableProperty]
-    private string _searchText = string.Empty;
+    private string? _searchText = string.Empty;
 
     [ObservableProperty]
     private ObservableCollection<Santiye> _sidebarSantiyeler = new();
 
     [ObservableProperty]
     private string? _selectedFilterSantiye;
+
+    // Zimmet Takibi - Ölçüm Cihazları
+    [ObservableProperty]
+    private ObservableCollection<Cihaz> _olcumCihazlari = new();
+
+    [ObservableProperty]
+    private Cihaz? _selectedOlcumCihazi;
+
+    public ICollectionView OlcumCihazlariView { get; private set; }
+
+    // Zimmet Takibi - Ofis Cihazları
+    [ObservableProperty]
+    private ObservableCollection<Cihaz> _ofisCihazlari = new();
+
+    [ObservableProperty]
+    private Cihaz? _selectedOfisCihazi;
+
+    public ICollectionView OfisCihazlariView { get; private set; }
 
     [RelayCommand]
     private void SantiyeFiltrele(string? santiyeKod)
@@ -176,7 +221,7 @@ public partial class MainViewModel : BaseViewModel
     public ICollectionView? UyruklarView { get; private set; }
     public ICollectionView? ParaBirimleriView { get; private set; }
 
-    partial void OnSearchTextChanged(string value)
+    partial void OnSearchTextChanged(string? value)
     {
         PersonellerView?.Refresh();
         KullanicilarView?.Refresh();
@@ -185,6 +230,8 @@ public partial class MainViewModel : BaseViewModel
         GorevlerView?.Refresh();
         UyruklarView?.Refresh();
         ParaBirimleriView?.Refresh();
+        OlcumCihazlariView?.Refresh();
+        OfisCihazlariView?.Refresh();
         
         CalculateDashboardStats();
     }
@@ -199,6 +246,12 @@ public partial class MainViewModel : BaseViewModel
         IsAdmin = CurrentUser?.Rol == "Admin";
         // 'Admin' kullanıcı adına sahip olan kişi Süper Admin kabul edilir (büyük/küçük harf duyarsız)
         IsSuperAdmin = IsAdmin && CurrentUser?.KullaniciAdi?.Equals("Admin", StringComparison.OrdinalIgnoreCase) == true;
+
+        OlcumCihazlariView = CollectionViewSource.GetDefaultView(OlcumCihazlari);
+        OlcumCihazlariView.Filter = FilterOlcumCihazlari;
+
+        OfisCihazlariView = CollectionViewSource.GetDefaultView(OfisCihazlari);
+        OfisCihazlariView.Filter = FilterOfisCihazlari;
 
         LoadAllDataAsync().ConfigureAwait(false);
     }
@@ -282,27 +335,56 @@ public partial class MainViewModel : BaseViewModel
             {
                 if (Guid.TryParse(tetikleyenIdStr, out var tetikleyenId))
                 {
-                    // Her durumda listeyi güncelle ve işlemi yapan kişi ben değilsem snackbar göster
-                    if (CurrentUser?.Id != tetikleyenId)
+                    // Snack bar göster
+                    Application.Current.Dispatcher.Invoke(() => 
                     {
-                        Application.Current.Dispatcher.Invoke(() => 
-                        {
-                            ShowSnackbarNotification(mesaj);
-                        });
-                    }
+                        ShowSnackbarNotification(mesaj);
+                    });
                     
                     // Listeyi her halükarda güncelle (anında düşmesi için)
                     await LoadBildirimlerAsync();
                 }
             }, _notificationCts.Token);
         });
+
+        // YEDEK MEKANİZMA (Polling): LISTEN/NOTIFY bazen ağ/firewall nedeniyle takılabilir.
+        // Her 30 saniyede bir listeyi manuel olarak da yenileyelim.
+        _ = Task.Run(async () =>
+        {
+            while (!_notificationCts.Token.IsCancellationRequested)
+            {
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(30), _notificationCts.Token);
+                    
+                    var oldUnread = UnreadBildirimCount;
+                    await LoadBildirimlerAsync();
+                    
+                    // Eğer yeni okunmamış bildirim varsa ve liste açılmadıysa bilgilendir
+                    if (UnreadBildirimCount > oldUnread && !IsBildirimPopupOpen)
+                    {
+                        Application.Current.Dispatcher.Invoke(() => 
+                        {
+                            ShowSnackbarNotification("Yeni bildirimleriniz var.");
+                        });
+                    }
+                }
+                catch { /* Polling hatası kritik değil */ }
+            }
+        });
     }
 
     private async void ShowSnackbarNotification(string message)
     {
+        // Önceki bildirimi temizle
+        IsNotificationVisible = false;
+        await Task.Delay(100);
+
         NotificationMessage = message;
         IsNotificationVisible = true;
-        await Task.Delay(4000);
+        
+        // 8 saniye boyunca görünür kalsın (kullanıcı görsün diye süreyi uzattık)
+        await Task.Delay(8000);
         IsNotificationVisible = false;
     }
 
@@ -526,6 +608,7 @@ public partial class MainViewModel : BaseViewModel
             await LoadLookupsAsync();
             await LoadSantiyelerAsync();
             await LoadBildirimlerAsync();
+            await LoadCihazlarAsync();
             
             StartNotificationListener();
 
@@ -543,6 +626,35 @@ public partial class MainViewModel : BaseViewModel
             IsSlowConnection = false;
             IsDataLoaded = false;
         }
+    }
+
+    private async Task LoadCihazlarAsync()
+    {
+        var olcum = await _databaseService.CihazlariGetirAsync(CihazTuru.Olcum);
+        OlcumCihazlari.Clear();
+        foreach (var c in olcum) OlcumCihazlari.Add(c);
+
+        var ofis = await _databaseService.CihazlariGetirAsync(CihazTuru.Ofis);
+        OfisCihazlari.Clear();
+        foreach (var c in ofis) OfisCihazlari.Add(c);
+    }
+
+    private bool FilterOlcumCihazlari(object obj)
+    {
+        if (obj is not Cihaz c) return false;
+        if (string.IsNullOrWhiteSpace(SearchText)) return true;
+
+        var combined = $"{c.CihazAdi} {c.SeriNo} {c.Marka} {c.Model} {c.SantiyeKod} {c.SantiyeAdi} {c.SahipFirma} {c.Durum} {c.Not}";
+        return StringHelper.SmartSearch(combined, SearchText);
+    }
+
+    private bool FilterOfisCihazlari(object obj)
+    {
+        if (obj is not Cihaz c) return false;
+        if (string.IsNullOrWhiteSpace(SearchText)) return true;
+
+        var combined = $"{c.CihazAdi} {c.SeriNo} {c.Marka} {c.Model} {c.SantiyeKod} {c.SantiyeAdi} {c.SahipFirma} {c.Durum} {c.Not}";
+        return StringHelper.SmartSearch(combined, SearchText);
     }
 
     [RelayCommand]
@@ -610,6 +722,123 @@ public partial class MainViewModel : BaseViewModel
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task YeniOlcumCihaziAsync()
+    {
+        var vm = new CihazEditViewModel(_databaseService, CihazTuru.Olcum)
+        {
+            SantiyeList = SantiyeList
+        };
+
+        var window = new Views.CihazEditWindow { DataContext = vm };
+        if (window.ShowDialog() == true)
+        {
+            await LoadCihazlarAsync();
+        }
+    }
+
+    [RelayCommand]
+    public async Task DuzenleOlcumCihaziAsync()
+    {
+        if (SelectedOlcumCihazi == null) return;
+
+        var vm = new CihazEditViewModel(_databaseService, CihazTuru.Olcum, SelectedOlcumCihazi)
+        {
+            SantiyeList = SantiyeList
+        };
+
+        var window = new Views.CihazEditWindow { DataContext = vm };
+        if (window.ShowDialog() == true)
+        {
+            await LoadCihazlarAsync();
+        }
+    }
+
+    [RelayCommand]
+    public async Task OlcumCihaziHareketAsync()
+    {
+        if (SelectedOlcumCihazi == null) return;
+
+        var vm = new CihazHareketViewModel(_databaseService, CurrentUser!, SelectedOlcumCihazi)
+        {
+            SantiyeList = SantiyeList
+        };
+
+        var window = new Views.CihazHareketWindow { DataContext = vm };
+        if (window.ShowDialog() == true)
+        {
+            await LoadCihazlarAsync();
+        }
+    }
+
+    [RelayCommand]
+    public void OlcumCihaziGecmis()
+    {
+        if (SelectedOlcumCihazi == null) return;
+
+        var vm = new CihazGecmisViewModel(_databaseService, SelectedOlcumCihazi);
+        var window = new Views.CihazGecmisWindow { DataContext = vm };
+        window.ShowDialog();
+    }
+
+    [RelayCommand]
+    public async Task SilOlcumCihaziAsync()
+    {
+        if (SelectedOlcumCihazi == null) return;
+        
+        var result = MessageBox.Show($"{SelectedOlcumCihazi.SeriNo} seri nolu cihazı silmek istediğinize emin misiniz?", "Onay", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+        if (result == MessageBoxResult.Yes)
+        {
+            await _databaseService.CihazSilAsync(SelectedOlcumCihazi.Id);
+            await LoadCihazlarAsync();
+        }
+    }
+
+    [RelayCommand]
+    public async Task YeniOfisCihaziAsync()
+    {
+        var vm = new CihazEditViewModel(_databaseService, CihazTuru.Ofis)
+        {
+            SantiyeList = SantiyeList
+        };
+
+        var window = new Views.CihazEditWindow { DataContext = vm };
+        if (window.ShowDialog() == true)
+        {
+            await LoadCihazlarAsync();
+        }
+    }
+
+    [RelayCommand]
+    public async Task DuzenleOfisCihaziAsync()
+    {
+        if (SelectedOfisCihazi == null) return;
+
+        var vm = new CihazEditViewModel(_databaseService, CihazTuru.Ofis, SelectedOfisCihazi)
+        {
+            SantiyeList = SantiyeList
+        };
+
+        var window = new Views.CihazEditWindow { DataContext = vm };
+        if (window.ShowDialog() == true)
+        {
+            await LoadCihazlarAsync();
+        }
+    }
+
+    [RelayCommand]
+    public async Task SilOfisCihaziAsync()
+    {
+        if (SelectedOfisCihazi == null) return;
+        
+        var result = MessageBox.Show($"{SelectedOfisCihazi.SeriNo} seri nolu cihazı silmek istediğinize emin misiniz?", "Onay", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+        if (result == MessageBoxResult.Yes)
+        {
+            await _databaseService.CihazSilAsync(SelectedOfisCihazi.Id);
+            await LoadCihazlarAsync();
         }
     }
 
@@ -1126,15 +1355,18 @@ public partial class MainViewModel : BaseViewModel
     public void Logout()
     {
         var loginWindow = new Views.LoginWindow();
+        Application.Current.MainWindow = loginWindow;
         loginWindow.Show();
 
-        // Mevcut MainWindow'u kapat
-        foreach (Window window in Application.Current.Windows)
+        // Diğer pencereleri (MainWindow vb.) kapat
+        var otherWindows = Application.Current.Windows.Cast<Window>()
+            .Where(w => w != loginWindow).ToList();
+            
+        foreach (Window window in otherWindows)
         {
-            if (window is Views.MainWindow)
+            if (window is Views.MainWindow || window is Views.LoginWindow == false)
             {
                 window.Close();
-                break;
             }
         }
     }
@@ -1250,6 +1482,114 @@ public partial class MainViewModel : BaseViewModel
         catch (Exception ex)
         {
             ShowError($"Toplu güncelleme sırasında hata: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    #endregion
+
+    #region Cihaz Excel İşlemleri
+
+    [RelayCommand]
+    private void ExcelCihazSablonIndir()
+    {
+        if (!IsSuperAdmin) return;
+        _excelService.CihazTemplateIndir();
+    }
+
+    [RelayCommand]
+    private async Task ExcelCihazTopluYukleAsync()
+    {
+        if (!IsSuperAdmin) return;
+
+        var (cihazlar, error) = await _excelService.CihazExceldenOkuAsync(isUpdate: false);
+        if (!string.IsNullOrEmpty(error))
+        {
+            ShowError($"Excel okuma hatası: {error}");
+            return;
+        }
+
+        if (cihazlar.Count == 0) return;
+
+        if (!Confirm($"{cihazlar.Count} adet cihaz sisteme toplu olarak eklenecek. Onaylıyor musunuz?")) return;
+
+        IsBusy = true;
+        try
+        {
+            foreach (var c in cihazlar)
+            {
+                await _databaseService.CihazEkleAsync(c);
+            }
+            ShowSuccess($"{cihazlar.Count} adet cihaz başarıyla eklendi.");
+            await LoadCihazlarAsync();
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Yükleme sırasında hata: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task ExcelCihazDisariAktarAsync()
+    {
+        if (!IsSuperAdmin) return;
+
+        IsBusy = true;
+        try
+        {
+            var cihazlar = await _databaseService.CihazlariGetirAsync(CihazTuru.Olcum);
+            var path = await _excelService.CihazlariDisariAktarAsync(cihazlar);
+            if (!string.IsNullOrEmpty(path))
+            {
+                ShowSuccess("Cihaz verileri başarıyla dışarı aktarildi.");
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Dışarı aktarma hatası: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task ExcelCihazTopluGuncelleAsync()
+    {
+        if (!IsSuperAdmin) return;
+
+        var (cihazlar, error) = await _excelService.CihazExceldenOkuAsync(isUpdate: true);
+        if (!string.IsNullOrEmpty(error))
+        {
+            ShowError($"Excel okuma hatası: {error}");
+            return;
+        }
+
+        if (cihazlar.Count == 0) return;
+
+        if (!Confirm($"{cihazlar.Count} adet cihaz kaydı güncellenecek. Onaylıyor musunuz?")) return;
+
+        IsBusy = true;
+        try
+        {
+            foreach (var c in cihazlar)
+            {
+                await _databaseService.CihazGuncelleAsync(c);
+            }
+            ShowSuccess($"{cihazlar.Count} adet cihaz başarıyla güncellendi.");
+            await LoadCihazlarAsync();
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Güncelleme sırasında hata: {ex.Message}");
         }
         finally
         {

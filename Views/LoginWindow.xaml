@@ -194,7 +194,7 @@
 
                 <!-- 1. Logo Section -->
                 <StackPanel Grid.Row="0" Margin="0,0,0,20">
-                    <TextBlock Text="PERSONEL TAKİP" FontSize="20" FontWeight="Bold" Foreground="#1F2937" HorizontalAlignment="Center"/>
+                    <TextBlock Text="PERSONEL VE ZİMMET TAKİBİ" FontSize="17" FontWeight="Bold" Foreground="#1F2937" HorizontalAlignment="Center"/>
                     <TextBlock Text="Akıllı Yönetim Sistemi" FontSize="11" Foreground="#9CA3AF" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                 </StackPanel>
 

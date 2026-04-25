@@ -37,6 +37,67 @@ public class DatabaseService
                     tarih TIMESTAMP NOT NULL DEFAULT NOW(),
                     okundu_mu BOOLEAN NOT NULL DEFAULT FALSE
                 );
+
+                -- Bildirim Tetikleyici Fonksiyonu
+                CREATE OR REPLACE FUNCTION fn_cihaz_hareket_bildirim()
+                RETURNS TRIGGER AS $$
+                DECLARE
+                    v_cihaz_adi TEXT;
+                    v_seri_no TEXT;
+                    v_santiye_kod TEXT;
+                    v_mesaj TEXT;
+                BEGIN
+                    -- Cihaz bilgilerini al
+                    SELECT cihaz_adi, seri_no INTO v_cihaz_adi, v_seri_no FROM cihazlar WHERE id = NEW.cihaz_id;
+                    -- Şantiye kodunu al
+                    SELECT kod INTO v_santiye_kod FROM santiyeler WHERE id = NEW.nereye_santiye_id;
+                    
+                    IF v_santiye_kod IS NULL THEN v_santiye_kod := 'Merkez'; END IF;
+                    
+                    v_mesaj := v_cihaz_adi || ' (' || v_seri_no || ') ' || v_santiye_kod || ' konumuna (' || NEW.islem_turu || ') transfer edildi.';
+                    
+                    -- Bildirimi kaydet
+                    INSERT INTO bildirimler (mesaj, tetikleyen_kullanici_id, tarih)
+                    VALUES (v_mesaj, NEW.kullanici_id, NEW.tarih);
+                    
+                    -- LISTEN/NOTIFY gönder
+                    PERFORM pg_notify('personel_bildirim', NEW.kullanici_id || '|' || v_mesaj);
+                    
+                    RETURN NEW;
+                END;
+                $$ LANGUAGE plpgsql;
+
+                -- Tetikleyiciyi oluştur (varsa önce sil)
+                DROP TRIGGER IF EXISTS trg_cihaz_hareket_bildirim ON cihaz_hareketleri;
+                CREATE TRIGGER trg_cihaz_hareket_bildirim
+                AFTER INSERT ON cihaz_hareketleri
+                FOR EACH ROW
+                EXECUTE FUNCTION fn_cihaz_hareket_bildirim();
+
+                CREATE TABLE IF NOT EXISTS cihazlar (
+                    id UUID PRIMARY KEY,
+                    seri_no TEXT,
+                    cihaz_adi TEXT,
+                    marka TEXT,
+                    model TEXT,
+                    sahip_firma TEXT,
+                    not_text TEXT,
+                    tur INTEGER,
+                    santiye_id UUID,
+                    durum TEXT,
+                    son_islem_tarihi TIMESTAMP
+                );
+
+                CREATE TABLE IF NOT EXISTS cihaz_hareketleri (
+                    id UUID PRIMARY KEY,
+                    cihaz_id UUID NOT NULL,
+                    nereden_santiye_id UUID,
+                    nereye_santiye_id UUID,
+                    tarih TIMESTAMP NOT NULL,
+                    kullanici_id UUID NOT NULL,
+                    aciklama TEXT,
+                    islem_turu TEXT
+                );
             ");
             
             return true;
@@ -53,7 +114,7 @@ public class DatabaseService
         await conn.OpenAsync();
 
         var kullanici = await conn.QueryFirstOrDefaultAsync<Kullanici>(
-            @"SELECT k.id, k.kullanici_adi, k.email, k.sifre_hash AS SifreHash, k.rol, k.santiye_id, k.aktif, k.son_giris, k.created_at, s.adi AS santiye_adi
+            @"SELECT k.id, k.kullanici_adi, k.email, k.sifre_hash AS SifreHash, k.rol, k.santiye_id, k.aktif, k.son_giris, k.created_at, s.adi AS SantiyeAdi, s.kod AS SantiyeKod
               FROM kullanicilar k 
               LEFT JOIN santiyeler s ON k.santiye_id = s.id 
               WHERE k.kullanici_adi = @KullaniciAdi AND k.aktif = true",
@@ -76,6 +137,20 @@ public class DatabaseService
         return null;
     }
 
+    public async Task NotifySystemAsync(Guid tetikleyenKullaniciId, string mesaj)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // 1. Veritabanına kaydet
+        await conn.ExecuteAsync(
+            "INSERT INTO bildirimler (mesaj, tetikleyen_kullanici_id, tarih) VALUES (@Mesaj, @TetikleyenId, NOW())",
+            new { Mesaj = mesaj, TetikleyenId = tetikleyenKullaniciId });
+
+        // 2. LISTEN/NOTIFY ile kanala gönder
+        await conn.ExecuteAsync($"NOTIFY personel_bildirim, '{tetikleyenKullaniciId}|{mesaj}'");
+    }
+
     public async Task<Kullanici?> KullaniciGetirIdAsync(Guid id)
     {
         using var conn = CreateConnection();
@@ -92,7 +167,7 @@ public class DatabaseService
         using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        var sql = @"SELECT k.*, s.adi AS SantiyeAdi
+        var sql = @"SELECT k.*, s.adi AS SantiyeAdi, s.kod AS SantiyeKod
                     FROM kullanicilar k
                     LEFT JOIN santiyeler s ON k.santiye_id = s.id
                     WHERE k.aktif = true";
@@ -670,6 +745,15 @@ public class DatabaseService
             });
     }
 
+    public async Task<List<string>> AdminMailleriniGetirAsync()
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        var sql = "SELECT email FROM kullanicilar WHERE rol IN ('Admin', 'SuperAdmin') AND email IS NOT NULL";
+        var result = await conn.QueryAsync<string>(sql);
+        return result.ToList();
+    }
+
     public async Task SistemiSifirlaAsync(Guid superAdminId)
     {
         using var conn = CreateConnection();
@@ -745,32 +829,145 @@ public class DatabaseService
     
     public async Task StartListeningNotifications(Action<string, string> onNotificationReceived, CancellationToken cancellationToken)
     {
-        try
+        while (!cancellationToken.IsCancellationRequested)
         {
-            await using var conn = CreateConnection();
-            await conn.OpenAsync(cancellationToken);
-            
-            conn.Notification += (o, e) => 
+            try
             {
-                if (e.Channel == "personel_bildirim" && !string.IsNullOrEmpty(e.Payload))
+                await using var conn = CreateConnection();
+                await conn.OpenAsync(cancellationToken);
+                
+                conn.Notification += (o, e) => 
                 {
-                    var parts = e.Payload.Split('|', 2);
-                    if (parts.Length == 2)
+                    if (e.Channel == "personel_bildirim" && !string.IsNullOrEmpty(e.Payload))
                     {
-                        onNotificationReceived?.Invoke(parts[0], parts[1]);
+                        var parts = e.Payload.Split('|', 2);
+                        if (parts.Length == 2)
+                        {
+                            onNotificationReceived?.Invoke(parts[0], parts[1]);
+                        }
                     }
+                };
+                
+                await using var cmd = new NpgsqlCommand("LISTEN personel_bildirim;", conn);
+                await cmd.ExecuteNonQueryAsync(cancellationToken);
+                
+                // Bağlantı açık olduğu sürece bekle
+                while (!cancellationToken.IsCancellationRequested && conn.State == System.Data.ConnectionState.Open)
+                {
+                    await conn.WaitAsync(cancellationToken);
                 }
-            };
-            
-            await using var cmd = new NpgsqlCommand("LISTEN personel_bildirim;", conn);
-            await cmd.ExecuteNonQueryAsync(cancellationToken);
-            
-            while (!cancellationToken.IsCancellationRequested)
+            }
+            catch (OperationCanceledException) { break; }
+            catch (Exception ex)
             {
-                await conn.WaitAsync(cancellationToken);
+                // Bağlantı hatası durumunda 5 saniye bekle ve tekrar dene
+                System.Diagnostics.Debug.WriteLine($"Bildirim dinleyici hatası: {ex.Message}");
+                try { await Task.Delay(5000, cancellationToken); } catch { break; }
             }
         }
-        catch (OperationCanceledException) { }
-        catch { }
     }
+
+    #region Cihaz İşlemleri
+
+    public async Task<List<Cihaz>> CihazlariGetirAsync(CihazTuru? tur = null, Guid? santiyeId = null)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var sql = @"SELECT c.*, s.adi AS SantiyeAdi, s.kod AS SantiyeKod, c.not_text AS ""Not""
+                    FROM cihazlar c
+                    LEFT JOIN santiyeler s ON c.santiye_id = s.id
+                    WHERE 1=1";
+
+        if (tur.HasValue) sql += " AND c.tur = @Tur";
+        if (santiyeId.HasValue) sql += " AND c.santiye_id = @SantiyeId";
+
+        sql += " ORDER BY c.cihaz_adi";
+
+        var result = await conn.QueryAsync<Cihaz>(sql, new { Tur = (int?)tur, SantiyeId = santiyeId });
+        return result.ToList();
+    }
+
+    public async Task CihazEkleAsync(Cihaz cihaz)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        await conn.ExecuteAsync(@"
+            INSERT INTO cihazlar (id, seri_no, cihaz_adi, marka, model, sahip_firma, not_text, tur, santiye_id, durum, son_islem_tarihi)
+            VALUES (@Id, @SeriNo, @CihazAdi, @Marka, @Model, @SahipFirma, @Not, @Tur, @SantiyeId, @Durum, @SonIslemTarihi)",
+            cihaz);
+    }
+
+    public async Task CihazGuncelleAsync(Cihaz cihaz)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        await conn.ExecuteAsync(@"
+            UPDATE cihazlar SET 
+                seri_no = @SeriNo, cihaz_adi = @CihazAdi, marka = @Marka, model = @Model, 
+                sahip_firma = @SahipFirma, not_text = @Not, tur = @Tur, 
+                santiye_id = @SantiyeId, durum = @Durum, son_islem_tarihi = @SonIslemTarihi
+            WHERE id = @Id",
+            cihaz);
+    }
+
+    public async Task CihazSilAsync(Guid id)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await conn.ExecuteAsync("DELETE FROM cihazlar WHERE id = @Id", new { Id = id });
+        await conn.ExecuteAsync("DELETE FROM cihaz_hareketleri WHERE cihaz_id = @Id", new { Id = id });
+    }
+
+    public async Task CihazHareketKaydetAsync(CihazHareket hareket)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        using var trans = conn.BeginTransaction();
+
+        try
+        {
+            // Hareketi kaydet
+            await conn.ExecuteAsync(@"
+                INSERT INTO cihaz_hareketleri (id, cihaz_id, nereden_santiye_id, nereye_santiye_id, tarih, kullanici_id, aciklama, islem_turu)
+                VALUES (@Id, @CihazId, @NeredenSantiyeId, @NereyeSantiyeId, @Tarih, @KullaniciId, @Aciklama, @IslemTuru)",
+                hareket, trans);
+
+            // Cihazın durumunu ve konumunu güncelle
+            await conn.ExecuteAsync(@"
+                UPDATE cihazlar SET 
+                    santiye_id = @NereyeSantiyeId, 
+                    durum = @IslemTuru, 
+                    son_islem_tarihi = @Tarih
+                WHERE id = @CihazId",
+                new { hareket.NereyeSantiyeId, hareket.IslemTuru, hareket.Tarih, hareket.CihazId }, trans);
+
+            await trans.CommitAsync();
+        }
+        catch
+        {
+            await trans.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task<List<CihazHareket>> CihazGecmisiGetirAsync(Guid cihazId)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        return (await conn.QueryAsync<CihazHareket>(@"
+            SELECT h.*, s1.adi AS NeredenSantiyeAdi, s2.adi AS NereyeSantiyeAdi, k.kullanici_adi AS KullaniciAdi
+            FROM cihaz_hareketleri h
+            LEFT JOIN santiyeler s1 ON h.nereden_santiye_id = s1.id
+            LEFT JOIN santiyeler s2 ON h.nereye_santiye_id = s2.id
+            LEFT JOIN kullanicilar k ON h.kullanici_id = k.id
+            WHERE h.cihaz_id = @CihazId
+            ORDER BY h.tarih DESC",
+            new { CihazId = cihazId })).ToList();
+    }
+
+    #endregion
 }

@@ -30,7 +30,7 @@ public static class CredentialHelper
     [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     private static extern bool CredRead(string target, uint type, uint flags, out IntPtr credential);
 
-    [DllImport("advapi32.dll", SetLastError = true)]
+    [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     private static extern bool CredDelete(string target, uint type, uint flags);
 
     [DllImport("advapi32.dll", SetLastError = true)]

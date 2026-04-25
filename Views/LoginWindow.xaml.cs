@@ -75,6 +75,26 @@ public partial class LoginWindow : Window
         var mainWindow = new MainWindow();
         Application.Current.MainWindow = mainWindow;
         mainWindow.Show();
-        this.Hide();
+        this.Close(); // Hide yerine Close kullanarak pencereyi tamamen sonlandırıyoruz
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+        // Eğer açık olan başka "Ana" pencere yoksa uygulamayı tamamen kapat
+        bool hasOtherMainWindow = false;
+        foreach (Window window in Application.Current.Windows)
+        {
+            if (window is MainWindow || window is LoginWindow)
+            {
+                hasOtherMainWindow = true;
+                break;
+            }
+        }
+        
+        if (!hasOtherMainWindow)
+        {
+            Application.Current.Shutdown();
+        }
     }
 }

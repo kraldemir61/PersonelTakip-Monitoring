@@ -12,4 +12,5 @@ public class Kullanici
     public DateTime? SonGiris { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public string? SantiyeAdi { get; set; }
+    public string? SantiyeKod { get; set; }
 }

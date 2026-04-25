@@ -182,4 +182,160 @@ public class ExcelService
         headerRange.Style.Font.Bold = true;
         headerRange.Style.Fill.BackgroundColor = XLColor.LightBlue;
     }
+
+    #region Cihaz Excel İşlemleri
+
+    public void CihazTemplateIndir()
+    {
+        var saveFileDialog = new SaveFileDialog
+        {
+            Filter = "Excel Files (*.xlsx)|*.xlsx",
+            FileName = "Cihaz_Sablon.xlsx"
+        };
+
+        if (saveFileDialog.ShowDialog() == true)
+        {
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Cihazlar");
+                SetCihazTemplateHeaders(worksheet);
+                worksheet.Columns().AdjustToContents();
+                workbook.SaveAs(saveFileDialog.FileName);
+            }
+        }
+    }
+
+    public async Task<string> CihazlariDisariAktarAsync(List<Cihaz> cihazlar)
+    {
+        var saveFileDialog = new SaveFileDialog
+        {
+            Filter = "Excel Files (*.xlsx)|*.xlsx",
+            FileName = $"Cihaz_Listesi_{DateTime.Now:yyyyMMdd}.xlsx"
+        };
+
+        if (saveFileDialog.ShowDialog() == true)
+        {
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Cihazlar");
+                SetCihazHeaders(worksheet, true);
+
+                int row = 2;
+                foreach (var c in cihazlar)
+                {
+                    worksheet.Cell(row, 1).Value = c.Id.ToString();
+                    worksheet.Cell(row, 2).Value = c.SeriNo;
+                    worksheet.Cell(row, 3).Value = c.CihazAdi;
+                    worksheet.Cell(row, 4).Value = c.Marka;
+                    worksheet.Cell(row, 5).Value = c.Model;
+                    worksheet.Cell(row, 6).Value = c.SahipFirma;
+                    worksheet.Cell(row, 7).Value = c.SantiyeKod;
+                    worksheet.Cell(row, 8).Value = c.Not;
+                    row++;
+                }
+
+                worksheet.Columns().AdjustToContents();
+                workbook.SaveAs(saveFileDialog.FileName);
+                return saveFileDialog.FileName;
+            }
+        }
+        return string.Empty;
+    }
+
+    public async Task<(List<Cihaz> cihazlar, string error)> CihazExceldenOkuAsync(bool isUpdate)
+    {
+        var openFileDialog = new OpenFileDialog
+        {
+            Filter = "Excel Files (*.xlsx)|*.xlsx"
+        };
+
+        if (openFileDialog.ShowDialog() != true) return (new(), "Dosya seçilmedi.");
+
+        try
+        {
+            using (var workbook = new XLWorkbook(openFileDialog.FileName))
+            {
+                var worksheet = workbook.Worksheet(1);
+                var rows = worksheet.RangeUsed().RowsUsed().Skip(1);
+
+                var santiyeler = await _databaseService.SantiyeleriGetirAsync();
+                var list = new List<Cihaz>();
+
+                foreach (var row in rows)
+                {
+                    var c = new Cihaz { Tur = CihazTuru.Olcum, Durum = "Boşta", SonIslemTarihi = DateTime.Now };
+                    int startCol = 1;
+
+                    if (isUpdate)
+                    {
+                        var idStr = row.Cell(1).GetValue<string>();
+                        if (Guid.TryParse(idStr, out Guid id)) c.Id = id;
+                        else continue;
+                        startCol = 2;
+                    }
+                    else
+                    {
+                        c.Id = Guid.NewGuid();
+                    }
+
+                    c.SeriNo = row.Cell(startCol).GetValue<string>();
+                    if (string.IsNullOrWhiteSpace(c.SeriNo)) continue;
+
+                    c.CihazAdi = row.Cell(startCol + 1).GetValue<string>();
+                    c.Marka = row.Cell(startCol + 2).GetValue<string>();
+                    c.Model = row.Cell(startCol + 3).GetValue<string>();
+                    c.SahipFirma = row.Cell(startCol + 4).GetValue<string>();
+                    
+                    var santiyeKod = row.Cell(startCol + 5).GetValue<string>();
+                    var sId = santiyeler.FirstOrDefault(s => s.Kod.Equals(santiyeKod, StringComparison.OrdinalIgnoreCase))?.Id;
+                    c.SantiyeId = sId;
+                    if (sId.HasValue) c.Durum = "Şantiyede";
+
+                    c.Not = row.Cell(startCol + 6).GetValue<string>();
+
+                    list.Add(c);
+                }
+
+                return (list, string.Empty);
+            }
+        }
+        catch (Exception ex)
+        {
+            return (new(), ex.Message);
+        }
+    }
+
+    private void SetCihazHeaders(IXLWorksheet worksheet, bool includeId)
+    {
+        int col = 1;
+        if (includeId) worksheet.Cell(1, col++).Value = "ID (Güncelleme İçin)";
+        worksheet.Cell(1, col++).Value = "Seri No";
+        worksheet.Cell(1, col++).Value = "Cihaz Adı";
+        worksheet.Cell(1, col++).Value = "Marka";
+        worksheet.Cell(1, col++).Value = "Model";
+        worksheet.Cell(1, col++).Value = "Sahip Firma";
+        worksheet.Cell(1, col++).Value = "Şantiye Kodu";
+        worksheet.Cell(1, col++).Value = "Not";
+
+        var headerRange = worksheet.Range(1, 1, 1, col - 1);
+        headerRange.Style.Font.Bold = true;
+        headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
+    }
+
+    private void SetCihazTemplateHeaders(IXLWorksheet worksheet)
+    {
+        worksheet.Cell(1, 1).Value = "Seri No";
+        worksheet.Cell(1, 2).Value = "Cihaz Adı";
+        worksheet.Cell(1, 3).Value = "Marka";
+        worksheet.Cell(1, 4).Value = "Model";
+        worksheet.Cell(1, 5).Value = "Sahip Firma";
+        worksheet.Cell(1, 6).Value = "Şantiye Kodu";
+        worksheet.Cell(1, 7).Value = "Not";
+
+        var headerRange = worksheet.Range(1, 1, 1, 7);
+        headerRange.Style.Font.Bold = true;
+        headerRange.Style.Fill.BackgroundColor = XLColor.LightGreen;
+    }
+
+    #endregion
 }

@@ -90,4 +90,24 @@ public partial class MainWindow : Window
     {
         public int left, top, right, bottom;
     }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+        // Eğer açık olan başka "Ana" pencere yoksa uygulamayı tamamen kapat
+        bool hasOtherMainWindow = false;
+        foreach (Window window in Application.Current.Windows)
+        {
+            if (window is MainWindow || window is LoginWindow)
+            {
+                hasOtherMainWindow = true;
+                break;
+            }
+        }
+
+        if (!hasOtherMainWindow)
+        {
+            Application.Current.Shutdown();
+        }
+    }
 }
