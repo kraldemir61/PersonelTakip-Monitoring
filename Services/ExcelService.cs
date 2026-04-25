@@ -117,12 +117,15 @@ public class ExcelService
                     p.SantiyeId = santiyeler.FirstOrDefault(s => s.Kod.Equals(santiyeKod, StringComparison.OrdinalIgnoreCase))?.Id;
 
                     var bolumAdi = row.Cell(startCol + 2).GetValue<string>();
+                    p.BolumuDisplay = bolumAdi;
                     p.Bolumu = bolumler.FirstOrDefault(b => b.Adi.Equals(bolumAdi, StringComparison.OrdinalIgnoreCase))?.Id;
 
                     var gorevAdi = row.Cell(startCol + 3).GetValue<string>();
+                    p.GoreviDisplay = gorevAdi;
                     p.Gorevi = gorevler.FirstOrDefault(g => g.Adi.Equals(gorevAdi, StringComparison.OrdinalIgnoreCase))?.Id;
 
                     var uyrukAdi = row.Cell(startCol + 4).GetValue<string>();
+                    p.UyruguDisplay = uyrukAdi;
                     p.Uyrugu = uyruklar.FirstOrDefault(u => u.Adi.Equals(uyrukAdi, StringComparison.OrdinalIgnoreCase))?.Id;
 
                     var tarihStr = row.Cell(startCol + 5).GetValue<string>();
@@ -134,6 +137,7 @@ public class ExcelService
                     if (decimal.TryParse(maasVal, out decimal maas)) p.Maas = maas;
 
                     var pbAdi = row.Cell(startCol + 8).GetValue<string>();
+                    p.ParaBirimiDisplay = pbAdi;
                     p.ParaBirimi = paraBirimleri.FirstOrDefault(pb => pb.Adi.Equals(pbAdi, StringComparison.OrdinalIgnoreCase))?.Id;
 
                     list.Add(p);
@@ -335,6 +339,56 @@ public class ExcelService
         var headerRange = worksheet.Range(1, 1, 1, 7);
         headerRange.Style.Font.Bold = true;
         headerRange.Style.Fill.BackgroundColor = XLColor.LightGreen;
+    }
+
+    public async Task<string> CihazHareketleriDisariAktarAsync(List<CihazHareket> hareketler)
+    {
+        var saveFileDialog = new SaveFileDialog
+        {
+            Filter = "Excel Files (*.xlsx)|*.xlsx",
+            FileName = $"Cihaz_Hareketleri_{DateTime.Now:yyyyMMdd}.xlsx"
+        };
+
+        if (saveFileDialog.ShowDialog() == true)
+        {
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Hareketler");
+                
+                // Headers
+                worksheet.Cell(1, 1).Value = "Tarih";
+                worksheet.Cell(1, 2).Value = "Seri No";
+                worksheet.Cell(1, 3).Value = "Cihaz Adı";
+                worksheet.Cell(1, 4).Value = "İşlem Türü";
+                worksheet.Cell(1, 5).Value = "Nereden";
+                worksheet.Cell(1, 6).Value = "Nereye";
+                worksheet.Cell(1, 7).Value = "Açıklama";
+                worksheet.Cell(1, 8).Value = "İşlemi Yapan";
+
+                var headerRange = worksheet.Range(1, 1, 1, 8);
+                headerRange.Style.Font.Bold = true;
+                headerRange.Style.Fill.BackgroundColor = XLColor.LightBlue;
+
+                int row = 2;
+                foreach (var h in hareketler)
+                {
+                    worksheet.Cell(row, 1).Value = h.Tarih.ToString("dd.MM.yyyy HH:mm");
+                    worksheet.Cell(row, 2).Value = h.CihazSeriNo;
+                    worksheet.Cell(row, 3).Value = h.CihazAdi;
+                    worksheet.Cell(row, 4).Value = h.IslemTuru;
+                    worksheet.Cell(row, 5).Value = h.NeredenSantiyeAdi;
+                    worksheet.Cell(row, 6).Value = h.NereyeSantiyeAdi;
+                    worksheet.Cell(row, 7).Value = h.Aciklama;
+                    worksheet.Cell(row, 8).Value = h.KullaniciAdi;
+                    row++;
+                }
+
+                worksheet.Columns().AdjustToContents();
+                workbook.SaveAs(saveFileDialog.FileName);
+                return saveFileDialog.FileName;
+            }
+        }
+        return string.Empty;
     }
 
     #endregion

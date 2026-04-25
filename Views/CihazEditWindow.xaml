@@ -22,16 +22,24 @@
                 <TextBox Text="{Binding SeriNo, UpdateSourceTrigger=PropertyChanged}" Height="35" VerticalContentAlignment="Center" Padding="10,0" Margin="0,0,0,15"/>
 
                 <TextBlock Text="Cihaz Adı" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
-                <TextBox Text="{Binding CihazAdi, UpdateSourceTrigger=PropertyChanged}" Height="35" VerticalContentAlignment="Center" Padding="10,0" Margin="0,0,0,15"/>
+                <ComboBox Text="{Binding CihazAdi, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding CihazAdlari}" 
+                          DisplayMemberPath="Adi" SelectedValuePath="Adi" IsEditable="True"
+                          Height="35" VerticalContentAlignment="Center" Margin="0,0,0,15"/>
 
                 <TextBlock Text="Markası" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
-                <TextBox Text="{Binding Marka, UpdateSourceTrigger=PropertyChanged}" Height="35" VerticalContentAlignment="Center" Padding="10,0" Margin="0,0,0,15"/>
+                <ComboBox Text="{Binding Marka, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Markalar}" 
+                          DisplayMemberPath="Adi" SelectedValuePath="Adi" IsEditable="True"
+                          Height="35" VerticalContentAlignment="Center" Margin="0,0,0,15"/>
 
                 <TextBlock Text="Modeli" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
-                <TextBox Text="{Binding Model, UpdateSourceTrigger=PropertyChanged}" Height="35" VerticalContentAlignment="Center" Padding="10,0" Margin="0,0,0,15"/>
+                <ComboBox Text="{Binding Model, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Modeller}" 
+                          DisplayMemberPath="Adi" SelectedValuePath="Adi" IsEditable="True"
+                          Height="35" VerticalContentAlignment="Center" Margin="0,0,0,15"/>
 
                 <TextBlock Text="Sahip Firma" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
-                <TextBox Text="{Binding SahipFirma, UpdateSourceTrigger=PropertyChanged}" Height="35" VerticalContentAlignment="Center" Padding="10,0" Margin="0,0,0,15"/>
+                <ComboBox Text="{Binding SahipFirma, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Firmalar}" 
+                          DisplayMemberPath="Adi" SelectedValuePath="Adi" IsEditable="True" IsEnabled="{Binding IsSuperAdmin}"
+                          Height="35" VerticalContentAlignment="Center" Margin="0,0,0,15"/>
 
                 <TextBlock Text="Bulunduğu Yer (Şantiye)" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
                 <ComboBox ItemsSource="{Binding SantiyeList}" SelectedValue="{Binding SantiyeId}" 

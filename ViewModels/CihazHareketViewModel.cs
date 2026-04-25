@@ -28,10 +28,13 @@ namespace PersonelTakip.ViewModels
         private string _islemTuru; // Transfer, Arıza, Bakım, Kalibrasyon
 
         [ObservableProperty]
-        private ObservableCollection<string> _islemTurleri = new() { "Transfer", "Arıza", "Bakım", "Kalibrasyon", "Şantiyeye Sevk" };
+        private ObservableCollection<string> _islemTurleri = new() { "Transfer", "Arıza", "Bakım", "Kalibrasyon", "Şantiyeye Sevk", "Diğer" };
 
         [ObservableProperty]
         private string _aciklama;
+
+        [ObservableProperty]
+        private bool _isSuperAdmin;
 
         public CihazHareketViewModel(DatabaseService databaseService, Kullanici currentUser, Cihaz cihaz)
         {
@@ -47,6 +50,27 @@ namespace PersonelTakip.ViewModels
         [RelayCommand]
         private async Task KaydetAsync(Window window)
         {
+            if (IslemTuru == "Diğer" && string.IsNullOrWhiteSpace(Aciklama))
+            {
+                MessageBox.Show("'Diğer' işlem türü seçildiğinde açıklama yazılması zorunludur.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Güvenlik Kontrolü: Süper admin değilse
+            if (!IsSuperAdmin)
+            {
+                // Boştaki cihazı çekiyorsa, sadece kendi şantiyesine çekebilir
+                if (_cihaz.SantiyeId == null)
+                {
+                    if (NereyeSantiyeId != _currentUser.SantiyeId)
+                    {
+                        MessageBox.Show("Boştaki bir cihazı sadece kendi şantiyenize çekebilirsiniz.");
+                        return;
+                    }
+                    IslemTuru = "Şantiyeye Sevk";
+                }
+            }
+
             var hareket = new CihazHareket
             {
                 Id = Guid.NewGuid(),

@@ -88,6 +88,26 @@ public class DatabaseService
                     son_islem_tarihi TIMESTAMP
                 );
 
+                CREATE TABLE IF NOT EXISTS cihaz_adlari (
+                    id SERIAL PRIMARY KEY,
+                    adi VARCHAR(100) NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS cihaz_markalari (
+                    id SERIAL PRIMARY KEY,
+                    adi VARCHAR(100) NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS cihaz_modelleri (
+                    id SERIAL PRIMARY KEY,
+                    adi VARCHAR(100) NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS cihaz_firmalari (
+                    id SERIAL PRIMARY KEY,
+                    adi VARCHAR(100) NOT NULL
+                );
+
                 CREATE TABLE IF NOT EXISTS cihaz_hareketleri (
                     id UUID PRIMARY KEY,
                     cihaz_id UUID NOT NULL,
@@ -162,6 +182,13 @@ public class DatabaseService
               WHERE k.id = @Id", new { Id = id });
     }
 
+    public async Task ExecuteSqlAsync(string sql)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await conn.ExecuteAsync(sql);
+    }
+
     public async Task<List<Kullanici>> KullanicilariGetirAsync(Guid? santiyeId = null, string? rol = null)
     {
         using var conn = CreateConnection();
@@ -195,9 +222,9 @@ public class DatabaseService
         if (kullanici.SantiyeId.HasValue)
         {
             var sayi = await GetSantiyeKullaniciSayisiAsync(kullanici.SantiyeId.Value);
-            if (sayi >= 2)
+            if (sayi >= 1)
             {
-                throw new InvalidOperationException("Bu şantiyede zaten 2 kullanıcı mevcut. Daha fazla kullanıcı eklenemez.");
+                throw new InvalidOperationException("Bu şantiyeye atanmış bir kullanıcı zaten mevcut. Her şantiye için sadece tek bir kullanıcı tanımlanabilir.");
             }
         }
 
@@ -231,9 +258,9 @@ public class DatabaseService
         if (kullanici.SantiyeId.HasValue)
         {
             var sayi = await GetSantiyeKullaniciSayisiAsync(kullanici.SantiyeId.Value, kullanici.Id);
-            if (sayi >= 2)
+            if (sayi >= 1)
             {
-                throw new InvalidOperationException("Bu şantiyede zaten 2 kullanıcı mevcut. Kullanıcı bu şantiyeye atanamaz.");
+                throw new InvalidOperationException("Bu şantiyeye atanmış bir kullanıcı zaten mevcut. Kullanıcı bu şantiyeye atanamaz.");
             }
         }
 
@@ -959,14 +986,43 @@ public class DatabaseService
         await conn.OpenAsync();
 
         return (await conn.QueryAsync<CihazHareket>(@"
-            SELECT h.*, s1.adi AS NeredenSantiyeAdi, s2.adi AS NereyeSantiyeAdi, k.kullanici_adi AS KullaniciAdi
+            SELECT h.*, s1.adi AS NeredenSantiyeAdi, s2.adi AS NereyeSantiyeAdi, 
+                   s1.kod AS NeredenSantiyeKod, s2.kod AS NereyeSantiyeKod,
+                   k.kullanici_adi AS KullaniciAdi,
+                   c.seri_no AS CihazSeriNo, c.cihaz_adi AS CihazAdi
             FROM cihaz_hareketleri h
             LEFT JOIN santiyeler s1 ON h.nereden_santiye_id = s1.id
             LEFT JOIN santiyeler s2 ON h.nereye_santiye_id = s2.id
             LEFT JOIN kullanicilar k ON h.kullanici_id = k.id
+            LEFT JOIN cihazlar c ON h.cihaz_id = c.id
             WHERE h.cihaz_id = @CihazId
             ORDER BY h.tarih DESC",
             new { CihazId = cihazId })).ToList();
+    }
+
+    public async Task<List<CihazHareket>> TumCihazHareketleriniGetirAsync()
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        return (await conn.QueryAsync<CihazHareket>(@"
+            SELECT h.*, s1.adi AS NeredenSantiyeAdi, s2.adi AS NereyeSantiyeAdi, 
+                   s1.kod AS NeredenSantiyeKod, s2.kod AS NereyeSantiyeKod,
+                   k.kullanici_adi AS KullaniciAdi,
+                   c.seri_no AS CihazSeriNo, c.cihaz_adi AS CihazAdi, c.marka AS CihazMarka, c.model AS CihazModel
+            FROM cihaz_hareketleri h
+            LEFT JOIN santiyeler s1 ON h.nereden_santiye_id = s1.id
+            LEFT JOIN santiyeler s2 ON h.nereye_santiye_id = s2.id
+            LEFT JOIN kullanicilar k ON h.kullanici_id = k.id
+            LEFT JOIN cihazlar c ON h.cihaz_id = c.id
+            ORDER BY h.tarih DESC")).ToList();
+    }
+
+    public async Task SantiyeAktiflestirAsync(Guid id)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await conn.ExecuteAsync("UPDATE santiyeler SET aktif = true WHERE id = @Id", new { Id = id });
     }
 
     #endregion

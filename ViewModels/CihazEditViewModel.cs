@@ -44,7 +44,19 @@ namespace PersonelTakip.ViewModels
         private Guid? _santiyeId;
 
         [ObservableProperty]
-        private ObservableCollection<Santiye> _santiyeList;
+        private ObservableCollection<Santiye> _santiyeList = new();
+
+        [ObservableProperty]
+        private ObservableCollection<LookupItem> _cihazAdlari = new();
+        [ObservableProperty]
+        private ObservableCollection<LookupItem> _markalar = new();
+        [ObservableProperty]
+        private ObservableCollection<LookupItem> _modeller = new();
+        [ObservableProperty]
+        private ObservableCollection<LookupItem> _firmalar = new();
+ 
+        [ObservableProperty]
+        private bool _isSuperAdmin;
 
         public CihazEditViewModel(DatabaseService databaseService, CihazTuru tur, Cihaz? cihaz = null)
         {
@@ -65,6 +77,25 @@ namespace PersonelTakip.ViewModels
                 Not = _cihaz.Not;
                 SantiyeId = _cihaz.SantiyeId;
             }
+
+            _ = LoadLookupsAsync();
+        }
+
+        private async Task LoadLookupsAsync()
+        {
+            try
+            {
+                var adlar = await _databaseService.LookupGetirAsync("cihaz_adlari");
+                var markalar = await _databaseService.LookupGetirAsync("cihaz_markalari");
+                var modeller = await _databaseService.LookupGetirAsync("cihaz_modelleri");
+                var firmalar = await _databaseService.LookupGetirAsync("cihaz_firmalari");
+
+                CihazAdlari = new ObservableCollection<LookupItem>(adlar);
+                Markalar = new ObservableCollection<LookupItem>(markalar);
+                Modeller = new ObservableCollection<LookupItem>(modeller);
+                Firmalar = new ObservableCollection<LookupItem>(firmalar);
+            }
+            catch { /* Hata yönetimi gerekebilir */ }
         }
 
         [RelayCommand]

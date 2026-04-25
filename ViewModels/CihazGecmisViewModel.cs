@@ -7,6 +7,10 @@ using CommunityToolkit.Mvvm.Input;
 using PersonelTakip.Models;
 using PersonelTakip.Services;
 
+using System.ComponentModel;
+using System.Linq;
+using System.Windows.Data;
+
 namespace PersonelTakip.ViewModels
 {
     public partial class CihazGecmisViewModel : BaseViewModel
@@ -20,12 +24,20 @@ namespace PersonelTakip.ViewModels
         [ObservableProperty]
         private ObservableCollection<CihazHareket> _hareketler = new();
 
+        public ICollectionView HareketlerView { get; private set; }
+
+        [ObservableProperty]
+        private string? _searchText = string.Empty;
+
         public CihazGecmisViewModel(DatabaseService databaseService, Cihaz cihaz)
         {
             _databaseService = databaseService;
             _cihaz = cihaz;
             CihazBilgi = $"{cihaz.SeriNo} - {cihaz.CihazAdi} ({cihaz.Marka} {cihaz.Model})";
             
+            HareketlerView = CollectionViewSource.GetDefaultView(Hareketler);
+            HareketlerView.Filter = FilterHareketler;
+
             _ = LoadGecmisAsync();
         }
 
@@ -43,10 +55,28 @@ namespace PersonelTakip.ViewModels
             }
         }
 
+        partial void OnSearchTextChanged(string? value)
+        {
+            HareketlerView.Refresh();
+        }
+
+        private bool FilterHareketler(object obj)
+        {
+            if (obj is not CihazHareket h) return false;
+            if (string.IsNullOrWhiteSpace(SearchText)) return true;
+
+            string search = SearchText.ToLower();
+            string[] terms = search.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+            string content = $"{(h.IslemTuru ?? "")} {(h.NeredenSantiyeAdi ?? "")} {(h.NereyeSantiyeAdi ?? "")} {(h.Aciklama ?? "")} {(h.KullaniciAdi ?? "")}".ToLower();
+
+            return terms.All(term => content.Contains(term));
+        }
+
         [RelayCommand]
         private void Kapat(Window window)
         {
-            window.Close();
+            window?.Close();
         }
     }
 }

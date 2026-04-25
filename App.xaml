@@ -8,6 +8,7 @@
             <helpers:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
             <converters:InverseBoolToFontWeightConverter x:Key="InverseBoolToFontWeightConverter"/>
             <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
+            <converters:IntToVisibilityConverter x:Key="IntToVisibilityConverter"/>
             
             <Style x:Key="ModernWindowStyle" TargetType="Window">
                 <Setter Property="WindowStyle" Value="None"/>

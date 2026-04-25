@@ -14,9 +14,15 @@ namespace PersonelTakip.Models
         public string IslemTuru { get; set; } // Transfer, Arıza, Bakım, Kalibrasyon, Giriş
 
         // Display Properties
-        public string CihazBilgi { get; set; }
-        public string NeredenSantiyeAdi { get; set; }
-        public string NereyeSantiyeAdi { get; set; }
-        public string KullaniciAdi { get; set; }
+        public string? CihazSeriNo { get; set; }
+        public string? CihazAdi { get; set; }
+        public string? CihazMarka { get; set; }
+        public string? CihazModel { get; set; }
+        public string? CihazBilgi { get; set; }
+        public string? NeredenSantiyeAdi { get; set; }
+        public string? NereyeSantiyeAdi { get; set; }
+        public string? NeredenSantiyeKod { get; set; }
+        public string? NereyeSantiyeKod { get; set; }
+        public string? KullaniciAdi { get; set; }
     }
 }

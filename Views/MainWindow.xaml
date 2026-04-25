@@ -99,8 +99,9 @@
                 <Style TargetType="DataGridCell">
                     <Setter Property="BorderThickness" Value="0"/>
                     <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-                    <Setter Property="Padding" Value="10,0"/>
+                    <Setter Property="Padding" Value="15,0"/>
                     <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Left"/>
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate TargetType="DataGridCell">
@@ -110,6 +111,7 @@
                                         SnapsToDevicePixels="True">
                                     <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" 
                                                       VerticalAlignment="Center"
+                                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                                       Margin="{TemplateBinding Padding}"/>
                                 </Border>
                             </ControlTemplate>
@@ -253,7 +255,6 @@
                             </Popup>
                         </Grid>
 
-                        <Button Content="Excel'e Aktar" Width="90" Height="24" FontSize="11" Padding="0" Command="{Binding ExportExcelCommand}" Margin="0,0,8,0" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" WindowChrome.IsHitTestVisibleInChrome="True"/>
                         <Button Content="Şifre Değiştir" Width="90" Height="24" FontSize="11" Padding="0" Command="{Binding ParolaDegistirCommand}" Margin="0,0,8,0" Background="#FF5D0BF5" Foreground="White" Style="{StaticResource HeaderButton}" WindowChrome.IsHitTestVisibleInChrome="True"/>
                     </StackPanel>
                 </StackPanel>
@@ -354,7 +355,8 @@
                                 <StackPanel Grid.Column="0" Orientation="Horizontal">
                                     <Button Content="Ekle" Command="{Binding YeniPersonelCommand}" Width="100" Height="40" Background="#3B82F6" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                                     <Button Content="Düzenle" Command="{Binding DuzenlePersonelCommand}" Width="100" Height="40" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
-                                    <Button Content="Sil" Command="{Binding SilPersonelCommand}" Width="60" Height="40" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
+                                    <Button Content="Sil" Command="{Binding SilPersonelCommand}" Width="60" Height="40" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                                    <Button Content="Excel'e Aktar" Command="{Binding ExportExcelCommand}" Width="110" Height="40" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}"/>
                                 </StackPanel>
                                 <Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="White" BorderBrush="#E5E7EB" BorderThickness="1" Height="40">
                                     <Grid>
@@ -667,7 +669,9 @@
                                         <StackPanel Grid.Column="0" Orientation="Horizontal">
                                             <Button Content="Ekle" Command="{Binding YeniSantiyeCommand}" Width="100" Height="40" Background="#3B82F6" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                                             <Button Content="Düzenle" Command="{Binding DuzenleSantiyeCommand}" Width="100" Height="40" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
-                                            <Button Content="Sil" Command="{Binding SilSantiyeCommand}" Width="60" Height="40" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
+                                            <Button Content="Sil" Command="{Binding SilSantiyeCommand}" Width="60" Height="40" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                                            <Button Content="Silinenleri Yönet" Command="{Binding OpenPasifSantiyelerCommand}" Width="130" Height="40" Background="#6B7280" Foreground="White" Style="{StaticResource HeaderButton}"
+                                                    Visibility="{Binding IsSuperAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
                                         </StackPanel>
                                         <Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="White" BorderBrush="#E5E7EB" BorderThickness="1" Height="40">
                                             <Grid>
@@ -967,7 +971,8 @@
                                             <Button Content="Düzenle" Command="{Binding DuzenleOlcumCihaziCommand}" Width="100" Height="40" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                                             <Button Content="Transfer / Hareket" Command="{Binding OlcumCihaziHareketCommand}" Width="140" Height="40" Background="#3B82F6" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                                             <Button Content="Geçmiş" Command="{Binding OlcumCihaziGecmisCommand}" Width="80" Height="40" Background="#6B7280" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
-                                            <Button Content="Sil" Command="{Binding SilOlcumCihaziCommand}" Width="60" Height="40" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
+                                            <Button Content="Sil" Command="{Binding SilOlcumCihaziCommand}" Width="60" Height="40" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"
+                                                    Visibility="{Binding IsSuperAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
                                         </StackPanel>
                                         <Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="White" BorderBrush="#E5E7EB" BorderThickness="1" Height="40">
                                             <Grid>
@@ -1046,6 +1051,114 @@
                                 </Grid>
                             </Border>
                         </TabItem>
+
+                        <!-- CİHAZ TANIMLAMALARI -->
+                        <TabItem Header="Cihaz Tanımlamalar" Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <Border Background="White" CornerRadius="0,12,12,12" Padding="20">
+                                <TabControl Background="Transparent" BorderThickness="0" Margin="0">
+                                    <TabControl.Resources>
+                                        <Style TargetType="TabItem">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="TabItem">
+                                                        <Border x:Name="TabBorder" Background="#F1F5F9" Padding="15,6" CornerRadius="4" Margin="0,0,5,0">
+                                                            <ContentPresenter x:Name="ContentSite" ContentSource="Header"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsSelected" Value="True">
+                                                                <Setter TargetName="TabBorder" Property="Background" Value="#3B82F6"/>
+                                                                <Setter Property="Foreground" Value="White"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                            <Setter Property="Foreground" Value="#475569"/>
+                                        </Style>
+                                    </TabControl.Resources>
+
+                                    <!-- Cihaz Adı -->
+                                    <TabItem Header="Cihaz Adı">
+                                        <Grid Margin="0,15,0,0">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+                                            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
+                                                <Button Content="Yeni Ekle" Command="{Binding YeniCihazAdCommand}" Width="100" Height="35" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                                                <Button Content="Düzenle" Command="{Binding DuzenleCihazAdCommand}" Width="100" Height="35" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                                                <Button Content="Sil" Command="{Binding SilCihazAdCommand}" Width="60" Height="35" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
+                                            </StackPanel>
+                                            <DataGrid Grid.Row="1" ItemsSource="{Binding CihazAdlariView}" SelectedItem="{Binding SelectedCihazAd}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" BorderThickness="1" BorderBrush="#E5E7EB">
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn Header="Cihaz Adı" Binding="{Binding Adi}" Width="*"/>
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+                                        </Grid>
+                                    </TabItem>
+
+                                    <!-- Marka -->
+                                    <TabItem Header="Marka">
+                                        <Grid Margin="0,15,0,0">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+                                            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
+                                                <Button Content="Yeni Ekle" Command="{Binding YeniMarkaCommand}" Width="100" Height="35" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                                                <Button Content="Düzenle" Command="{Binding DuzenleMarkaCommand}" Width="100" Height="35" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                                                <Button Content="Sil" Command="{Binding SilMarkaCommand}" Width="60" Height="35" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
+                                            </StackPanel>
+                                            <DataGrid Grid.Row="1" ItemsSource="{Binding MarkalarView}" SelectedItem="{Binding SelectedMarka}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" BorderThickness="1" BorderBrush="#E5E7EB">
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn Header="Marka" Binding="{Binding Adi}" Width="*"/>
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+                                        </Grid>
+                                    </TabItem>
+
+                                    <!-- Model -->
+                                    <TabItem Header="Model">
+                                        <Grid Margin="0,15,0,0">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+                                            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
+                                                <Button Content="Yeni Ekle" Command="{Binding YeniModelCommand}" Width="100" Height="35" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                                                <Button Content="Düzenle" Command="{Binding DuzenleModelCommand}" Width="100" Height="35" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                                                <Button Content="Sil" Command="{Binding SilModelCommand}" Width="60" Height="35" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
+                                            </StackPanel>
+                                            <DataGrid Grid.Row="1" ItemsSource="{Binding ModellerView}" SelectedItem="{Binding SelectedModel}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" BorderThickness="1" BorderBrush="#E5E7EB">
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn Header="Model" Binding="{Binding Adi}" Width="*"/>
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+                                        </Grid>
+                                    </TabItem>
+
+                                    <!-- Firma -->
+                                    <TabItem Header="Firma">
+                                        <Grid Margin="0,15,0,0">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+                                            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
+                                                <Button Content="Yeni Ekle" Command="{Binding YeniFirmaCommand}" Width="100" Height="35" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                                                <Button Content="Düzenle" Command="{Binding DuzenleFirmaCommand}" Width="100" Height="35" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                                                <Button Content="Sil" Command="{Binding SilFirmaCommand}" Width="60" Height="35" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
+                                            </StackPanel>
+                                            <DataGrid Grid.Row="1" ItemsSource="{Binding FirmalarView}" SelectedItem="{Binding SelectedFirma}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" BorderThickness="1" BorderBrush="#E5E7EB">
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn Header="Firma" Binding="{Binding Adi}" Width="*"/>
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+                                        </Grid>
+                                    </TabItem>
+                                </TabControl>
+                            </Border>
+                        </TabItem>
                     </TabControl>
                 </TabItem>
 
@@ -1096,6 +1209,17 @@
                                             <Button Grid.Column="2" Content="📤 Verileri İndir" Command="{Binding ExcelCihazDisariAktarCommand}" Height="40" Background="#6366F1" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                                             <Button Grid.Column="3" Content="🔄 Toplu Güncelle" Command="{Binding ExcelCihazTopluGuncelleCommand}" Height="40" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}"/>
                                         </Grid>
+                                    </StackPanel>
+                                </Border>
+                                <!-- SİSTEM SIFIRLAMA -->
+                                <Border Background="#FEF2F2" BorderBrush="#FEE2E2" BorderThickness="1" CornerRadius="12" Padding="20" Margin="0,30,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="Sistem Sıfırlama" FontSize="18" FontWeight="Bold" Foreground="#991B1B" Margin="0,0,0,10"/>
+                                        <TextBlock Text="DİKKAT: Bu işlem tüm personel, cihaz ve hareket geçmişi verilerini kalıcı olarak siler. Tanımlamalar korunur." 
+                                                   FontSize="13" Foreground="#B91C1C" Margin="0,0,0,20"/>
+                                        <Button Content="⚠️ VERİTABANINI TEMİZLE" Command="{Binding ResetDatabaseCommand}" 
+                                                Height="45" Width="250" Background="#EF4444" Foreground="White" 
+                                                Style="{StaticResource HeaderButton}" HorizontalAlignment="Left"/>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>

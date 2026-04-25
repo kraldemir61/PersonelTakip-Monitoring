@@ -125,7 +125,21 @@ public partial class MainViewModel : BaseViewModel
         {
             if (SetProperty(ref _selectedTabIndex, value))
             {
+                // Tüm filtreleri temizle
                 SearchText = string.Empty;
+                SelectedFilterSantiye = null;
+                SelectedKullaniciFilterSantiye = null;
+
+                // Tüm görünümleri tazele
+                PersonellerView?.Refresh();
+                KullanicilarView?.Refresh();
+                SantiyeListView?.Refresh();
+                BolumlerView?.Refresh();
+                GorevlerView?.Refresh();
+                UyruklarView?.Refresh();
+                ParaBirimleriView?.Refresh();
+                OlcumCihazlariView?.Refresh();
+                OfisCihazlariView?.Refresh();
             }
         }
     }
@@ -169,6 +183,31 @@ public partial class MainViewModel : BaseViewModel
     private Cihaz? _selectedOfisCihazi;
 
     public ICollectionView OfisCihazlariView { get; private set; }
+
+    // Cihaz Tanımlamalar
+    [ObservableProperty]
+    private ObservableCollection<LookupItem> _cihazAdlari = new();
+    [ObservableProperty]
+    private LookupItem? _selectedCihazAd;
+    public ICollectionView CihazAdlariView { get; private set; }
+
+    [ObservableProperty]
+    private ObservableCollection<LookupItem> _markalar = new();
+    [ObservableProperty]
+    private LookupItem? _selectedMarka;
+    public ICollectionView MarkalarView { get; private set; }
+
+    [ObservableProperty]
+    private ObservableCollection<LookupItem> _modeller = new();
+    [ObservableProperty]
+    private LookupItem? _selectedModel;
+    public ICollectionView ModellerView { get; private set; }
+
+    [ObservableProperty]
+    private ObservableCollection<LookupItem> _firmalar = new();
+    [ObservableProperty]
+    private LookupItem? _selectedFirma;
+    public ICollectionView FirmalarView { get; private set; }
 
     [RelayCommand]
     private void SantiyeFiltrele(string? santiyeKod)
@@ -232,6 +271,10 @@ public partial class MainViewModel : BaseViewModel
         ParaBirimleriView?.Refresh();
         OlcumCihazlariView?.Refresh();
         OfisCihazlariView?.Refresh();
+        CihazAdlariView?.Refresh();
+        MarkalarView?.Refresh();
+        ModellerView?.Refresh();
+        FirmalarView?.Refresh();
         
         CalculateDashboardStats();
     }
@@ -247,10 +290,10 @@ public partial class MainViewModel : BaseViewModel
         // 'Admin' kullanıcı adına sahip olan kişi Süper Admin kabul edilir (büyük/küçük harf duyarsız)
         IsSuperAdmin = IsAdmin && CurrentUser?.KullaniciAdi?.Equals("Admin", StringComparison.OrdinalIgnoreCase) == true;
 
-        OlcumCihazlariView = CollectionViewSource.GetDefaultView(OlcumCihazlari);
+        OlcumCihazlariView = new ListCollectionView(OlcumCihazlari);
         OlcumCihazlariView.Filter = FilterOlcumCihazlari;
 
-        OfisCihazlariView = CollectionViewSource.GetDefaultView(OfisCihazlari);
+        OfisCihazlariView = new ListCollectionView(OfisCihazlari);
         OfisCihazlariView.Filter = FilterOfisCihazlari;
 
         LoadAllDataAsync().ConfigureAwait(false);
@@ -398,7 +441,7 @@ public partial class MainViewModel : BaseViewModel
             var liste = await _databaseService.PersonelleriGetirAsync(santiyeId);
             Personeller = new ObservableCollection<Personel>(liste);
             
-            PersonellerView = CollectionViewSource.GetDefaultView(Personeller);
+            PersonellerView = new ListCollectionView(Personeller);
             PersonellerView.Filter = (obj) =>
             {
                 if (obj is not Personel p) return false;
@@ -471,7 +514,7 @@ public partial class MainViewModel : BaseViewModel
             var liste = await _databaseService.KullanicilariGetirAsync();
             Kullanicilar = new ObservableCollection<Kullanici>(liste);
 
-            KullanicilarView = CollectionViewSource.GetDefaultView(Kullanicilar);
+            KullanicilarView = new ListCollectionView(Kullanicilar);
             KullanicilarView.Filter = (obj) =>
             {
                 if (obj is not Kullanici k) return false;
@@ -502,10 +545,10 @@ public partial class MainViewModel : BaseViewModel
         IsBusy = true;
         try
         {
-            var liste = await _databaseService.SantiyeleriGetirAsync();
+            var liste = await _databaseService.SantiyeleriGetirAsync(true);
             SantiyeList = new ObservableCollection<Santiye>(liste);
 
-            SantiyeListView = CollectionViewSource.GetDefaultView(SantiyeList);
+            SantiyeListView = new ListCollectionView(SantiyeList);
             SantiyeListView.Filter = (obj) =>
             {
                 if (obj is not Santiye s) return false;
@@ -542,22 +585,43 @@ public partial class MainViewModel : BaseViewModel
             Uyruklar = new ObservableCollection<LookupItem>(uyruklar);
             ParaBirimleri = new ObservableCollection<LookupItem>(paraBirimleri);
 
-            BolumlerView = CollectionViewSource.GetDefaultView(Bolumler);
-            BolumlerView.Filter = (obj) => obj is LookupItem l && StringHelper.SmartSearch(l.Adi, SearchText);
+            CihazAdlari = new ObservableCollection<LookupItem>(await _databaseService.LookupGetirAsync("cihaz_adlari"));
+            Markalar = new ObservableCollection<LookupItem>(await _databaseService.LookupGetirAsync("cihaz_markalari"));
+            Modeller = new ObservableCollection<LookupItem>(await _databaseService.LookupGetirAsync("cihaz_modelleri"));
+            Firmalar = new ObservableCollection<LookupItem>(await _databaseService.LookupGetirAsync("cihaz_firmalari"));
+
+            BolumlerView = new ListCollectionView(Bolumler);
+            BolumlerView.Filter = (obj) => StringHelper.SmartSearch(((LookupItem)obj).Adi, SearchText);
             
-            GorevlerView = CollectionViewSource.GetDefaultView(Gorevler);
-            GorevlerView.Filter = (obj) => obj is LookupItem l && StringHelper.SmartSearch(l.Adi, SearchText);
+            GorevlerView = new ListCollectionView(Gorevler);
+            GorevlerView.Filter = (obj) => StringHelper.SmartSearch(((LookupItem)obj).Adi, SearchText);
             
-            UyruklarView = CollectionViewSource.GetDefaultView(Uyruklar);
-            UyruklarView.Filter = (obj) => obj is LookupItem l && StringHelper.SmartSearch(l.Adi, SearchText);
+            UyruklarView = new ListCollectionView(Uyruklar);
+            UyruklarView.Filter = (obj) => StringHelper.SmartSearch(((LookupItem)obj).Adi, SearchText);
             
-            ParaBirimleriView = CollectionViewSource.GetDefaultView(ParaBirimleri);
-            ParaBirimleriView.Filter = (obj) => obj is LookupItem l && StringHelper.SmartSearch(l.Adi, SearchText);
+            ParaBirimleriView = new ListCollectionView(ParaBirimleri);
+            ParaBirimleriView.Filter = (obj) => StringHelper.SmartSearch(((LookupItem)obj).Adi, SearchText);
+
+            CihazAdlariView = new ListCollectionView(CihazAdlari);
+            CihazAdlariView.Filter = (obj) => StringHelper.SmartSearch(((LookupItem)obj).Adi, SearchText);
+
+            MarkalarView = new ListCollectionView(Markalar);
+            MarkalarView.Filter = (obj) => StringHelper.SmartSearch(((LookupItem)obj).Adi, SearchText);
+
+            ModellerView = new ListCollectionView(Modeller);
+            ModellerView.Filter = (obj) => StringHelper.SmartSearch(((LookupItem)obj).Adi, SearchText);
+
+            FirmalarView = new ListCollectionView(Firmalar);
+            FirmalarView.Filter = (obj) => StringHelper.SmartSearch(((LookupItem)obj).Adi, SearchText);
 
             OnPropertyChanged(nameof(BolumlerView));
             OnPropertyChanged(nameof(GorevlerView));
             OnPropertyChanged(nameof(UyruklarView));
             OnPropertyChanged(nameof(ParaBirimleriView));
+            OnPropertyChanged(nameof(CihazAdlariView));
+            OnPropertyChanged(nameof(MarkalarView));
+            OnPropertyChanged(nameof(ModellerView));
+            OnPropertyChanged(nameof(FirmalarView));
         }
         catch (Exception ex)
         {
@@ -642,6 +706,15 @@ public partial class MainViewModel : BaseViewModel
     private bool FilterOlcumCihazlari(object obj)
     {
         if (obj is not Cihaz c) return false;
+
+        // Süper admin ve admin her şeyi görür, normal kullanıcılar sadece kendi şantiyesini ve boştakileri görür
+        if (!IsAdmin)
+        {
+            bool isIdle = c.SantiyeId == null;
+            bool isMySantiye = c.SantiyeId != null && c.SantiyeId == CurrentUser?.SantiyeId;
+            if (!isIdle && !isMySantiye) return false;
+        }
+
         if (string.IsNullOrWhiteSpace(SearchText)) return true;
 
         var combined = $"{c.CihazAdi} {c.SeriNo} {c.Marka} {c.Model} {c.SantiyeKod} {c.SantiyeAdi} {c.SahipFirma} {c.Durum} {c.Not}";
@@ -730,7 +803,8 @@ public partial class MainViewModel : BaseViewModel
     {
         var vm = new CihazEditViewModel(_databaseService, CihazTuru.Olcum)
         {
-            SantiyeList = SantiyeList
+            SantiyeList = SantiyeList,
+            IsSuperAdmin = IsSuperAdmin
         };
 
         var window = new Views.CihazEditWindow { DataContext = vm };
@@ -745,9 +819,17 @@ public partial class MainViewModel : BaseViewModel
     {
         if (SelectedOlcumCihazi == null) return;
 
+        // Admin değilse ve cihaz kendi şantiyesinde değilse VE boşta da değilse izin verme
+        if (!IsAdmin && SelectedOlcumCihazi.SantiyeId != null && SelectedOlcumCihazi.SantiyeId != CurrentUser?.SantiyeId)
+        {
+            ShowError("Bu cihaz üzerinde işlem yapma yetkiniz bulunmamaktadır.");
+            return;
+        }
+
         var vm = new CihazEditViewModel(_databaseService, CihazTuru.Olcum, SelectedOlcumCihazi)
         {
-            SantiyeList = SantiyeList
+            SantiyeList = SantiyeList,
+            IsSuperAdmin = IsSuperAdmin
         };
 
         var window = new Views.CihazEditWindow { DataContext = vm };
@@ -762,10 +844,28 @@ public partial class MainViewModel : BaseViewModel
     {
         if (SelectedOlcumCihazi == null) return;
 
+        // Admin değilse kontrol et
+        if (!IsAdmin)
+        {
+            // Cihaz bir şantiyeye kayıtlıysa ve o şantiye kullanıcının şantiyesi değilse hata ver
+            if (SelectedOlcumCihazi.SantiyeId != null && SelectedOlcumCihazi.SantiyeId != CurrentUser?.SantiyeId)
+            {
+                ShowError("Bu cihaz üzerinde işlem yapma yetkiniz bulunmamaktadır.");
+                return;
+            }
+        }
+
         var vm = new CihazHareketViewModel(_databaseService, CurrentUser!, SelectedOlcumCihazi)
         {
-            SantiyeList = SantiyeList
+            SantiyeList = SantiyeList,
+            IsSuperAdmin = IsAdmin // Adminler de her yere taşıyabilsin
         };
+
+        // Eğer cihaz boştaysa ve kullanıcı admin değilse, hedefi direkt kendi şantiyesi yapalım
+        if (!IsAdmin && SelectedOlcumCihazi.SantiyeId == null)
+        {
+            vm.NereyeSantiyeId = CurrentUser?.SantiyeId;
+        }
 
         var window = new Views.CihazHareketWindow { DataContext = vm };
         if (window.ShowDialog() == true)
@@ -777,17 +877,30 @@ public partial class MainViewModel : BaseViewModel
     [RelayCommand]
     public void OlcumCihaziGecmis()
     {
-        if (SelectedOlcumCihazi == null) return;
+        if (SelectedOlcumCihazi == null)
+        {
+            var vm = new CihazHareketGecmisiViewModel(_databaseService, _excelService);
+            var window = new Views.CihazHareketGecmisiWindow(vm);
+            window.ShowDialog();
+            return;
+        }
 
-        var vm = new CihazGecmisViewModel(_databaseService, SelectedOlcumCihazi);
-        var window = new Views.CihazGecmisWindow { DataContext = vm };
-        window.ShowDialog();
+        var vmOld = new CihazGecmisViewModel(_databaseService, SelectedOlcumCihazi);
+        var windowOld = new Views.CihazGecmisWindow { DataContext = vmOld };
+        windowOld.ShowDialog();
     }
 
     [RelayCommand]
     public async Task SilOlcumCihaziAsync()
     {
         if (SelectedOlcumCihazi == null) return;
+
+        // Sadece Süper Admin silme yapabilir
+        if (!IsSuperAdmin)
+        {
+            ShowError("Cihaz silme yetkisi sadece Süper Admin'e aittir.");
+            return;
+        }
         
         var result = MessageBox.Show($"{SelectedOlcumCihazi.SeriNo} seri nolu cihazı silmek istediğinize emin misiniz?", "Onay", MessageBoxButton.YesNo, MessageBoxImage.Warning);
         if (result == MessageBoxResult.Yes)
@@ -1240,6 +1353,44 @@ public partial class MainViewModel : BaseViewModel
         }
     }
 
+    // CİHAZ TANIMLAMALARI KOMUTLARI
+    [RelayCommand] public async Task YeniCihazAdAsync() => await ManageLookupAsync("cihaz_adlari", "Cihaz Adı");
+    [RelayCommand] public async Task DuzenleCihazAdAsync() => await ManageLookupAsync("cihaz_adlari", "Cihaz Adı", SelectedCihazAd);
+    [RelayCommand] public async Task SilCihazAdAsync() => await DeleteLookupAsync("cihaz_adlari", "Cihaz Adı", SelectedCihazAd);
+
+    [RelayCommand] public async Task YeniMarkaAsync() => await ManageLookupAsync("cihaz_markalari", "Marka");
+    [RelayCommand] public async Task DuzenleMarkaAsync() => await ManageLookupAsync("cihaz_markalari", "Marka", SelectedMarka);
+    [RelayCommand] public async Task SilMarkaAsync() => await DeleteLookupAsync("cihaz_markalari", "Marka", SelectedMarka);
+
+    [RelayCommand] public async Task YeniModelAsync() => await ManageLookupAsync("cihaz_modelleri", "Model");
+    [RelayCommand] public async Task DuzenleModelAsync() => await ManageLookupAsync("cihaz_modelleri", "Model", SelectedModel);
+    [RelayCommand] public async Task SilModelAsync() => await DeleteLookupAsync("cihaz_modelleri", "Model", SelectedModel);
+
+    [RelayCommand] public async Task YeniFirmaAsync() => await ManageLookupAsync("cihaz_firmalari", "Firma");
+    [RelayCommand] public async Task DuzenleFirmaAsync() => await ManageLookupAsync("cihaz_firmalari", "Firma", SelectedFirma);
+    [RelayCommand] public async Task SilFirmaAsync() => await DeleteLookupAsync("cihaz_firmalari", "Firma", SelectedFirma);
+
+    private async Task ManageLookupAsync(string table, string title, LookupItem? item = null)
+    {
+        if (!IsAdmin) return;
+        var vm = new LookupEditViewModel(_databaseService, table, title, item);
+        var window = new Views.LookupEditWindow { DataContext = vm };
+        if (window.ShowDialog() == true) await LoadLookupsAsync();
+    }
+
+    private async Task DeleteLookupAsync(string table, string title, LookupItem? item)
+    {
+        if (!IsAdmin || item == null) return;
+        if (!Confirm($"'{item.Adi}' {title.ToLower()} silinecek. Onaylıyor musunuz?")) return;
+        try {
+            await _databaseService.LookupSilAsync(table, item.Id);
+            ShowSuccess($"{title} silindi.");
+            await LoadLookupsAsync();
+        } catch (Exception ex) {
+            ShowError($"Silme hatası: {ex.Message}");
+        }
+    }
+
     [RelayCommand]
     public async Task DuzenleSantiyeAsync()
     {
@@ -1306,7 +1457,7 @@ public partial class MainViewModel : BaseViewModel
     [RelayCommand]
     public async Task LoadPasifSantiyelerAsync()
     {
-        if (!IsAdmin) return;
+        if (!IsSuperAdmin) return;
 
         IsBusy = true;
         try
@@ -1322,6 +1473,65 @@ public partial class MainViewModel : BaseViewModel
         {
             IsBusy = false;
         }
+    }
+
+    [RelayCommand]
+    public async Task AktiflestirSantiyeAsync(Santiye santiye)
+    {
+        if (santiye == null) return;
+        
+        try
+        {
+            await _databaseService.SantiyeAktiflestirAsync(santiye.Id);
+            await LoadPasifSantiyelerAsync();
+            await LoadSantiyelerAsync();
+            ShowSuccess($"{santiye.Adi} şantiyesi tekrar aktifleştirildi.");
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Aktifleştirme hatası: {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    public async Task ResetDatabaseAsync()
+    {
+        if (!IsSuperAdmin) return;
+        
+        if (!Confirm("DİKKAT: Veritabanındaki tüm Personeller, Cihazlar, Hareket Geçmişi ve Bildirimler silinecektir. \n\nSadece Tanımlamalar (Şantiyeler, Bölümler vb.) ve Süper Admin hesabı kalacaktır. \n\nBu işlem geri alınamaz! Onaylıyor musunuz?")) return;
+
+        IsBusy = true;
+        try
+        {
+            await _databaseService.ExecuteSqlAsync("DELETE FROM bildirimler;");
+            await _databaseService.ExecuteSqlAsync("DELETE FROM audit_log;");
+            await _databaseService.ExecuteSqlAsync("DELETE FROM cihaz_hareketleri;");
+            await _databaseService.ExecuteSqlAsync("DELETE FROM cihazlar;");
+            await _databaseService.ExecuteSqlAsync("DELETE FROM personeller;");
+            await _databaseService.ExecuteSqlAsync("DELETE FROM kullanicilar WHERE LOWER(kullanici_adi) != 'admin';");
+            
+            ShowSuccess("Veritabanı başarıyla temizlendi.");
+            
+            // Verileri yenile
+            await LoadAllDataAsync();
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Temizleme sırasında hata: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task OpenPasifSantiyelerAsync()
+    {
+        if (!IsSuperAdmin) return;
+        await LoadPasifSantiyelerAsync();
+        var window = new Views.PasifSantiyelerWindow(this);
+        window.ShowDialog();
     }
 
     [RelayCommand]
@@ -1403,6 +1613,9 @@ public partial class MainViewModel : BaseViewModel
         IsBusy = true;
         try
         {
+            // Eksik tanımlamaları (bölüm, görev vb.) kontrol et ve ekle
+            await EnsurePersonelLookupsAsync(personeller);
+
             int count = 0;
             foreach (var p in personeller)
             {
@@ -1470,6 +1683,9 @@ public partial class MainViewModel : BaseViewModel
         IsBusy = true;
         try
         {
+            // Eksik tanımlamaları (bölüm, görev vb.) kontrol et ve ekle
+            await EnsurePersonelLookupsAsync(personeller);
+
             int count = 0;
             foreach (var p in personeller)
             {
@@ -1514,17 +1730,22 @@ public partial class MainViewModel : BaseViewModel
 
         if (cihazlar.Count == 0) return;
 
-        if (!Confirm($"{cihazlar.Count} adet cihaz sisteme toplu olarak eklenecek. Onaylıyor musunuz?")) return;
+        if (!Confirm($"{cihazlar.Count} adet cihaz sisteme toplu olarak eklenecek. Tanımlı olmayan Cihaz Adı, Marka, Model ve Firmalar otomatik olarak eklenecektir. Onaylıyor musunuz?")) return;
 
         IsBusy = true;
         try
         {
+            // 1. Tanımlamaları kontrol et ve eksikleri ekle
+            await EnsureCihazLookupsAsync(cihazlar);
+
+            // 2. Cihazları ekle
             foreach (var c in cihazlar)
             {
                 await _databaseService.CihazEkleAsync(c);
             }
             ShowSuccess($"{cihazlar.Count} adet cihaz başarıyla eklendi.");
             await LoadCihazlarAsync();
+            await LoadLookupsAsync(); // Tanımlamalar güncellenmiş olabilir
         }
         catch (Exception ex)
         {
@@ -1534,6 +1755,66 @@ public partial class MainViewModel : BaseViewModel
         {
             IsBusy = false;
         }
+    }
+
+    private async Task EnsureCihazLookupsAsync(List<Cihaz> cihazlar)
+    {
+        // Mevcutları yükle
+        var adlar = await _databaseService.LookupGetirAsync("cihaz_adlari");
+        var markalar = await _databaseService.LookupGetirAsync("cihaz_markalari");
+        var modeller = await _databaseService.LookupGetirAsync("cihaz_modelleri");
+        var firmalar = await _databaseService.LookupGetirAsync("cihaz_firmalari");
+
+        foreach (var c in cihazlar)
+        {
+            if (!string.IsNullOrWhiteSpace(c.CihazAdi))
+                await CheckAndAddLookupAsync("cihaz_adlari", adlar, c.CihazAdi);
+
+            if (!string.IsNullOrWhiteSpace(c.Marka))
+                await CheckAndAddLookupAsync("cihaz_markalari", markalar, c.Marka);
+
+            if (!string.IsNullOrWhiteSpace(c.Model))
+                await CheckAndAddLookupAsync("cihaz_modelleri", modeller, c.Model);
+
+            if (!string.IsNullOrWhiteSpace(c.SahipFirma))
+                await CheckAndAddLookupAsync("cihaz_firmalari", firmalar, c.SahipFirma);
+        }
+    }
+
+    private async Task EnsurePersonelLookupsAsync(List<Personel> personeller)
+    {
+        var bolumler = await _databaseService.LookupGetirAsync("bolumler");
+        var gorevler = await _databaseService.LookupGetirAsync("gorevler");
+        var uyruklar = await _databaseService.LookupGetirAsync("uyruklar");
+        var paraBirimleri = await _databaseService.LookupGetirAsync("para_birimleri");
+
+        foreach (var p in personeller)
+        {
+            if (!string.IsNullOrWhiteSpace(p.BolumuDisplay))
+                p.Bolumu = await CheckAndAddLookupAsync("bolumler", bolumler, p.BolumuDisplay);
+
+            if (!string.IsNullOrWhiteSpace(p.GoreviDisplay))
+                p.Gorevi = await CheckAndAddLookupAsync("gorevler", gorevler, p.GoreviDisplay);
+
+            if (!string.IsNullOrWhiteSpace(p.UyruguDisplay))
+                p.Uyrugu = await CheckAndAddLookupAsync("uyruklar", uyruklar, p.UyruguDisplay);
+            
+            if (!string.IsNullOrWhiteSpace(p.ParaBirimiDisplay))
+                p.ParaBirimi = await CheckAndAddLookupAsync("para_birimleri", paraBirimleri, p.ParaBirimiDisplay);
+        }
+    }
+
+    private async Task<int?> CheckAndAddLookupAsync(string table, List<LookupItem> list, string value)
+    {
+        var normalizedValue = Helpers.StringHelper.NormalizeTurkish(value);
+        var existing = list.FirstOrDefault(l => Helpers.StringHelper.NormalizeTurkish(l.Adi) == normalizedValue);
+        if (existing != null) return existing.Id;
+
+        // Veritabanına ekle
+        var newId = await _databaseService.LookupOlusturAsync(table, value);
+        // Listeye de ekle ki aynı excelde tekrar edenler için tekrar veritabanına gitmesin
+        list.Add(new LookupItem { Id = newId, Adi = value });
+        return newId;
     }
 
     [RelayCommand]
@@ -1575,17 +1856,22 @@ public partial class MainViewModel : BaseViewModel
 
         if (cihazlar.Count == 0) return;
 
-        if (!Confirm($"{cihazlar.Count} adet cihaz kaydı güncellenecek. Onaylıyor musunuz?")) return;
+        if (!Confirm($"{cihazlar.Count} adet cihaz kaydı güncellenecek. Yeni tanımlanan Cihaz Adı, Marka, Model ve Firmalar otomatik olarak eklenecektir. Onaylıyor musunuz?")) return;
 
         IsBusy = true;
         try
         {
+            // 1. Tanımlamaları kontrol et ve eksikleri ekle
+            await EnsureCihazLookupsAsync(cihazlar);
+
+            // 2. Cihazları güncelle
             foreach (var c in cihazlar)
             {
                 await _databaseService.CihazGuncelleAsync(c);
             }
             ShowSuccess($"{cihazlar.Count} adet cihaz başarıyla güncellendi.");
             await LoadCihazlarAsync();
+            await LoadLookupsAsync(); // Tanımlamalar güncellenmiş olabilir
         }
         catch (Exception ex)
         {
