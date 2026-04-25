@@ -22,6 +22,4 @@ public class Personel
     public string? GoreviDisplay { get; set; }
     public string? UyruguDisplay { get; set; }
     public string? ParaBirimiDisplay { get; set; }
-    
-    public bool IsSystemUser { get; set; } = false;
 }

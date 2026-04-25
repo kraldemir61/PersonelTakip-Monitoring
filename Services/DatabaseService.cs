@@ -477,38 +477,23 @@ public class DatabaseService
         using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        var sql = @"
-            SELECT p.id, p.santiye_id, p.adi_soyadi, p.bolumu, p.gorevi, p.uyrugu, p.ise_giris_tarihi, p.telefon_numarasi, p.maas, p.para_birimi, p.aktif, p.created_at,
-                   s.adi AS SantiyeAdiDisplay, s.kod AS SantiyeKod, b.adi AS BolumuDisplay, g.adi AS GoreviDisplay, u.adi AS UyruguDisplay, pb.adi AS ParaBirimiDisplay,
-                   FALSE as IsSystemUser
-            FROM personeller p
-            LEFT JOIN santiyeler s ON p.santiye_id = s.id
-            LEFT JOIN bolumler b ON p.bolumu = b.id
-            LEFT JOIN gorevler g ON p.gorevi = g.id
-            LEFT JOIN uyruklar u ON p.uyrugu = u.id
-            LEFT JOIN para_birimleri pb ON p.para_birimi = pb.id
-            WHERE p.aktif = true";
+        var sql = @"SELECT p.*,
+                    s.adi AS SantiyeAdiDisplay,
+                    s.kod AS SantiyeKod,
+                    b.adi AS BolumuDisplay,
+                    g.adi AS GoreviDisplay,
+                    u.adi AS UyruguDisplay,
+                    pb.adi AS ParaBirimiDisplay
+                    FROM personeller p
+                    LEFT JOIN santiyeler s ON p.santiye_id = s.id
+                    LEFT JOIN bolumler b ON p.bolumu = b.id
+                    LEFT JOIN gorevler g ON p.gorevi = g.id
+                    LEFT JOIN uyruklar u ON p.uyrugu = u.id
+                    LEFT JOIN para_birimleri pb ON p.para_birimi = pb.id
+                    WHERE p.aktif = true";
 
         if (santiyeId.HasValue) sql += " AND p.santiye_id = @SantiyeId";
-
-        sql += @"
-            UNION ALL
-            SELECT k.id, k.santiye_id, k.kullanici_adi as adi_soyadi, 
-                   NULL::integer as bolumu, NULL::integer as gorevi, NULL::integer as uyrugu, 
-                   k.son_giris as ise_giris_tarihi, k.email as telefon_numarasi, 
-                   NULL::numeric as maas, NULL::integer as para_birimi, k.aktif, k.created_at,
-                   s.adi AS SantiyeAdiDisplay, s.kod AS SantiyeKod, 'Yönetim' AS BolumuDisplay, 
-                   (CASE WHEN k.rol = 'Admin' THEN 'Sistem Yöneticisi' ELSE 'Sistem Kullanıcısı' END) AS GoreviDisplay, 
-                   NULL AS UyruguDisplay, NULL AS ParaBirimiDisplay,
-                   TRUE as IsSystemUser
-            FROM kullanicilar k
-            LEFT JOIN santiyeler s ON k.santiye_id = s.id
-            WHERE k.aktif = true";
-
-        if (santiyeId.HasValue) sql += " AND k.santiye_id = @SantiyeId";
-        else sql += " AND k.santiye_id IS NOT NULL"; // Global admin görünümünde sadece şantiyeli kullanıcıları personele ekleyelim
-
-        sql += " ORDER BY adi_soyadi";
+        sql += " ORDER BY p.adi_soyadi";
 
         var result = await conn.QueryAsync<Personel>(sql, new { SantiyeId = santiyeId });
         return result.ToList();
