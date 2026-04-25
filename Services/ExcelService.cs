@@ -39,7 +39,7 @@ public class ExcelService
         var saveFileDialog = new SaveFileDialog
         {
             Filter = "Excel Files (*.xlsx)|*.xlsx",
-            FileName = $"Personel_Listesi_{DateTime.Now:yyyyMMdd}.xlsx"
+            FileName = $"Personel_Listesi_{DateTime.Now:dd.MM.yyyy HH.mm.ss}.xlsx"
         };
 
         if (saveFileDialog.ShowDialog() == true)
@@ -214,7 +214,7 @@ public class ExcelService
         var saveFileDialog = new SaveFileDialog
         {
             Filter = "Excel Files (*.xlsx)|*.xlsx",
-            FileName = $"Cihaz_Listesi_{DateTime.Now:yyyyMMdd}.xlsx"
+            FileName = $"Cihaz_Listesi_{DateTime.Now:dd.MM.yyyy HH.mm.ss}.xlsx"
         };
 
         if (saveFileDialog.ShowDialog() == true)
@@ -346,7 +346,7 @@ public class ExcelService
         var saveFileDialog = new SaveFileDialog
         {
             Filter = "Excel Files (*.xlsx)|*.xlsx",
-            FileName = $"Cihaz_Hareketleri_{DateTime.Now:yyyyMMdd}.xlsx"
+            FileName = $"Cihaz_Hareketleri_{DateTime.Now:dd.MM.yyyy HH.mm.ss}.xlsx"
         };
 
         if (saveFileDialog.ShowDialog() == true)

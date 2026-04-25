@@ -45,3 +45,11 @@ Bu dosya, kullanıcı talimatları ve yapılan işlemlerin kronolojik kaydını 
 - **İşlem**: `MainViewModel`'e `EnsurePersonelLookupsAsync` metodu eklendi.
 - **İşlem**: `CheckAndAddLookupAsync` metodu ID dönecek şekilde güncellendi.
 - **İşlem**: `ExcelTopluYukleAsync` ve `ExcelTopluGuncelleAsync` komutları, eksik tanımlamaları otomatik oluşturacak şekilde güncellendi.
+
+### [25.04.2026 16:01] - Git Push
+- **Talimat**: Projeyi push et.
+- **İşlem**: `DuzenlemeNotlari.md` repo içine taşındı. Visual Studio'ya gömülü Git kullanılarak tüm değişiklikler GitHub'a (`origin master`) başarıyla push edildi.
+
+### [25.04.2026 16:04] - Excel Dosya Adı Formatı
+- **Talimat**: İndirilen excel dosyalarında "25.04.2026 16.03.22" formatını kullan.
+- **İşlem**: `ExcelService` içindeki tüm dışarı aktarma (Personel, Cihaz, Hareketler) dosya adı şablonları saniye detaylı tarih formatına güncellendi.
