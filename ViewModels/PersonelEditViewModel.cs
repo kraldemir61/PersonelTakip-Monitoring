@@ -124,12 +124,6 @@ public partial class PersonelEditViewModel : BaseViewModel
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(TelefonNumarasi))
-        {
-            ShowError("Telefon numarası zorunludur.");
-            return;
-        }
-
         if (Maas.HasValue && Maas.Value > 0 && ParaBirimi == null)
         {
             ShowError("Maaş girilmişse para birimi seçimi zorunludur.");

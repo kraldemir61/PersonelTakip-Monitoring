@@ -59,3 +59,7 @@ Bu dosya, kullanıcı talimatları ve yapılan işlemlerin kronolojik kaydını 
 - **İşlem**: `ExcelService.ExceldenOkuAsync` metotunda tüm hücre verilerine `.Trim()` eklendi (gizli boşluk sorunları için).
 - **İşlem**: `DatabaseService.LookupOlusturAsync` metodunda `SELECT lastval()` yerine daha güvenilir olan `RETURNING id` yapısına geçildi.
 - **İşlem**: Proje tekrar push edildi.
+
+### [25.04.2026 16:34] - Personel Kayıt Esnekliği
+- **Talimat**: Yeni personel kayıtta telefon zorunlu alan olmayacak.
+- **İşlem**: `PersonelEditViewModel.cs` içindeki telefon numarası zorunluluk kontrolü kaldırıldı.
