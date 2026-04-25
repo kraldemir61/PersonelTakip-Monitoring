@@ -6,6 +6,14 @@ namespace PersonelTakip;
 
 public partial class App : Application
 {
+    public App()
+    {
+        AppDomain.CurrentDomain.UnhandledException += (s, ex) =>
+        {
+            LogException(ex.ExceptionObject as Exception, "App Constructor AppDomain.UnhandledException");
+        };
+    }
+
     protected override void OnStartup(StartupEventArgs e)
     {
         // Global hata yakalayıcı
@@ -23,12 +31,13 @@ public partial class App : Application
 
         try 
         {
-            base.OnStartup(e);
+            var loginWindow = new Views.LoginWindow();
+            loginWindow.Show();
         }
         catch (Exception ex)
         {
-            LogException(ex, "OnStartup Exception");
-            MessageBox.Show($"Uygulama başlatılamadı:\n{ex.Message}", "Başlatma Hatası", MessageBoxButton.OK, MessageBoxImage.Error);
+            LogException(ex, "OnStartup Exception during window creation");
+            MessageBox.Show($"Uygulama başlatılamadı (Pencere oluşturma hatası):\n{ex.Message}\n\nDetaylar crash_log.txt dosyasına kaydedildi.", "Başlatma Hatası", MessageBoxButton.OK, MessageBoxImage.Error);
             Environment.Exit(1);
         }
     }
