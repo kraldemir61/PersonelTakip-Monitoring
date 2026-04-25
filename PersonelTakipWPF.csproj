@@ -29,4 +29,9 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="scratch\**" />
+    <None Remove="scratch\**" />
+  </ItemGroup>
+
 </Project>
