@@ -75,21 +75,21 @@ public partial class KullaniciEditViewModel : BaseViewModel
             return;
         }
 
-        // Eğer düzenlenen kişi orijinalde "Roujin61" ise:
+        // Eğer düzenlenen kişi orijinalde "Admin" ise:
         if (!string.IsNullOrEmpty(_orijinalKullaniciAdi) && 
-            _orijinalKullaniciAdi.Equals("Roujin61", StringComparison.OrdinalIgnoreCase))
+            _orijinalKullaniciAdi.Equals("Admin", StringComparison.OrdinalIgnoreCase))
         {
             // Kullanıcı adı değişmişse izin verme
-            if (!KullaniciAdi.Equals("Roujin61", StringComparison.OrdinalIgnoreCase))
+            if (!KullaniciAdi.Equals("Admin", StringComparison.OrdinalIgnoreCase))
             {
-                ShowError("Süper Admin hesabının (Roujin61) kullanıcı adı değiştirilemez.");
+                ShowError("Süper Admin hesabının (Admin) kullanıcı adı değiştirilemez.");
                 return;
             }
 
             // Rolü User yapılmışsa izin verme
             if (Rol != "Admin")
             {
-                ShowError("Süper Admin hesabının (Roujin61) yetkisi 'User' olarak düşürülemez.");
+                ShowError("Süper Admin hesabının (Admin) yetkisi 'User' olarak düşürülemez.");
                 return;
             }
         }

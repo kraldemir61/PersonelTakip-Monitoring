@@ -195,8 +195,8 @@ public partial class MainViewModel : BaseViewModel
 
         CurrentUser = Application.Current.Properties["Kullanici"] as Kullanici;
         IsAdmin = CurrentUser?.Rol == "Admin";
-        // 'Roujin61' kullanıcı adına sahip olan kişi Süper Admin kabul edilir (büyük/küçük harf duyarsız)
-        IsSuperAdmin = IsAdmin && CurrentUser?.KullaniciAdi?.Equals("Roujin61", StringComparison.OrdinalIgnoreCase) == true;
+        // 'Admin' kullanıcı adına sahip olan kişi Süper Admin kabul edilir (büyük/küçük harf duyarsız)
+        IsSuperAdmin = IsAdmin && CurrentUser?.KullaniciAdi?.Equals("Admin", StringComparison.OrdinalIgnoreCase) == true;
     }
 
     [RelayCommand]
@@ -651,9 +651,9 @@ public partial class MainViewModel : BaseViewModel
     {
         if (!IsAdmin || SelectedKullanici == null) return;
 
-        if (SelectedKullanici.KullaniciAdi.Equals("Roujin61", StringComparison.OrdinalIgnoreCase))
+        if (SelectedKullanici.KullaniciAdi.Equals("Admin", StringComparison.OrdinalIgnoreCase))
         {
-            ShowError("Süper Admin hesabı (Roujin61) silinemez.");
+            ShowError("Süper Admin hesabı (Admin) silinemez.");
             return;
         }
 
