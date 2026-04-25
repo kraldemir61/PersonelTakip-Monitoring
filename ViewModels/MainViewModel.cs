@@ -16,6 +16,7 @@ public partial class MainViewModel : BaseViewModel
 {
     private readonly DatabaseService _databaseService;
     private readonly EmailService _emailService;
+    private readonly ExcelService _excelService;
 
     [ObservableProperty]
     private Kullanici? _currentUser;
@@ -192,11 +193,14 @@ public partial class MainViewModel : BaseViewModel
     {
         _databaseService = new DatabaseService();
         _emailService = new EmailService();
+        _excelService = new ExcelService(_databaseService);
 
         CurrentUser = Application.Current.Properties["Kullanici"] as Kullanici;
         IsAdmin = CurrentUser?.Rol == "Admin";
         // 'Admin' kullanıcı adına sahip olan kişi Süper Admin kabul edilir (büyük/küçük harf duyarsız)
         IsSuperAdmin = IsAdmin && CurrentUser?.KullaniciAdi?.Equals("Admin", StringComparison.OrdinalIgnoreCase) == true;
+
+        LoadAllDataAsync().ConfigureAwait(false);
     }
 
     [RelayCommand]
@@ -1134,4 +1138,124 @@ public partial class MainViewModel : BaseViewModel
             }
         }
     }
+
+    #region Excel İşlemleri
+
+    [RelayCommand]
+    private void ExcelSablonIndir()
+    {
+        if (!IsSuperAdmin) return;
+        _excelService.TemplateIndir();
+    }
+
+    [RelayCommand]
+    private async Task ExcelTopluYukleAsync()
+    {
+        if (!IsSuperAdmin) return;
+
+        var (personeller, error) = await _excelService.ExceldenOkuAsync(isUpdate: false);
+        if (!string.IsNullOrEmpty(error))
+        {
+            ShowError($"Excel okuma hatası: {error}");
+            return;
+        }
+
+        if (personeller.Count == 0)
+        {
+            ShowError("Excel dosyasında geçerli personel kaydı bulunamadı.");
+            return;
+        }
+
+        if (!Confirm($"{personeller.Count} adet yeni personel eklenecek. Onaylıyor musunuz?")) return;
+
+        IsBusy = true;
+        try
+        {
+            int count = 0;
+            foreach (var p in personeller)
+            {
+                await _databaseService.PersonelOlusturAsync(p);
+                count++;
+            }
+            ShowSuccess($"{count} adet personel başarıyla eklendi.");
+            await LoadAllDataAsync();
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Toplu yükleme sırasında hata: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task ExcelDisariAktarAsync()
+    {
+        if (!IsSuperAdmin) return;
+        
+        IsBusy = true;
+        try
+        {
+            var personeller = await _databaseService.PersonelleriGetirAsync();
+            var path = await _excelService.PersonelleriDisariAktarAsync(personeller);
+            if (!string.IsNullOrEmpty(path))
+            {
+                ShowSuccess("Veriler başarıyla dışarı aktarıldı.");
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Dışarı aktarma hatası: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task ExcelTopluGuncelleAsync()
+    {
+        if (!IsSuperAdmin) return;
+
+        var (personeller, error) = await _excelService.ExceldenOkuAsync(isUpdate: true);
+        if (!string.IsNullOrEmpty(error))
+        {
+            ShowError($"Excel okuma hatası: {error}");
+            return;
+        }
+
+        if (personeller.Count == 0)
+        {
+            ShowError("Excel dosyasında güncellenecek geçerli personel kaydı bulunamadı. ID sütununu kontrol edin.");
+            return;
+        }
+
+        if (!Confirm($"{personeller.Count} adet personel kaydı güncellenecek. Onaylıyor musunuz?")) return;
+
+        IsBusy = true;
+        try
+        {
+            int count = 0;
+            foreach (var p in personeller)
+            {
+                await _databaseService.PersonelGuncelleAsync(p);
+                count++;
+            }
+            ShowSuccess($"{count} adet personel başarıyla güncellendi.");
+            await LoadAllDataAsync();
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Toplu güncelleme sırasında hata: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    #endregion
 }

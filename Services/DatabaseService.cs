@@ -405,6 +405,14 @@ public class DatabaseService
         return result.ToList();
     }
 
+    public async Task<List<LookupItem>> LookupGetirAsync(string tablo)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        var result = await conn.QueryAsync<LookupItem>($"SELECT id, adi FROM {tablo} ORDER BY adi");
+        return result.ToList();
+    }
+
     public async Task<int> LookupOlusturAsync(string tablo, string adi)
     {
         using var conn = CreateConnection();

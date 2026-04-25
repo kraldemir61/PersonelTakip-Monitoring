@@ -430,7 +430,10 @@
                                             <TextBlock Text="TELEFON" FontSize="10" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,0,0,2"/>
                                             <TextBlock Text="{Binding SelectedPersonel.TelefonNumarasi}" FontSize="14" Margin="0,0,0,12"/>
                                             <TextBlock Text="MAAŞ" FontSize="10" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,0,0,2" Visibility="{Binding IsSuperAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                                            <TextBlock Text="{Binding SelectedPersonel.Maas, StringFormat=N2}" FontSize="16" FontWeight="Bold" Foreground="#10B981" Visibility="{Binding IsSuperAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                            <StackPanel Orientation="Horizontal" Visibility="{Binding IsSuperAdmin, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                <TextBlock Text="{Binding SelectedPersonel.Maas, StringFormat=N2}" FontSize="16" FontWeight="Bold" Foreground="#10B981"/>
+                                                <TextBlock Text="{Binding SelectedPersonel.ParaBirimiDisplay}" FontSize="14" FontWeight="SemiBold" Foreground="#065F46" Margin="5,0,0,0" VerticalAlignment="Bottom"/>
+                                            </StackPanel>
                                         </StackPanel>
                                     </StackPanel>
                                     <Grid Visibility="{Binding SelectedPersonel, Converter={StaticResource NullToVisibilityConverter}}">
@@ -878,6 +881,67 @@
                                 </DataGrid.Columns>
                             </DataGrid>
                         </Grid>
+                    </Border>
+                </TabItem>
+
+                <!-- 8. TOPLU İŞLEMLER (Excel) -->
+                <TabItem Header="Toplu İşlemler" Visibility="{Binding IsSuperAdmin, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Border Background="White" CornerRadius="0,12,12,12" Padding="30">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.08" Direction="270"/>
+                        </Border.Effect>
+                        <StackPanel MaxWidth="800" HorizontalAlignment="Left">
+                            <TextBlock Text="Excel ile Toplu Personel Yönetimi" FontSize="24" FontWeight="Bold" Foreground="#1F2937" Margin="0,0,0,10"/>
+                            <TextBlock Text="Bu bölümden Excel şablonu kullanarak sisteme toplu personel ekleyebilir veya mevcut personelleri toplu olarak güncelleyebilirsiniz." 
+                                       FontSize="14" Foreground="#6B7280" TextWrapping="Wrap" Margin="0,0,0,30"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Şablon İndir -->
+                                <Border Grid.Row="0" Grid.Column="0" Margin="0,0,15,15" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="12" Padding="20">
+                                    <StackPanel>
+                                        <TextBlock Text="📄 Boş Şablon" FontSize="18" FontWeight="Bold" Foreground="#3B82F6" Margin="0,0,0,10"/>
+                                        <TextBlock Text="Yeni kayıtlar için gerekli sütun başlıklarını içeren boş bir Excel dosyası indirir." FontSize="12" Foreground="#64748B" Margin="0,0,0,20" Height="40" TextWrapping="Wrap"/>
+                                        <Button Content="Şablonu İndir" Command="{Binding ExcelSablonIndirCommand}" Height="40" Background="#3B82F6" Foreground="White" Style="{StaticResource HeaderButton}"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Toplu Ekle -->
+                                <Border Grid.Row="0" Grid.Column="1" Margin="15,0,0,15" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="12" Padding="20">
+                                    <StackPanel>
+                                        <TextBlock Text="📥 Toplu Personel Ekle" FontSize="18" FontWeight="Bold" Foreground="#10B981" Margin="0,0,0,10"/>
+                                        <TextBlock Text="Doldurduğunuz şablonu sisteme yükleyerek yeni personelleri toplu olarak oluşturur." FontSize="12" Foreground="#64748B" Margin="0,0,0,20" Height="40" TextWrapping="Wrap"/>
+                                        <Button Content="Excel'den Yükle" Command="{Binding ExcelTopluYukleCommand}" Height="40" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Mevcut Verileri İndir -->
+                                <Border Grid.Row="1" Grid.Column="0" Margin="0,15,15,0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="12" Padding="20">
+                                    <StackPanel>
+                                        <TextBlock Text="📤 Verileri Dışarı Aktar" FontSize="18" FontWeight="Bold" Foreground="#6366F1" Margin="0,0,0,10"/>
+                                        <TextBlock Text="Sistemdeki tüm personel bilgilerini düzenleme yapabilmeniz için Excel formatında indirir." FontSize="12" Foreground="#64748B" Margin="0,0,0,20" Height="40" TextWrapping="Wrap"/>
+                                        <Button Content="Verileri İndir" Command="{Binding ExcelDisariAktarCommand}" Height="40" Background="#6366F1" Foreground="White" Style="{StaticResource HeaderButton}"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Toplu Güncelle -->
+                                <Border Grid.Row="1" Grid.Column="1" Margin="15,15,0,0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="12" Padding="20">
+                                    <StackPanel>
+                                        <TextBlock Text="🔄 Toplu Güncelleme" FontSize="18" FontWeight="Bold" Foreground="#F59E0B" Margin="0,0,0,10"/>
+                                        <TextBlock Text="İndirdiğiniz dosya üzerinde yaptığınız değişiklikleri sisteme geri yükleyerek kayıtları günceller." FontSize="12" Foreground="#64748B" Margin="0,0,0,20" Height="40" TextWrapping="Wrap"/>
+                                        <Button Content="Güncellemeleri Uygula" Command="{Binding ExcelTopluGuncelleCommand}" Height="40" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </StackPanel>
                     </Border>
                 </TabItem>
 

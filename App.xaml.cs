@@ -16,6 +16,7 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        this.ShutdownMode = ShutdownMode.OnMainWindowClose;
         // Global hata yakalayıcı
         this.DispatcherUnhandledException += (s, ex) =>
         {

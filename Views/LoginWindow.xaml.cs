@@ -73,7 +73,8 @@ public partial class LoginWindow : Window
     private void OnLoginSuccessful(Models.Kullanici kullanici)
     {
         var mainWindow = new MainWindow();
+        Application.Current.MainWindow = mainWindow;
         mainWindow.Show();
-        this.Close();
+        this.Hide();
     }
 }
