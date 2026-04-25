@@ -175,6 +175,12 @@ public partial class MainViewModel : BaseViewModel
 
     public ICollectionView OlcumCihazlariView { get; private set; }
 
+    [ObservableProperty]
+    private int _toplamOlcumCihazi;
+
+    [ObservableProperty]
+    private ObservableCollection<StatItem> _olcumCihaziStats = new();
+
     // Zimmet Takibi - Ofis Cihazları
     [ObservableProperty]
     private ObservableCollection<Cihaz> _ofisCihazlari = new();
@@ -183,6 +189,9 @@ public partial class MainViewModel : BaseViewModel
     private Cihaz? _selectedOfisCihazi;
 
     public ICollectionView OfisCihazlariView { get; private set; }
+
+    [ObservableProperty]
+    private int _toplamOfisCihazi;
 
     // Cihaz Tanımlamalar
     [ObservableProperty]
@@ -271,6 +280,9 @@ public partial class MainViewModel : BaseViewModel
         ParaBirimleriView?.Refresh();
         OlcumCihazlariView?.Refresh();
         OfisCihazlariView?.Refresh();
+        
+        CalculateDashboardStats();
+        CalculateDeviceStats();
         CihazAdlariView?.Refresh();
         MarkalarView?.Refresh();
         ModellerView?.Refresh();
@@ -501,6 +513,30 @@ public partial class MainViewModel : BaseViewModel
             .OrderByDescending(x => x.Count);
             
         SantiyeStats = new ObservableCollection<StatItem>(santiyeGrup);
+        
+        CalculateDeviceStats();
+    }
+
+    private void CalculateDeviceStats()
+    {
+        if (OlcumCihazlariView == null) return;
+
+        var olcumCihazlari = OlcumCihazlariView.Cast<Cihaz>().ToList();
+        ToplamOlcumCihazi = olcumCihazlari.Count;
+
+        var olcumGrup = olcumCihazlari
+            .GroupBy(c => string.IsNullOrWhiteSpace(c.CihazAdi) ? "Bilinmiyor" : c.CihazAdi)
+            .Select(g => new StatItem 
+            { 
+                Name = g.Key, 
+                Count = g.Count() 
+            })
+            .OrderByDescending(x => x.Count);
+
+        OlcumCihaziStats = new ObservableCollection<StatItem>(olcumGrup);
+
+        if (OfisCihazlariView == null) return;
+        ToplamOfisCihazi = OfisCihazlariView.Cast<Cihaz>().Count();
     }
 
     [RelayCommand]

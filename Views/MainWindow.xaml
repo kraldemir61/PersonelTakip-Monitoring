@@ -269,7 +269,7 @@
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate TargetType="TabItem">
-                                <Border x:Name="TabBorder" Background="Transparent" Padding="20,12" CornerRadius="8,8,0,0" Margin="0,0,2,0">
+                                <Border x:Name="TabBorder" Background="Transparent" Padding="15,12" CornerRadius="8,8,0,0" Margin="0,0,2,0">
                                     <ContentPresenter x:Name="ContentSite" ContentSource="Header"/>
                                 </Border>
                                 <ControlTemplate.Triggers>
@@ -961,7 +961,13 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
-                                    <Grid Grid.Row="0" Margin="0,0,0,20">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="320" MinWidth="250" MaxWidth="600"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Grid Grid.Row="0" Grid.ColumnSpan="3" Margin="0,0,0,20">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
@@ -998,24 +1004,103 @@
                                             </Grid>
                                         </Border>
                                     </Grid>
-                                    <DataGrid Grid.Row="1" ItemsSource="{Binding OlcumCihazlariView}" SelectedItem="{Binding SelectedOlcumCihazi}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" BorderThickness="1" BorderBrush="#E5E7EB">
+
+                                    <DataGrid Grid.Row="1" Grid.Column="0" ItemsSource="{Binding OlcumCihazlariView}" SelectedItem="{Binding SelectedOlcumCihazi}" 
+                                              AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" BorderThickness="1" BorderBrush="#E5E7EB" Margin="0,0,5,0">
                                         <DataGrid.Columns>
-                                            <DataGridTextColumn Header="Seri No" Binding="{Binding SeriNo}" Width="150"/>
-                                            <DataGridTextColumn Header="Cihaz Adı" Binding="{Binding CihazAdi}" Width="150"/>
-                                            <DataGridTextColumn Header="Marka" Binding="{Binding Marka}" Width="120"/>
-                                            <DataGridTextColumn Header="Model" Binding="{Binding Model}" Width="120"/>
-                                            <DataGridTextColumn Header="Bulunduğu Yer" Binding="{Binding SantiyeKod}" Width="*">
-                                                <DataGridTextColumn.ElementStyle>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="FontWeight" Value="Bold"/>
-                                                        <Setter Property="Foreground" Value="#1E2937"/>
-                                                    </Style>
-                                                </DataGridTextColumn.ElementStyle>
-                                            </DataGridTextColumn>
-                                            <DataGridTextColumn Header="Durum" Binding="{Binding Durum}" Width="120"/>
-                                            <DataGridTextColumn Header="Son İşlem" Binding="{Binding SonIslemTarihi, StringFormat=dd.MM.yyyy}" Width="100"/>
+                                            <DataGridTextColumn Header="Seri No" Binding="{Binding SeriNo}" Width="120"/>
+                                            <DataGridTextColumn Header="Cihaz Adı" Binding="{Binding CihazAdi}" Width="120"/>
+                                            <DataGridTextColumn Header="Marka" Binding="{Binding Marka}" Width="100"/>
+                                            <DataGridTextColumn Header="Durum" Binding="{Binding Durum}" Width="*"/>
                                         </DataGrid.Columns>
                                     </DataGrid>
+
+                                    <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="Transparent" ShowsPreview="True" Cursor="SizeWE" Margin="0,0,5,0"/>
+
+                                    <Border Grid.Row="1" Grid.Column="2" Background="#FFFFFF" CornerRadius="12" BorderBrush="#E2E8F0" BorderThickness="1" Padding="15" Margin="5,0,0,0">
+                                        <Border.Effect>
+                                            <DropShadowEffect BlurRadius="15" ShadowDepth="2" Opacity="0.05" Direction="270" Color="#000000"/>
+                                        </Border.Effect>
+                                        <Grid>
+                                            <!-- CİHAZ DETAY -->
+                                            <StackPanel Visibility="{Binding SelectedOlcumCihazi, Converter={StaticResource NullToVisibilityConverter}, ConverterParameter=Invert}">
+                                                <Border Width="60" Height="60" Background="#DCFCE7" CornerRadius="40" Margin="0,0,0,5">
+                                                    <TextBlock Text="🛠️" FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <TextBlock Text="{Binding SelectedOlcumCihazi.CihazAdi}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                                                <TextBlock Text="{Binding SelectedOlcumCihazi.SeriNo}" FontSize="14" Foreground="#6B7280" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+                                                
+                                                <Separator Margin="0,0,0,20"/>
+                                                
+                                                <StackPanel>
+                                                    <TextBlock Text="MARKA / MODEL" FontSize="10" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,0,0,2"/>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                                        <TextBlock Text="{Binding SelectedOlcumCihazi.Marka}" FontSize="14" FontWeight="SemiBold"/>
+                                                        <TextBlock Text=" / " Foreground="#9CA3AF"/>
+                                                        <TextBlock Text="{Binding SelectedOlcumCihazi.Model}" FontSize="14"/>
+                                                    </StackPanel>
+
+                                                    <TextBlock Text="SAHİP FİRMA" FontSize="10" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,0,0,2"/>
+                                                    <TextBlock Text="{Binding SelectedOlcumCihazi.SahipFirma}" FontSize="14" Margin="0,0,0,12"/>
+
+                                                    <TextBlock Text="BULUNDUĞU YER" FontSize="10" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,0,0,2"/>
+                                                    <TextBlock Text="{Binding SelectedOlcumCihazi.SantiyeKod}" FontSize="14" FontWeight="Bold" Foreground="#1E2937" Margin="0,0,0,12"/>
+
+                                                    <TextBlock Text="DURUM" FontSize="10" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,0,0,2"/>
+                                                    <Border Background="#F3F4F6" HorizontalAlignment="Left" Padding="10,4" CornerRadius="4" Margin="0,0,0,12">
+                                                        <TextBlock Text="{Binding SelectedOlcumCihazi.Durum}" FontSize="13" FontWeight="SemiBold" Foreground="#374151"/>
+                                                    </Border>
+
+                                                    <TextBlock Text="SON İŞLEM" FontSize="10" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,0,0,2"/>
+                                                    <TextBlock Text="{Binding SelectedOlcumCihazi.SonIslemTarihi, StringFormat=dd.MM.yyyy HH:mm}" FontSize="14" Margin="0,0,0,12"/>
+
+                                                    <TextBlock Text="NOT" FontSize="10" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,0,0,2"/>
+                                                    <TextBlock Text="{Binding SelectedOlcumCihazi.Not}" FontSize="13" TextWrapping="Wrap" Opacity="0.8"/>
+                                                </StackPanel>
+                                            </StackPanel>
+
+                                            <!-- GENEL DURUM ÖZETİ (Cihaz Seçili Değilse) -->
+                                            <Grid Visibility="{Binding SelectedOlcumCihazi, Converter={StaticResource NullToVisibilityConverter}}">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="*"/>
+                                                </Grid.RowDefinitions>
+                                                <TextBlock Text="Ölçüm Cihazları Özeti" FontSize="18" FontWeight="Bold" Foreground="#1F2937" Margin="0,0,0,15"/>
+                                                
+                                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                                    <StackPanel>
+                                                        <Border CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                                                            <Border.Background>
+                                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                                    <GradientStop Color="#ECFDF5" Offset="0.0"/>
+                                                                    <GradientStop Color="#D1FAE5" Offset="1.0"/>
+                                                                </LinearGradientBrush>
+                                                            </Border.Background>
+                                                            <StackPanel>
+                                                                <TextBlock Text="Toplam Ölçüm Cihazı" FontSize="13" FontWeight="SemiBold" Foreground="#059669"/>
+                                                                <TextBlock Text="{Binding ToplamOlcumCihazi}" FontSize="28" FontWeight="Bold" Foreground="#064E3B" Margin="0,5,0,0"/>
+                                                            </StackPanel>
+                                                        </Border>
+
+                                                        <TextBlock Text="Cihaz Dağılımı" FontSize="14" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,10"/>
+                                                        <ItemsControl ItemsSource="{Binding OlcumCihaziStats}">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="6" Margin="0,0,0,8" Padding="10">
+                                                                        <Grid>
+                                                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="#374151"/>
+                                                                            <TextBlock Grid.Column="1" Text="{Binding Count}" FontWeight="Bold" Foreground="#059669"/>
+                                                                        </Grid>
+                                                                    </Border>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </StackPanel>
+                                                </ScrollViewer>
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
                                 </Grid>
                             </Border>
                         </TabItem>
@@ -1028,7 +1113,13 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="*"/>
                                     </Grid.RowDefinitions>
-                                    <Grid Grid.Row="0" Margin="0,0,0,20">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="320" MinWidth="250" MaxWidth="600"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Grid Grid.Row="0" Grid.ColumnSpan="3" Margin="0,0,0,20">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="*"/>
@@ -1038,16 +1129,96 @@
                                             <Button Content="Düzenle" Command="{Binding DuzenleOfisCihaziCommand}" Width="100" Height="40" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                                             <Button Content="Sil" Command="{Binding SilOfisCihaziCommand}" Width="60" Height="40" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
                                         </StackPanel>
+                                        <Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="White" BorderBrush="#E5E7EB" BorderThickness="1" Height="40">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="40"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="🔍" VerticalAlignment="Center" HorizontalAlignment="Center" Opacity="0.5"/>
+                                                <TextBox x:Name="SearchBoxOfis" Grid.Column="1" BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center" Padding="5,0,15,0"
+                                                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
+                                                <TextBlock Grid.Column="1" Text="Hızlı arama..." Foreground="#9CA3AF" VerticalAlignment="Center" IsHitTestVisible="False" Margin="10,0,0,0">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Text, ElementName=SearchBoxOfis}" Value="">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </Grid>
+                                        </Border>
                                     </Grid>
-                                    <DataGrid Grid.Row="1" ItemsSource="{Binding OfisCihazlariView}" SelectedItem="{Binding SelectedOfisCihazi}" AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" BorderThickness="1" BorderBrush="#E5E7EB">
+
+                                    <DataGrid Grid.Row="1" Grid.Column="0" ItemsSource="{Binding OfisCihazlariView}" SelectedItem="{Binding SelectedOfisCihazi}" 
+                                              AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" BorderThickness="1" BorderBrush="#E5E7EB" Margin="0,0,5,0">
                                         <DataGrid.Columns>
-                                            <DataGridTextColumn Header="Seri No" Binding="{Binding SeriNo}" Width="150"/>
-                                            <DataGridTextColumn Header="Cihaz Adı" Binding="{Binding CihazAdi}" Width="200"/>
-                                            <DataGridTextColumn Header="Marka/Model" Binding="{Binding Marka}" Width="150"/>
-                                            <DataGridTextColumn Header="Bulunduğu Yer" Binding="{Binding SantiyeKod}" Width="*"/>
-                                            <DataGridTextColumn Header="Zimmetli Personel" Binding="{Binding Not}" Width="150"/>
+                                            <DataGridTextColumn Header="Seri No" Binding="{Binding SeriNo}" Width="120"/>
+                                            <DataGridTextColumn Header="Cihaz Adı" Binding="{Binding CihazAdi}" Width="*"/>
+                                            <DataGridTextColumn Header="Zimmet" Binding="{Binding Not}" Width="120"/>
                                         </DataGrid.Columns>
                                     </DataGrid>
+
+                                    <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="Transparent" ShowsPreview="True" Cursor="SizeWE" Margin="0,0,5,0"/>
+
+                                    <Border Grid.Row="1" Grid.Column="2" Background="#FFFFFF" CornerRadius="12" BorderBrush="#E2E8F0" BorderThickness="1" Padding="15" Margin="5,0,0,0">
+                                        <Border.Effect>
+                                            <DropShadowEffect BlurRadius="15" ShadowDepth="2" Opacity="0.05" Direction="270" Color="#000000"/>
+                                        </Border.Effect>
+                                        <Grid>
+                                            <!-- CİHAZ DETAY -->
+                                            <StackPanel Visibility="{Binding SelectedOfisCihazi, Converter={StaticResource NullToVisibilityConverter}, ConverterParameter=Invert}">
+                                                <Border Width="60" Height="60" Background="#DBEAFE" CornerRadius="40" Margin="0,0,0,5">
+                                                    <TextBlock Text="💻" FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <TextBlock Text="{Binding SelectedOfisCihazi.CihazAdi}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                                                <TextBlock Text="{Binding SelectedOfisCihazi.SeriNo}" FontSize="14" Foreground="#6B7280" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+                                                
+                                                <Separator Margin="0,0,0,20"/>
+                                                
+                                                <StackPanel>
+                                                    <TextBlock Text="MARKA / MODEL" FontSize="10" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,0,0,2"/>
+                                                    <TextBlock Text="{Binding SelectedOfisCihazi.Marka}" FontSize="14" Margin="0,0,0,12"/>
+
+                                                    <TextBlock Text="ZİMMETLİ PERSONEL" FontSize="10" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,0,0,2"/>
+                                                    <TextBlock Text="{Binding SelectedOfisCihazi.Not}" FontSize="14" FontWeight="SemiBold" Foreground="#1E2937" Margin="0,0,0,12"/>
+
+                                                    <TextBlock Text="BULUNDUĞU YER" FontSize="10" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,0,0,2"/>
+                                                    <TextBlock Text="{Binding SelectedOfisCihazi.SantiyeKod}" FontSize="14" Margin="0,0,0,12"/>
+                                                </StackPanel>
+                                            </StackPanel>
+
+                                            <!-- GENEL DURUM ÖZETİ (Cihaz Seçili Değilse) -->
+                                            <Grid Visibility="{Binding SelectedOfisCihazi, Converter={StaticResource NullToVisibilityConverter}}">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="*"/>
+                                                </Grid.RowDefinitions>
+                                                <TextBlock Text="Ofis Cihazları Özeti" FontSize="18" FontWeight="Bold" Foreground="#1F2937" Margin="0,0,0,15"/>
+                                                
+                                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                                    <StackPanel>
+                                                        <Border CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                                                            <Border.Background>
+                                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                                                    <GradientStop Color="#EFF6FF" Offset="0.0"/>
+                                                                    <GradientStop Color="#DBEAFE" Offset="1.0"/>
+                                                                </LinearGradientBrush>
+                                                            </Border.Background>
+                                                            <StackPanel>
+                                                                <TextBlock Text="Toplam Ofis Cihazı" FontSize="13" FontWeight="SemiBold" Foreground="#2563EB"/>
+                                                                <TextBlock Text="{Binding ToplamOfisCihazi}" FontSize="28" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,5,0,0"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </ScrollViewer>
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
                                 </Grid>
                             </Border>
                         </TabItem>

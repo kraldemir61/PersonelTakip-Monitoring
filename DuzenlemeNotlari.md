@@ -63,3 +63,9 @@ Bu dosya, kullanıcı talimatları ve yapılan işlemlerin kronolojik kaydını 
 ### [25.04.2026 16:34] - Personel Kayıt Esnekliği
 - **Talimat**: Yeni personel kayıtta telefon zorunlu alan olmayacak.
 - **İşlem**: `PersonelEditViewModel.cs` içindeki telefon numarası zorunluluk kontrolü kaldırıldı.
+
+### [25.04.2026 16:45] - Cihaz Yönetimi Arayüz Modernizasyonu
+- **Talimat**: Cihazları da personeller gibi layout tasarımında yapalım.
+- **İşlem**: "Ölçüm Cihazları" ve "Ofis Cihazları" sekmeleri, Personel sekmesiyle aynı 3 sütunlu yapıya (Liste + Detay Kartı) dönüştürüldü.
+- **İşlem**: Cihazlar için sağ tarafta dinamik detay kartı ve cihaz seçili değilken görünen "Genel Durum Özeti" eklendi.
+- **İşlem**: `MainViewModel` üzerinde cihaz istatistiklerini hesaplayan `CalculateDeviceStats` mantığı kuruldu ve arama ile entegre edildi.
