@@ -521,7 +521,7 @@ public class DatabaseService
         await conn.OpenAsync();
 
         var id = await conn.QueryFirstAsync<int>(
-            $@"INSERT INTO {tablo} (adi) VALUES (@Adi); SELECT lastval();",
+            $@"INSERT INTO {tablo} (adi) VALUES (@Adi) RETURNING id;",
             new { Adi = adi });
 
         return id;

@@ -110,33 +110,33 @@ public class ExcelService
                         startCol = 2;
                     }
 
-                    p.AdiSoyadi = row.Cell(startCol).GetValue<string>();
+                    p.AdiSoyadi = row.Cell(startCol).GetValue<string>()?.Trim();
                     if (string.IsNullOrWhiteSpace(p.AdiSoyadi)) continue;
 
-                    var santiyeKod = row.Cell(startCol + 1).GetValue<string>();
+                    var santiyeKod = row.Cell(startCol + 1).GetValue<string>()?.Trim();
                     p.SantiyeId = santiyeler.FirstOrDefault(s => s.Kod.Equals(santiyeKod, StringComparison.OrdinalIgnoreCase))?.Id;
 
-                    var bolumAdi = row.Cell(startCol + 2).GetValue<string>();
+                    var bolumAdi = row.Cell(startCol + 2).GetValue<string>()?.Trim();
                     p.BolumuDisplay = bolumAdi;
                     p.Bolumu = bolumler.FirstOrDefault(b => b.Adi.Equals(bolumAdi, StringComparison.OrdinalIgnoreCase))?.Id;
 
-                    var gorevAdi = row.Cell(startCol + 3).GetValue<string>();
+                    var gorevAdi = row.Cell(startCol + 3).GetValue<string>()?.Trim();
                     p.GoreviDisplay = gorevAdi;
                     p.Gorevi = gorevler.FirstOrDefault(g => g.Adi.Equals(gorevAdi, StringComparison.OrdinalIgnoreCase))?.Id;
 
-                    var uyrukAdi = row.Cell(startCol + 4).GetValue<string>();
+                    var uyrukAdi = row.Cell(startCol + 4).GetValue<string>()?.Trim();
                     p.UyruguDisplay = uyrukAdi;
                     p.Uyrugu = uyruklar.FirstOrDefault(u => u.Adi.Equals(uyrukAdi, StringComparison.OrdinalIgnoreCase))?.Id;
 
-                    var tarihStr = row.Cell(startCol + 5).GetValue<string>();
+                    var tarihStr = row.Cell(startCol + 5).GetValue<string>()?.Trim();
                     if (DateTime.TryParse(tarihStr, out DateTime tarih)) p.IseGirisTarihi = tarih;
 
-                    p.TelefonNumarasi = row.Cell(startCol + 6).GetValue<string>();
+                    p.TelefonNumarasi = row.Cell(startCol + 6).GetValue<string>()?.Trim();
                     
-                    var maasVal = row.Cell(startCol + 7).GetValue<string>();
+                    var maasVal = row.Cell(startCol + 7).GetValue<string>()?.Trim();
                     if (decimal.TryParse(maasVal, out decimal maas)) p.Maas = maas;
 
-                    var pbAdi = row.Cell(startCol + 8).GetValue<string>();
+                    var pbAdi = row.Cell(startCol + 8).GetValue<string>()?.Trim();
                     p.ParaBirimiDisplay = pbAdi;
                     p.ParaBirimi = paraBirimleri.FirstOrDefault(pb => pb.Adi.Equals(pbAdi, StringComparison.OrdinalIgnoreCase))?.Id;
 

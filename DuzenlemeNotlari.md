@@ -53,3 +53,9 @@ Bu dosya, kullanıcı talimatları ve yapılan işlemlerin kronolojik kaydını 
 ### [25.04.2026 16:04] - Excel Dosya Adı Formatı
 - **Talimat**: İndirilen excel dosyalarında "25.04.2026 16.03.22" formatını kullan.
 - **İşlem**: `ExcelService` içindeki tüm dışarı aktarma (Personel, Cihaz, Hareketler) dosya adı şablonları saniye detaylı tarih formatına güncellendi.
+
+### [25.04.2026 16:13] - Personel Toplu Yükleme Hatası Düzeltilmesi
+- **Hata**: Bölüm sütunundaki verilerin bazen boş kaydedilmesi.
+- **İşlem**: `ExcelService.ExceldenOkuAsync` metotunda tüm hücre verilerine `.Trim()` eklendi (gizli boşluk sorunları için).
+- **İşlem**: `DatabaseService.LookupOlusturAsync` metodunda `SELECT lastval()` yerine daha güvenilir olan `RETURNING id` yapısına geçildi.
+- **İşlem**: Proje tekrar push edildi.
