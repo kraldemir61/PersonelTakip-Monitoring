@@ -1,4 +1,7 @@
 using System.Text.Json;
+using System.Text;
+using System.Linq;
+using System.Collections.Generic;
 using Dapper;
 using Npgsql;
 using PersonelTakip.Models;
@@ -7,8 +10,6 @@ namespace PersonelTakip.Services;
 
 public class DatabaseService
 {
-    private readonly string _connectionString;
-
     static DatabaseService()
     {
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
@@ -16,10 +17,9 @@ public class DatabaseService
 
     public DatabaseService()
     {
-        _connectionString = AppConfiguration.Instance.Database.ConnectionString;
     }
 
-    private NpgsqlConnection CreateConnection() => new(_connectionString);
+    private NpgsqlConnection CreateConnection() => new(AppConfiguration.Instance.Database.ConnectionString);
 
     public async Task<bool> CheckConnectionAsync()
     {
@@ -27,9 +27,37 @@ public class DatabaseService
         {
             using var conn = CreateConnection();
             await conn.OpenAsync();
+            // Sadece bağlantının canlı olduğunu kontrol et (Sunucuyu yormaz, engellemeye takılmaz)
+            await conn.ExecuteAsync("SELECT 1");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"DB Connection Error: {ex.Message}");
+            return false;
+        }
+    }
+
+    public async Task<bool> InitializeDatabaseAsync()
+    {
+        try
+        {
+            using var conn = CreateConnection();
+            await conn.OpenAsync();
             
-            // 1. Bağımsız Tablolar
+            // Tek bir dev işlemde tüm şemayı ve onarımları yapıyoruz
             await conn.ExecuteAsync(@"
+                -- 1. TEMEL LOOKUP TABLOLARI
+                CREATE TABLE IF NOT EXISTS bolumler (id SERIAL PRIMARY KEY, adi TEXT UNIQUE NOT NULL);
+                CREATE TABLE IF NOT EXISTS gorevler (id SERIAL PRIMARY KEY, adi TEXT UNIQUE NOT NULL);
+                CREATE TABLE IF NOT EXISTS uyruklar (id SERIAL PRIMARY KEY, adi TEXT UNIQUE NOT NULL);
+                CREATE TABLE IF NOT EXISTS para_birimleri (id SERIAL PRIMARY KEY, adi VARCHAR(50) NOT NULL);
+                CREATE TABLE IF NOT EXISTS cihaz_adlari (id SERIAL PRIMARY KEY, adi TEXT UNIQUE NOT NULL);
+                CREATE TABLE IF NOT EXISTS cihaz_markalari (id SERIAL PRIMARY KEY, adi TEXT UNIQUE NOT NULL);
+                CREATE TABLE IF NOT EXISTS cihaz_modelleri (id SERIAL PRIMARY KEY, adi TEXT UNIQUE NOT NULL);
+                CREATE TABLE IF NOT EXISTS cihaz_firmalari (id SERIAL PRIMARY KEY, adi TEXT UNIQUE NOT NULL);
+
+                -- 2. ANA TABLOLAR
                 CREATE TABLE IF NOT EXISTS santiyeler (
                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                     adi TEXT NOT NULL,
@@ -41,19 +69,6 @@ public class DatabaseService
                     updated_at TIMESTAMPTZ DEFAULT now()
                 );
 
-                CREATE TABLE IF NOT EXISTS bolumler (id SERIAL PRIMARY KEY, adi TEXT UNIQUE NOT NULL);
-                CREATE TABLE IF NOT EXISTS gorevler (id SERIAL PRIMARY KEY, adi TEXT UNIQUE NOT NULL);
-                CREATE TABLE IF NOT EXISTS uyruklar (id SERIAL PRIMARY KEY, adi TEXT UNIQUE NOT NULL);
-                CREATE TABLE IF NOT EXISTS para_birimleri (id SERIAL PRIMARY KEY, adi VARCHAR(50) NOT NULL);
-                
-                CREATE TABLE IF NOT EXISTS cihaz_adlari (id SERIAL PRIMARY KEY, adi VARCHAR(100) NOT NULL);
-                CREATE TABLE IF NOT EXISTS cihaz_markalari (id SERIAL PRIMARY KEY, adi VARCHAR(100) NOT NULL);
-                CREATE TABLE IF NOT EXISTS cihaz_modelleri (id SERIAL PRIMARY KEY, adi VARCHAR(100) NOT NULL);
-                CREATE TABLE IF NOT EXISTS cihaz_firmalari (id SERIAL PRIMARY KEY, adi VARCHAR(100) NOT NULL);
-            ");
-
-            // 2. Kullanıcılar ve Audit
-            await conn.ExecuteAsync(@"
                 CREATE TABLE IF NOT EXISTS kullanicilar (
                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                     kullanici_adi TEXT UNIQUE NOT NULL,
@@ -66,23 +81,6 @@ public class DatabaseService
                     created_at TIMESTAMPTZ DEFAULT now()
                 );
 
-                CREATE TABLE IF NOT EXISTS audit_log (
-                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                    kullanici_id UUID REFERENCES kullanicilar(id),
-                    kullanici_adi TEXT,
-                    tablo_adi TEXT NOT NULL,
-                    kayit_id TEXT,
-                    islem_tipi TEXT NOT NULL,
-                    eski_deger JSONB,
-                    yeni_deger JSONB,
-                    ip_adresi TEXT,
-                    aciklama TEXT,
-                    tarih TIMESTAMPTZ DEFAULT now()
-                );
-            ");
-
-            // 3. Personeller ve Cihazlar
-            await conn.ExecuteAsync(@"
                 CREATE TABLE IF NOT EXISTS personeller (
                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                     santiye_id UUID REFERENCES santiyeler(id),
@@ -104,12 +102,55 @@ public class DatabaseService
                     cihaz_adi TEXT,
                     marka TEXT,
                     model TEXT,
+                    ozellik TEXT,
                     sahip_firma TEXT,
                     not_text TEXT,
                     tur INTEGER,
                     santiye_id UUID REFERENCES santiyeler(id),
                     durum TEXT,
-                    son_islem_tarihi TIMESTAMP
+                    son_islem_tarihi TIMESTAMP,
+                    foto_path TEXT,
+                    zimmetli_personel_id UUID REFERENCES personeller(id),
+                    zimmet_tarihi TIMESTAMP
+                );
+                
+                -- CİHAZLAR TABLOSU GÜNCELLEMELERİ (ALTER TABLE if not exists)
+                DO $$ 
+                BEGIN 
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='cihazlar' AND column_name='foto_path') THEN
+                        ALTER TABLE cihazlar ADD COLUMN foto_path TEXT;
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='cihazlar' AND column_name='zimmetli_personel_id') THEN
+                        ALTER TABLE cihazlar ADD COLUMN zimmetli_personel_id UUID REFERENCES personeller(id);
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='cihazlar' AND column_name='zimmet_tarihi') THEN
+                        ALTER TABLE cihazlar ADD COLUMN zimmet_tarihi TIMESTAMP;
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='cihazlar' AND column_name='ozellik') THEN
+                        ALTER TABLE cihazlar ADD COLUMN ozellik TEXT;
+                    END IF;
+                    
+                    -- CİHAZ_ZİMMET_GECMİSİ TABLOSU GÜNCELLEMELERİ
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='cihaz_zimmet_gecmisi' AND column_name='iade_aciklamasi') THEN
+                        ALTER TABLE cihaz_zimmet_gecmisi ADD COLUMN iade_aciklamasi TEXT;
+                    END IF;
+                END $$;
+
+                CREATE TABLE IF NOT EXISTS cihaz_zimmet_gecmisi (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    cihaz_id UUID REFERENCES cihazlar(id) ON DELETE CASCADE,
+                    personel_id UUID REFERENCES personeller(id) ON DELETE CASCADE,
+                    zimmet_tarihi TIMESTAMP NOT NULL,
+                    iade_tarihi TIMESTAMP,
+                    aciklama TEXT
+                );
+
+                -- 3. HAREKET VE LOG TABLOLARI
+                CREATE TABLE IF NOT EXISTS hareketler (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    h_personel_id UUID REFERENCES personeller(id) ON DELETE CASCADE,
+                    tarih TIMESTAMPTZ DEFAULT now(),
+                    aciklama TEXT
                 );
 
                 CREATE TABLE IF NOT EXISTS cihaz_hareketleri (
@@ -122,10 +163,7 @@ public class DatabaseService
                     aciklama TEXT,
                     islem_turu TEXT
                 );
-            ");
 
-            // 4. Bildirimler
-            await conn.ExecuteAsync(@"
                 CREATE TABLE IF NOT EXISTS bildirimler (
                     id SERIAL PRIMARY KEY,
                     mesaj TEXT NOT NULL,
@@ -138,37 +176,89 @@ public class DatabaseService
                     bildirim_id INT NOT NULL,
                     okundu_mu BOOLEAN NOT NULL DEFAULT FALSE,
                     silindi_mi BOOLEAN NOT NULL DEFAULT FALSE,
-                    PRIMARY KEY (kullanici_id, bildirim_id),
-                    FOREIGN KEY (bildirim_id) REFERENCES bildirimler(id) ON DELETE CASCADE
+                    PRIMARY KEY (kullanici_id, bildirim_id)
                 );
+
+                CREATE TABLE IF NOT EXISTS audit_log (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    kullanici_id UUID REFERENCES kullanicilar(id),
+                    kullanici_adi TEXT,
+                    tablo_adi TEXT NOT NULL,
+                    kayit_id TEXT,
+                    islem_tipi TEXT NOT NULL,
+                    eski_deger JSONB,
+                    yeni_deger JSONB,
+                    ip_adresi TEXT,
+                    aciklama TEXT,
+                    tarih TIMESTAMPTZ DEFAULT now()
+                );
+
+                -- 4. AGRESİF SÜTUN ONARIMI (Eğer tablo varsa ama sütun eksikse ekler)
+                ALTER TABLE santiyeler ADD COLUMN IF NOT EXISTS adres TEXT;
+                ALTER TABLE santiyeler ADD COLUMN IF NOT EXISTS telefon TEXT;
+                ALTER TABLE santiyeler ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT now();
+                ALTER TABLE santiyeler ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
+
+                ALTER TABLE kullanicilar ADD COLUMN IF NOT EXISTS son_giris TIMESTAMPTZ;
+                ALTER TABLE kullanicilar ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT now();
+
+                ALTER TABLE personeller ADD COLUMN IF NOT EXISTS bolumu INTEGER;
+                ALTER TABLE personeller ADD COLUMN IF NOT EXISTS gorevi INTEGER;
+                ALTER TABLE personeller ADD COLUMN IF NOT EXISTS uyrugu INTEGER;
+                ALTER TABLE personeller ADD COLUMN IF NOT EXISTS para_birimi INTEGER;
+                ALTER TABLE personeller ADD COLUMN IF NOT EXISTS ise_giris_tarihi DATE;
+                ALTER TABLE personeller ADD COLUMN IF NOT EXISTS telefon_numarasi TEXT;
+                ALTER TABLE personeller ADD COLUMN IF NOT EXISTS maas NUMERIC(15, 2);
+                ALTER TABLE personeller ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT now();
+
+                ALTER TABLE cihazlar ADD COLUMN IF NOT EXISTS seri_no TEXT;
+                ALTER TABLE cihazlar ADD COLUMN IF NOT EXISTS cihaz_adi TEXT;
+                ALTER TABLE cihazlar ADD COLUMN IF NOT EXISTS marka TEXT;
+                ALTER TABLE cihazlar ADD COLUMN IF NOT EXISTS model TEXT;
+                ALTER TABLE cihazlar ADD COLUMN IF NOT EXISTS sahip_firma TEXT;
+                ALTER TABLE cihazlar ADD COLUMN IF NOT EXISTS not_text TEXT;
+                ALTER TABLE cihazlar ADD COLUMN IF NOT EXISTS tur INTEGER;
+                ALTER TABLE cihazlar ADD COLUMN IF NOT EXISTS durum TEXT;
+                ALTER TABLE cihazlar ADD COLUMN IF NOT EXISTS son_islem_tarihi TIMESTAMP;
+                ALTER TABLE cihazlar ADD COLUMN IF NOT EXISTS foto_path TEXT;
+                ALTER TABLE cihazlar ADD COLUMN IF NOT EXISTS zimmetli_personel_id UUID;
+                ALTER TABLE cihazlar ADD COLUMN IF NOT EXISTS zimmet_tarihi TIMESTAMP;
+
+                ALTER TABLE cihaz_hareketleri ADD COLUMN IF NOT EXISTS cihaz_id UUID;
+                ALTER TABLE cihaz_hareketleri ADD COLUMN IF NOT EXISTS nereden_santiye_id UUID;
+                ALTER TABLE cihaz_hareketleri ADD COLUMN IF NOT EXISTS nereye_santiye_id UUID;
+                ALTER TABLE cihaz_hareketleri ADD COLUMN IF NOT EXISTS tarih TIMESTAMP;
+                ALTER TABLE cihaz_hareketleri ADD COLUMN IF NOT EXISTS kullanici_id UUID;
+                ALTER TABLE cihaz_hareketleri ADD COLUMN IF NOT EXISTS aciklama TEXT;
+                ALTER TABLE cihaz_hareketleri ADD COLUMN IF NOT EXISTS islem_turu TEXT;
+
+                ALTER TABLE hareketler ADD COLUMN IF NOT EXISTS aciklama TEXT;
+                
+                ALTER TABLE bildirimler ADD COLUMN IF NOT EXISTS mesaj TEXT;
+                ALTER TABLE bildirimler ADD COLUMN IF NOT EXISTS tetikleyen_kullanici_id UUID;
+                ALTER TABLE bildirimler ADD COLUMN IF NOT EXISTS tarih TIMESTAMP DEFAULT now();
+                ALTER TABLE bildirimler ADD COLUMN IF NOT EXISTS okundu_mu BOOLEAN DEFAULT false;
+                ALTER TABLE bildirimler ADD COLUMN IF NOT EXISTS silindi_mi BOOLEAN DEFAULT false;
+
+                ALTER TABLE bildirim_durumlari ADD COLUMN IF NOT EXISTS okundu_mu BOOLEAN DEFAULT false;
+                ALTER TABLE bildirim_durumlari ADD COLUMN IF NOT EXISTS silindi_mi BOOLEAN DEFAULT false;
+
+                ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS kullanici_adi TEXT;
+                ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS ip_adresi TEXT;
+                ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS aciklama TEXT;
+
+                -- Tip Onarımları
+                DO $$ BEGIN 
+                    IF (SELECT data_type FROM information_schema.columns WHERE table_name='personeller' AND column_name='para_birimi') = 'text' THEN 
+                        ALTER TABLE personeller ALTER COLUMN para_birimi TYPE INTEGER USING para_birimi::integer; 
+                    END IF;
+                    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='hareketler' AND column_name='personel_id') THEN 
+                        ALTER TABLE hareketler RENAME COLUMN personel_id TO h_personel_id; 
+                    END IF;
+                END $$;
             ");
 
-            // 5. Fonksiyon ve Tetikleyiciler
-            await conn.ExecuteAsync(@"
-                CREATE OR REPLACE FUNCTION fn_cihaz_hareket_bildirim()
-                RETURNS TRIGGER AS $$
-                DECLARE
-                    v_cihaz_adi TEXT;
-                    v_seri_no TEXT;
-                    v_santiye_kod TEXT;
-                    v_mesaj TEXT;
-                BEGIN
-                    SELECT cihaz_adi, seri_no INTO v_cihaz_adi, v_seri_no FROM cihazlar WHERE id = NEW.cihaz_id;
-                    SELECT kod INTO v_santiye_kod FROM santiyeler WHERE id = NEW.nereye_santiye_id;
-                    IF v_santiye_kod IS NULL THEN v_santiye_kod := 'Merkez'; END IF;
-                    v_mesaj := v_cihaz_adi || ' (' || v_seri_no || ') ' || v_santiye_kod || ' konumuna (' || NEW.islem_turu || ') transfer edildi.';
-                    INSERT INTO bildirimler (mesaj, tetikleyen_kullanici_id, tarih) VALUES (v_mesaj, NEW.kullanici_id, NEW.tarih);
-                    PERFORM pg_notify('personel_bildirim', NEW.kullanici_id || '|' || v_mesaj);
-                    RETURN NEW;
-                END; $$ LANGUAGE plpgsql;
-
-                DROP TRIGGER IF EXISTS trg_cihaz_hareket_bildirim ON cihaz_hareketleri;
-                CREATE TRIGGER trg_cihaz_hareket_bildirim
-                AFTER INSERT ON cihaz_hareketleri
-                FOR EACH ROW EXECUTE FUNCTION fn_cihaz_hareket_bildirim();
-            ");
-
-            // 6. Varsayılan Admin Kullanıcısı
+            // 5. VARSAYILAN ADMİN KONTROLÜ
             var adminCount = await conn.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM kullanicilar");
             if (adminCount == 0)
             {
@@ -183,8 +273,8 @@ public class DatabaseService
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"DB Init Error: {ex.Message}");
-            return false;
+            System.Diagnostics.Debug.WriteLine($"DB Initialization Error: {ex.Message}");
+            throw;
         }
     }
 
@@ -241,6 +331,127 @@ public class DatabaseService
               LEFT JOIN santiyeler s ON k.santiye_id = s.id
               WHERE k.id = @Id", new { Id = id });
     }
+
+    public async Task<int?> CheckAndAddLookupAsync(string table, List<LookupItem> list, string value)
+    {
+        var normalizedValue = Helpers.StringHelper.NormalizeTurkish(value);
+        var existing = list.FirstOrDefault(l => Helpers.StringHelper.NormalizeTurkish(l.Adi) == normalizedValue);
+        if (existing != null) return existing.Id;
+
+        // Veritabanına ekle
+        var newId = await LookupOlusturAsync(table, value);
+        // Listeye de ekle ki aynı excelde tekrar edenler için tekrar veritabanına gitmesin
+        list.Add(new LookupItem { Id = newId, Adi = value });
+        return newId;
+    }
+
+    #region Ofis Cihazı İşlemleri (Ayrı Kodlar)
+
+    public async Task OfisCihaziEkleAsync(OfisCihazi cihaz)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await conn.ExecuteAsync(@"
+            INSERT INTO cihazlar (id, seri_no, cihaz_adi, marka, model, ozellik, sahip_firma, not_text, tur, durum, son_islem_tarihi, foto_path)
+            VALUES (@Id, @SeriNo, @CihazAdi, @Marka, @Model, @Ozellik, NULL, @Not, 1, @Durum, @SonIslemTarihi, @FotoPath)",
+            cihaz);
+    }
+
+    public async Task OfisCihaziGuncelleAsync(OfisCihazi cihaz)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await conn.ExecuteAsync(@"
+            UPDATE cihazlar SET 
+                seri_no = @SeriNo, 
+                cihaz_adi = @CihazAdi, 
+                marka = @Marka, 
+                model = @Model, 
+                ozellik = @Ozellik,
+                not_text = @Not, 
+                foto_path = @FotoPath,
+                son_islem_tarihi = @SonIslemTarihi
+            WHERE id = @Id",
+            cihaz);
+    }
+
+    public async Task OfisCihaziZimmetleAsync(Guid cihazId, Guid personelId, DateTime tarih, string aciklama)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        using var trans = conn.BeginTransaction();
+        try
+        {
+            await conn.ExecuteAsync(@"
+                UPDATE cihazlar SET 
+                    zimmetli_personel_id = @PersonelId, 
+                    zimmet_tarihi = @Tarih, 
+                    durum = 'Zimmetli',
+                    son_islem_tarihi = @Tarih
+                WHERE id = @CihazId",
+                new { CihazId = cihazId, PersonelId = personelId, Tarih = tarih }, trans);
+
+            await conn.ExecuteAsync(@"
+                INSERT INTO cihaz_zimmet_gecmisi (cihaz_id, personel_id, zimmet_tarihi, aciklama)
+                VALUES (@CihazId, @PersonelId, @Tarih, @Aciklama)",
+                new { CihazId = cihazId, PersonelId = personelId, Tarih = tarih, Aciklama = aciklama }, trans);
+
+            await trans.CommitAsync();
+        }
+        catch
+        {
+            await trans.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task OfisCihaziIadeAlAsync(Guid cihazId, DateTime tarih, string aciklama)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        using var trans = conn.BeginTransaction();
+        try
+        {
+            await conn.ExecuteAsync(@"
+                UPDATE cihazlar SET 
+                    zimmetli_personel_id = NULL, 
+                    zimmet_tarihi = NULL, 
+                    durum = 'Boşta',
+                    son_islem_tarihi = @Tarih
+                WHERE id = @CihazId",
+                new { CihazId = cihazId, Tarih = tarih }, trans);
+
+            await conn.ExecuteAsync(@"
+                UPDATE cihaz_zimmet_gecmisi SET 
+                    iade_tarihi = @Tarih, 
+                    iade_aciklamasi = @Aciklama
+                WHERE cihaz_id = @CihazId AND iade_tarihi IS NULL",
+                new { CihazId = cihazId, Tarih = tarih, Aciklama = aciklama }, trans);
+
+            await trans.CommitAsync();
+        }
+        catch
+        {
+            await trans.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task<List<OfisCihazi>> OfisCihazlariniGetirAsync()
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        return (await conn.QueryAsync<OfisCihazi>(@"
+            SELECT c.id, c.seri_no, c.cihaz_adi, c.marka, c.model, c.ozellik, c.not_text as Not, 
+                   c.durum, c.son_islem_tarihi, c.foto_path,
+                   c.zimmetli_personel_id, p.adi_soyadi as ZimmetliPersonelAd, c.zimmet_tarihi
+            FROM cihazlar c
+            LEFT JOIN personeller p ON c.zimmetli_personel_id = p.id
+            WHERE c.tur = 1
+            ORDER BY c.son_islem_tarihi DESC")).ToList();
+    }
+
+    #endregion
 
     public async Task ExecuteSqlAsync(string sql)
     {
@@ -991,9 +1202,10 @@ public class DatabaseService
         using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        var sql = @"SELECT c.*, s.adi AS SantiyeAdi, s.kod AS SantiyeKod, c.not_text AS ""Not""
+        var sql = @"SELECT c.*, s.adi AS SantiyeAdi, s.kod AS SantiyeKod, p.adi_soyadi AS ZimmetliPersonelAd, c.not_text AS ""Not""
                     FROM cihazlar c
                     LEFT JOIN santiyeler s ON c.santiye_id = s.id
+                    LEFT JOIN personeller p ON c.zimmetli_personel_id = p.id
                     WHERE 1=1";
 
         if (tur.HasValue) sql += " AND c.tur = @Tur";
@@ -1011,8 +1223,8 @@ public class DatabaseService
         await conn.OpenAsync();
 
         await conn.ExecuteAsync(@"
-            INSERT INTO cihazlar (id, seri_no, cihaz_adi, marka, model, sahip_firma, not_text, tur, santiye_id, durum, son_islem_tarihi)
-            VALUES (@Id, @SeriNo, @CihazAdi, @Marka, @Model, @SahipFirma, @Not, @Tur, @SantiyeId, @Durum, @SonIslemTarihi)",
+            INSERT INTO cihazlar (id, seri_no, cihaz_adi, marka, model, sahip_firma, not_text, tur, santiye_id, durum, son_islem_tarihi, foto_path, zimmetli_personel_id, zimmet_tarihi)
+            VALUES (@Id, @SeriNo, @CihazAdi, @Marka, @Model, @SahipFirma, @Not, @Tur, @SantiyeId, @Durum, @SonIslemTarihi, @FotoPath, @ZimmetliPersonelId, @ZimmetTarihi)",
             cihaz);
     }
 
@@ -1025,9 +1237,82 @@ public class DatabaseService
             UPDATE cihazlar SET 
                 seri_no = @SeriNo, cihaz_adi = @CihazAdi, marka = @Marka, model = @Model, 
                 sahip_firma = @SahipFirma, not_text = @Not, tur = @Tur, 
-                santiye_id = @SantiyeId, durum = @Durum, son_islem_tarihi = @SonIslemTarihi
+                santiye_id = @SantiyeId, durum = @Durum, son_islem_tarihi = @SonIslemTarihi,
+                foto_path = @FotoPath, zimmetli_personel_id = @ZimmetliPersonelId, zimmet_tarihi = @ZimmetTarihi
             WHERE id = @Id",
             cihaz);
+    }
+
+    public async Task ZimmetleAsync(Guid cihazId, Guid personelId, DateTime tarih, string aciklama)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        using var trans = conn.BeginTransaction();
+        try
+        {
+            // 1. Cihazı güncelle
+            await conn.ExecuteAsync(@"
+                UPDATE cihazlar SET 
+                    zimmetli_personel_id = @PersonelId, 
+                    zimmet_tarihi = @Tarih,
+                    durum = 'Zimmetli',
+                    son_islem_tarihi = @Tarih
+                WHERE id = @CihazId",
+                new { CihazId = cihazId, PersonelId = personelId, Tarih = tarih }, trans);
+
+            // 2. Geçmişe ekle
+            await conn.ExecuteAsync(@"
+                INSERT INTO cihaz_zimmet_gecmisi (cihaz_id, personel_id, zimmet_tarihi, aciklama)
+                VALUES (@CihazId, @PersonelId, @Tarih, @Aciklama)",
+                new { CihazId = cihazId, PersonelId = personelId, Tarih = tarih, Aciklama = aciklama }, trans);
+
+            await trans.CommitAsync();
+        }
+        catch
+        {
+            await trans.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task IadeAlAsync(Guid cihazId, DateTime tarih, string aciklama)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        using var trans = conn.BeginTransaction();
+        try
+        {
+            // 1. Mevcut zimmet bilgisini al (geçmiş kaydını kapatmak için)
+            var currentZimmet = await conn.QueryFirstOrDefaultAsync<dynamic>(
+                "SELECT zimmetli_personel_id, zimmet_tarihi FROM cihazlar WHERE id = @CihazId",
+                new { CihazId = cihazId }, trans);
+
+            if (currentZimmet != null)
+            {
+                // 2. Geçmiş kaydını iade tarihi ile güncelle
+                await conn.ExecuteAsync(@"
+                    UPDATE cihaz_zimmet_gecmisi SET iade_tarihi = @Tarih, aciklama = aciklama || ' | İade: ' || @Aciklama
+                    WHERE cihaz_id = @CihazId AND personel_id = @PersonelId AND iade_tarihi IS NULL",
+                    new { CihazId = cihazId, PersonelId = (Guid)currentZimmet.zimmetli_personel_id, Tarih = tarih, Aciklama = aciklama }, trans);
+            }
+
+            // 3. Cihazı boşa çıkar
+            await conn.ExecuteAsync(@"
+                UPDATE cihazlar SET 
+                    zimmetli_personel_id = NULL, 
+                    zimmet_tarihi = NULL,
+                    durum = 'Boşta',
+                    son_islem_tarihi = @Tarih
+                WHERE id = @CihazId",
+                new { CihazId = cihazId, Tarih = tarih }, trans);
+
+            await trans.CommitAsync();
+        }
+        catch
+        {
+            await trans.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task CihazSilAsync(Guid id)
@@ -1062,6 +1347,24 @@ public class DatabaseService
                 new { hareket.NereyeSantiyeId, hareket.IslemTuru, hareket.Tarih, hareket.CihazId }, trans);
 
             await trans.CommitAsync();
+
+            try
+            {
+                using var conn2 = CreateConnection();
+                await conn2.OpenAsync();
+                var cihaz = (await conn2.QueryAsync<Cihaz>("SELECT * FROM cihazlar WHERE id = @Id", new { Id = hareket.CihazId })).FirstOrDefault();
+                var santiye = (await conn2.QueryAsync<Santiye>("SELECT * FROM santiyeler WHERE id = @Id", new { Id = hareket.NereyeSantiyeId })).FirstOrDefault();
+                if (cihaz != null && santiye != null)
+                {
+                    string msg = $"{cihaz.CihazAdi} ({cihaz.SeriNo}) cihazı {santiye.Adi} şantiyesine sevk edildi.";
+                    await conn2.ExecuteAsync("INSERT INTO bildirimler (mesaj, tetikleyen_kullanici_id, tarih) VALUES (@Mesaj, @KullaniciId, @Tarih)", 
+                        new { Mesaj = msg, KullaniciId = hareket.KullaniciId, Tarih = DateTime.Now });
+                    
+                    // Canlı bildirim gönder (Başında KullaniciId olmalı ki dinleyici tanısın)
+                    await conn2.ExecuteAsync($"NOTIFY personel_bildirim, '{hareket.KullaniciId}|{msg}';");
+                }
+            }
+            catch { }
         }
         catch
         {
@@ -1116,4 +1419,84 @@ public class DatabaseService
     }
 
     #endregion
+
+    public async Task<string> GenerateBackupSqlAsync()
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var tables = new[]
+        {
+            "santiyeler", "bolumler", "gorevler", "uyruklar", "para_birimleri",
+            "kullanicilar", "personeller", "cihazlar", "cihaz_adlari",
+            "cihaz_markalari", "cihaz_modelleri", "cihaz_firmalari",
+            "cihaz_hareketleri", "hareketler", "bildirimler", "bildirim_durumlari",
+            "audit_log"
+        };
+
+        var sb = new StringBuilder();
+        sb.AppendLine("-- Personel Takip Sistemi - Otomatik Veritabanı Yedeği");
+        sb.AppendLine($"-- Tarih: {DateTime.Now}");
+        sb.AppendLine();
+        sb.AppendLine("SET CONSTRAINTS ALL DEFERRED;");
+        sb.AppendLine();
+
+        foreach (var table in tables)
+        {
+            try
+            {
+                var rows = (await conn.QueryAsync($"SELECT * FROM {table}")).ToList();
+                if (rows.Count > 0)
+                {
+                    sb.AppendLine($"-- Table: {table}");
+                    sb.AppendLine($"TRUNCATE TABLE {table} CASCADE;");
+                    foreach (var row in rows)
+                    {
+                        var fields = (IDictionary<string, object>)row;
+                        var columns = string.Join(", ", fields.Keys);
+                        var values = string.Join(", ", fields.Values.Select(FormatSqlValue));
+                        sb.AppendLine($"INSERT INTO {table} ({columns}) VALUES ({values});");
+                    }
+                    sb.AppendLine();
+                }
+            }
+            catch (Exception ex)
+            {
+                sb.AppendLine($"-- Error backing up {table}: {ex.Message}");
+            }
+        }
+
+        return sb.ToString();
+    }
+
+    private string FormatSqlValue(object value)
+    {
+        if (value == null || value == DBNull.Value) return "NULL";
+        if (value is string s) return $"'{s.Replace("'", "''")}'";
+        if (value is Guid g) return $"'{g}'";
+        if (value is DateTime dt) return $"'{dt:yyyy-MM-dd HH:mm:ss}'";
+        if (value is bool b) return b ? "TRUE" : "FALSE";
+        if (value is byte[] bytes) return $"E'\\\\x{BitConverter.ToString(bytes).Replace("-", "")}'";
+        if (value is double || value is float || value is decimal || value is int || value is long)
+            return value.ToString().Replace(",", ".");
+        
+        return $"'{value.ToString().Replace("'", "''")}'";
+    }
+
+    public async Task RestoreBackupSqlAsync(string sql)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        using var trans = conn.BeginTransaction();
+        try
+        {
+            await conn.ExecuteAsync(sql, transaction: trans);
+            await trans.CommitAsync();
+        }
+        catch
+        {
+            await trans.RollbackAsync();
+            throw;
+        }
+    }
 }

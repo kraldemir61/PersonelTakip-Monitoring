@@ -7,6 +7,7 @@
         xmlns:vm="clr-namespace:PersonelTakip.ViewModels"
         xmlns:conv="clr-namespace:PersonelTakip.Converters"
         xmlns:controls="clr-namespace:PersonelTakip.Controls"
+        xmlns:helpers="clr-namespace:PersonelTakip.Helpers"
         mc:Ignorable="d"
         Title="{Binding PageTitle}" MinHeight="640" MinWidth="980" Height="640" Width="980"
         WindowStartupLocation="CenterScreen"
@@ -20,12 +21,14 @@
     
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <helpers:BooleanInverter x:Key="InverseBoolConverter"/>
         <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
         <conv:RolToColorConverter x:Key="RolToColorConverter"/>
         <conv:RolToIconConverter x:Key="RolToIconConverter"/>
         <conv:AktifToTextConverter x:Key="AktifToTextConverter"/>
         <conv:AktifToColorConverter x:Key="AktifToColorConverter"/>
         <conv:EqualityConverter x:Key="EqualityConverter"/>
+        <conv:FotoPathToImageConverter x:Key="FotoPathToImageConverter"/>
 
         <!-- Sidebar Button Style -->
         <Style x:Key="SidebarFilterButton" TargetType="Button">
@@ -57,6 +60,38 @@
             </Setter>
         </Style>
 
+        <!-- Sidebar ToggleButton Style -->
+        <Style x:Key="SidebarFilterToggleButton" TargetType="ToggleButton">
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="#F1F5F9"/>
+            <Setter Property="Foreground" Value="#475569"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#E2E8F0"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#2563EB"/>
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#2563EB"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="HeaderButton" TargetType="Button">
             <Setter Property="Padding" Value="0"/>
             <Setter Property="FontSize" Value="13"/>
@@ -80,6 +115,7 @@
             <Setter Property="GridLinesVisibility" Value="None"/>
             <Setter Property="RowHeight" Value="40"/>
             <Setter Property="AlternatingRowBackground" Value="#F8FAFC"/>
+            <Setter Property="AlternationCount" Value="2"/>
             <Setter Property="SelectionMode" Value="Single"/>
             <Setter Property="SelectionUnit" Value="FullRow"/>
             <Style.Resources>
@@ -143,126 +179,104 @@
 
         <controls:CustomTitleBar Grid.Row="0">
             <controls:CustomTitleBar.AdditionalContent>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0">
-                        <Ellipse Width="8" Height="8" Fill="#10B981" Margin="0,0,8,0"/>
-                        <TextBlock Text="{Binding CurrentUser.KullaniciAdi}" FontWeight="Bold" Foreground="White" FontSize="13"/>
-                        <TextBlock Text=" / " Foreground="#9CA3AF" Margin="4,0,4,0"/>
-                        <TextBlock Text="{Binding CurrentUser.Rol}" Foreground="#9CA3AF" FontSize="11" VerticalAlignment="Center"/>
-                    </StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
                     
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <!-- Bildirim Zili -->
-                        <Grid Margin="0,0,10,0">
-                            <Button Background="Transparent" BorderThickness="0" Command="{Binding ToggleBildirimPopupCommand}" Cursor="Hand" Padding="4,2" WindowChrome.IsHitTestVisibleInChrome="True">
-                                <Button.Template>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border Background="Transparent" CornerRadius="4">
-                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Opacity" Value="0.7"/>
-                                            </Trigger>
-                                            <Trigger Property="IsPressed" Value="True">
-                                                <Setter Property="Opacity" Value="0.5"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Button.Template>
-                                <TextBlock Text="🔔" FontSize="14" Foreground="White" VerticalAlignment="Center"/>
-                            </Button>
-                            
-                            <!-- Kırmızı Nokta (Unread Count) -->
-                            <Border Background="#EF4444" CornerRadius="8" MinWidth="14" Height="14" 
-                                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-2,-2,0"
-                                    Visibility="{Binding HasUnreadBildirimler, Converter={StaticResource BoolToVisibilityConverter}}"
-                                    IsHitTestVisible="False">
-                                <TextBlock Text="{Binding UnreadBildirimCount}" Foreground="White" FontSize="8" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="2,0"/>
-                            </Border>
-                            
-                            <!-- Popup -->
-                            <Popup IsOpen="{Binding IsBildirimPopupOpen}" StaysOpen="False" Placement="Bottom" HorizontalOffset="0" VerticalOffset="8" AllowsTransparency="True" PopupAnimation="Fade">
-                                <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Width="320" MaxHeight="450" Padding="15" Margin="5,5,5,15">
-                                    <Border.Effect>
-                                        <DropShadowEffect Color="Black" Opacity="0.15" BlurRadius="15" ShadowDepth="4" Direction="270"/>
-                                    </Border.Effect>
-                                    <Grid>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="*"/>
-                                        </Grid.RowDefinitions>
-                                        
-                                        <Grid Margin="0,0,0,10">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Text="Bildirim Merkezi" FontWeight="Bold" FontSize="15" Foreground="#111827" VerticalAlignment="Center"/>
-                                            <Button Grid.Column="1" Content="Tümünü Sil" Command="{Binding TumBildirimleriSilCommand}" Background="Transparent" Foreground="#EF4444" FontSize="11" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" VerticalAlignment="Center">
-                                                <Button.Style>
-                                                    <Style TargetType="Button">
-                                                        <Setter Property="Template">
-                                                            <Setter.Value>
-                                                                <ControlTemplate TargetType="Button">
-                                                                    <TextBlock Text="{TemplateBinding Content}" TextDecorations="Underline"/>
-                                                                </ControlTemplate>
-                                                            </Setter.Value>
-                                                        </Setter>
-                                                        <Style.Triggers>
-                                                            <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter Property="Opacity" Value="0.7"/>
-                                                            </Trigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Button.Style>
-                                            </Button>
-                                        </Grid>
-                                        
-                                        <Rectangle Grid.Row="1" Height="1" Fill="#F3F4F6" Margin="-15,0,-15,10"/>
-                                        
-                                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                                            <ItemsControl ItemsSource="{Binding BildirimlerListesi}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Border BorderBrush="#F3F4F6" BorderThickness="0,0,0,1" Padding="5,10" Background="Transparent">
-                                                            <Grid>
-                                                                <Grid.RowDefinitions>
-                                                                    <RowDefinition Height="Auto"/>
-                                                                    <RowDefinition Height="Auto"/>
-                                                                </Grid.RowDefinitions>
-                                                                <Grid.ColumnDefinitions>
-                                                                    <ColumnDefinition Width="*"/>
-                                                                    <ColumnDefinition Width="Auto"/>
-                                                                </Grid.ColumnDefinitions>
-                                                                <TextBlock Text="{Binding Mesaj}" TextWrapping="Wrap" FontSize="12" Foreground="#374151" FontWeight="{Binding OkunduMu, Converter={StaticResource InverseBoolToFontWeightConverter}}" LineHeight="18"/>
-                                                                <Button Grid.Column="1" Content="✕" Command="{Binding DataContext.BildirimSilCommand, RelativeSource={RelativeSource AncestorType=Popup}}" CommandParameter="{Binding}" Foreground="#9CA3AF" Background="Transparent" BorderThickness="0" Cursor="Hand" VerticalAlignment="Top" Margin="5,0,0,0">
-                                                                    <Button.Style>
-                                                                        <Style TargetType="Button">
-                                                                            <Style.Triggers>
-                                                                                <Trigger Property="IsMouseOver" Value="True">
-                                                                                    <Setter Property="Foreground" Value="#EF4444"/>
-                                                                                </Trigger>
-                                                                            </Style.Triggers>
-                                                                        </Style>
-                                                                    </Button.Style>
-                                                                </Button>
-                                                                <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Tarih, StringFormat=dd.MM.yyyy HH:mm}" Foreground="#9CA3AF" FontSize="10" Margin="0,6,0,0" HorizontalAlignment="Right"/>
-                                                            </Grid>
-                                                        </Border>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </ScrollViewer>
-                                    </Grid>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- User Info -->
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,15,0">
+                            <Ellipse Width="8" Height="8" Fill="#10B981" Margin="0,0,8,0"/>
+                            <TextBlock Text="{Binding CurrentUser.KullaniciAdi}" FontWeight="Bold" Foreground="White" FontSize="13"/>
+                            <TextBlock Text=" / " Foreground="#9CA3AF" Margin="4,0,4,0"/>
+                            <TextBlock Text="{Binding CurrentUser.Rol}" Foreground="#9CA3AF" FontSize="11" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        
+                        <!-- Actions -->
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Bildirim Zili -->
+                            <Grid Margin="0,0,10,0">
+                                <Button Background="Transparent" BorderThickness="0" Command="{Binding ToggleBildirimPopupCommand}" Cursor="Hand" Padding="4,2" WindowChrome.IsHitTestVisibleInChrome="True">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="Transparent" CornerRadius="4">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                    <TextBlock Text="🔔" FontSize="14" Foreground="White" VerticalAlignment="Center"/>
+                                </Button>
+                                
+                                <Border Background="#EF4444" CornerRadius="8" MinWidth="14" Height="14" 
+                                        HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-2,-2,0"
+                                        Visibility="{Binding HasUnreadBildirimler, Converter={StaticResource BoolToVisibilityConverter}}"
+                                        IsHitTestVisible="False">
+                                    <TextBlock Text="{Binding UnreadBildirimCount}" Foreground="White" FontSize="8" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="2,0"/>
                                 </Border>
-                            </Popup>
-                        </Grid>
-
-                        <Button Content="Şifre Değiştir" Width="90" Height="24" FontSize="11" Padding="0" Command="{Binding ParolaDegistirCommand}" Margin="0,0,8,0" Background="#FF5D0BF5" Foreground="White" Style="{StaticResource HeaderButton}" WindowChrome.IsHitTestVisibleInChrome="True"/>
+                                
+                                <Popup IsOpen="{Binding IsBildirimPopupOpen}" StaysOpen="False" Placement="Bottom" HorizontalOffset="0" VerticalOffset="8" AllowsTransparency="True" PopupAnimation="Fade">
+                                    <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="8" Width="320" MaxHeight="450" Padding="15" Margin="5,5,5,15">
+                                        <Border.Effect>
+                                            <DropShadowEffect Color="Black" Opacity="0.15" BlurRadius="15" ShadowDepth="4" Direction="270"/>
+                                        </Border.Effect>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+                                            
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="Bildirim Merkezi" FontWeight="Bold" FontSize="15" Foreground="#111827" VerticalAlignment="Center"/>
+                                                <Button Grid.Column="1" Content="Tümünü Sil" Command="{Binding TumBildirimleriSilCommand}" Background="Transparent" Foreground="#EF4444" FontSize="11" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" VerticalAlignment="Center">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Setter Property="Template">
+                                                                <Setter.Value>
+                                                                    <ControlTemplate TargetType="Button">
+                                                                        <TextBlock Text="{TemplateBinding Content}" TextDecorations="Underline"/>
+                                                                    </ControlTemplate>
+                                                                </Setter.Value>
+                                                            </Setter>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                            </Grid>
+                                            
+                                            <Rectangle Grid.Row="1" Height="1" Fill="#F3F4F6" Margin="-15,0,-15,10"/>
+                                            
+                                            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                                <ItemsControl ItemsSource="{Binding BildirimlerListesi}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Border BorderBrush="#F3F4F6" BorderThickness="0,0,0,1" Padding="5,10" Background="Transparent">
+                                                                <Grid>
+                                                                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                                                    <TextBlock Text="{Binding Mesaj}" TextWrapping="Wrap" FontSize="12" Foreground="#374151" LineHeight="18"/>
+                                                                    <Button Grid.Column="1" Content="✕" Command="{Binding DataContext.BildirimSilCommand, RelativeSource={RelativeSource AncestorType=Popup}}" CommandParameter="{Binding}" Foreground="#9CA3AF" Background="Transparent" BorderThickness="0" Cursor="Hand" VerticalAlignment="Top" Margin="5,0,0,0"/>
+                                                                    <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Tarih, StringFormat=dd.MM.yyyy HH:mm}" Foreground="#9CA3AF" FontSize="10" Margin="0,6,0,0" HorizontalAlignment="Right"/>
+                                                                </Grid>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </ScrollViewer>
+                                        </Grid>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                            
+                            <Button Content="Şifre Değiştir" Width="90" Height="24" FontSize="11" Padding="0" Command="{Binding ParolaDegistirCommand}" Margin="0,0,8,0" Background="#FF5D0BF5" Foreground="White" Style="{StaticResource HeaderButton}" WindowChrome.IsHitTestVisibleInChrome="True"/>
+                        </StackPanel>
                     </StackPanel>
-                </StackPanel>
+                </Grid>
             </controls:CustomTitleBar.AdditionalContent>
         </controls:CustomTitleBar>
 
@@ -1114,43 +1128,47 @@
 
                         <!-- OFİS CİHAZLARI -->
                         <TabItem Header="Ofis Cihazları">
-                            <Border Background="White" CornerRadius="0,12,12,12" Padding="20">
+                            <Border Background="#F8FAFC" CornerRadius="0,12,12,12" Padding="0">
                                 <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="*"/>
-                                    </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="320"/>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="320" MinWidth="250" MaxWidth="600"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <Grid Grid.Row="0" Grid.ColumnSpan="3" Margin="0,0,0,20">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                            <Button Content="Ekle" Command="{Binding YeniOfisCihaziCommand}" Width="110" Height="40" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
-                                            <Button Content="Düzenle" Command="{Binding DuzenleOfisCihaziCommand}" Width="100" Height="40" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
-                                            <Button Content="Sil" Command="{Binding SilOfisCihaziCommand}" Width="60" Height="40" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
-                                        </StackPanel>
-                                        <Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="White" BorderBrush="#E5E7EB" BorderThickness="1" Height="40">
+                                    <!-- ─── SOL: Cihaz Listesi ─── -->
+                                    <Grid Grid.Column="0" Margin="15">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+
+                                        <!-- Filtreler -->
+                                        <UniformGrid Grid.Row="0" Columns="2" Margin="0,0,0,10">
+                                            <ToggleButton Content="Boşta" Height="32" Margin="0,0,5,0"
+                                                          IsChecked="{Binding OfisCihaziFilterAvailable}"
+                                                          Style="{StaticResource SidebarFilterToggleButton}"/>
+                                            <ToggleButton Content="Zimmetli" Height="32" Margin="5,0,0,0"
+                                                          IsChecked="{Binding OfisCihaziFilterAssigned}"
+                                                          Style="{StaticResource SidebarFilterToggleButton}"/>
+                                        </UniformGrid>
+
+                                        <!-- Arama -->
+                                        <Border Grid.Row="1" CornerRadius="10" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" Height="38" Margin="0,0,0,10">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="40"/>
+                                                    <ColumnDefinition Width="35"/>
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="🔍" VerticalAlignment="Center" HorizontalAlignment="Center" Opacity="0.5"/>
-                                                <TextBox x:Name="SearchBoxOfis" Grid.Column="1" BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center" Padding="5,0,15,0"
+                                                <TextBox x:Name="SearchBoxOfisNew" Grid.Column="1" BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center" Padding="5,0,10,0"
                                                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <TextBlock Grid.Column="1" Text="Hızlı arama..." Foreground="#9CA3AF" VerticalAlignment="Center" IsHitTestVisible="False" Margin="10,0,0,0">
+                                                <TextBlock Grid.Column="1" Text="Cihaz veya personel ara..." Foreground="#9CA3AF" VerticalAlignment="Center" IsHitTestVisible="False" Margin="10,0,0,0">
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
                                                             <Setter Property="Visibility" Value="Collapsed"/>
                                                             <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Text, ElementName=SearchBoxOfis}" Value="">
+                                                                <DataTrigger Binding="{Binding Text, ElementName=SearchBoxOfisNew}" Value="">
                                                                     <Setter Property="Visibility" Value="Visible"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
@@ -1159,73 +1177,291 @@
                                                 </TextBlock>
                                             </Grid>
                                         </Border>
+
+                                        <!-- DataGrid (Sidebar List) -->
+                                        <Border Grid.Row="2" Background="White" CornerRadius="12" BorderBrush="#E2E8F0" BorderThickness="1" Padding="2">
+                                            <DataGrid ItemsSource="{Binding OfisCihazlariView}" SelectedItem="{Binding SelectedOfisCihazi}" 
+                                                      AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" AlternationCount="2">
+                                                <DataGrid.Columns>
+                                                    <DataGridTemplateColumn Header="Cihaz Listesi" Width="*">
+                                                        <DataGridTemplateColumn.CellTemplate>
+                                                            <DataTemplate>
+                                                                <StackPanel Margin="10,5">
+                                                                    <TextBlock Text="{Binding CihazAdi}" FontWeight="Bold" FontSize="13">
+                                                                        <TextBlock.Style>
+                                                                            <Style TargetType="TextBlock">
+                                                                                <Setter Property="Foreground" Value="#1E293B"/>
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=DataGridRow}}" Value="True">
+                                                                                        <Setter Property="Foreground" Value="Blue"/>
+                                                                                    </DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </TextBlock.Style>
+                                                                    </TextBlock>
+                                                                    <StackPanel Orientation="Horizontal">
+                                                                        <TextBlock Text="{Binding Marka}" FontSize="11">
+                                                                            <TextBlock.Style>
+                                                                                <Style TargetType="TextBlock">
+                                                                                    <Setter Property="Foreground" Value="#64748B"/>
+                                                                                    <Style.Triggers>
+                                                                                        <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=DataGridRow}}" Value="True">
+                                                                                            <Setter Property="Foreground" Value="Blue"/>
+                                                                                        </DataTrigger>
+                                                                                    </Style.Triggers>
+                                                                                </Style>
+                                                                            </TextBlock.Style>
+                                                                        </TextBlock>
+                                                                        <TextBlock Text=" " />
+                                                                        <TextBlock Text="{Binding Model}" FontSize="11">
+                                                                            <TextBlock.Style>
+                                                                                <Style TargetType="TextBlock">
+                                                                                    <Setter Property="Foreground" Value="#64748B"/>
+                                                                                    <Style.Triggers>
+                                                                                        <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=DataGridRow}}" Value="True">
+                                                                                            <Setter Property="Foreground" Value="Blue"/>
+                                                                                        </DataTrigger>
+                                                                                    </Style.Triggers>
+                                                                                </Style>
+                                                                            </TextBlock.Style>
+                                                                        </TextBlock>
+                                                                    </StackPanel>
+                                                                    <TextBlock Text="{Binding ZimmetliPersonelAd, TargetNullValue='Boşta'}" FontSize="11" FontWeight="SemiBold">
+                                                                        <TextBlock.Style>
+                                                                            <Style TargetType="TextBlock">
+                                                                                <Setter Property="Foreground" Value="#10B981"/>
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Binding="{Binding ZimmetliMi}" Value="True">
+                                                                                        <Setter Property="Foreground" Value="#EF4444"/>
+                                                                                    </DataTrigger>
+                                                                                    <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=DataGridRow}}" Value="True">
+                                                                                        <Setter Property="Foreground" Value="Blue"/>
+                                                                                    </DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </TextBlock.Style>
+                                                                    </TextBlock>
+                                                                </StackPanel>
+                                                            </DataTemplate>
+                                                        </DataGridTemplateColumn.CellTemplate>
+                                                    </DataGridTemplateColumn>
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+                                        </Border>
+                                        
+                                        <Button Grid.Row="2" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,15,15"
+                                                Content="+" FontSize="24" FontWeight="Bold" Width="45" Height="45"
+                                                Background="#2563EB" Foreground="White" BorderThickness="0" Cursor="Hand"
+                                                Command="{Binding YeniOfisCihaziCommand}">
+                                            <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="23"/></Style></Button.Resources>
+                                            <Button.Effect><DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.2"/></Button.Effect>
+                                        </Button>
                                     </Grid>
 
-                                    <DataGrid Grid.Row="1" Grid.Column="0" ItemsSource="{Binding OfisCihazlariView}" SelectedItem="{Binding SelectedOfisCihazi}" 
-                                              AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" BorderThickness="1" BorderBrush="#E5E7EB" Margin="0,0,5,0">
-                                        <DataGrid.Columns>
-                                            <DataGridTextColumn Header="Seri No" Binding="{Binding SeriNo}" Width="120"/>
-                                            <DataGridTextColumn Header="Cihaz Adı" Binding="{Binding CihazAdi}" Width="*"/>
-                                            <DataGridTextColumn Header="Zimmet" Binding="{Binding Not}" Width="120"/>
-                                        </DataGrid.Columns>
-                                    </DataGrid>
+                                    <!-- ─── SAĞ: Detay Kartı ─── -->
+                                    <Grid Grid.Column="1" Margin="0,15,15,15">
+                                        <!-- Empty State -->
+                                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                            <StackPanel.Style>
+                                                <Style TargetType="StackPanel">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding SelectedOfisCihazi}" Value="{x:Null}">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </StackPanel.Style>
+                                            <TextBlock Text="📱" FontSize="60" HorizontalAlignment="Center" Opacity="0.2"/>
+                                            <TextBlock Text="Detayları görmek için bir cihaz seçin" Foreground="#94A3B8" FontSize="16" FontStyle="Italic" Margin="0,10,0,0"/>
+                                        </StackPanel>
 
-                                    <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="Transparent" ShowsPreview="True" Cursor="SizeWE" Margin="0,0,5,0"/>
+                                        <!-- Detail Content -->
+                                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                            <ScrollViewer.Style>
+                                                <Style TargetType="ScrollViewer">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding SelectedOfisCihazi}" Value="{x:Null}">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ScrollViewer.Style>
 
-                                    <Border Grid.Row="1" Grid.Column="2" Background="#FFFFFF" CornerRadius="12" BorderBrush="#E2E8F0" BorderThickness="1" Padding="15" Margin="5,0,0,0">
-                                        <Border.Effect>
-                                            <DropShadowEffect BlurRadius="15" ShadowDepth="2" Opacity="0.05" Direction="270" Color="#000000"/>
-                                        </Border.Effect>
-                                        <Grid>
-                                            <!-- CİHAZ DETAY -->
-                                            <StackPanel Visibility="{Binding SelectedOfisCihazi, Converter={StaticResource NullToVisibilityConverter}, ConverterParameter=Invert}">
-                                                <Border Width="60" Height="60" Background="#DBEAFE" CornerRadius="40" Margin="0,0,0,5">
-                                                    <TextBlock Text="💻" FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <StackPanel DataContext="{Binding SelectedOfisCihazi}">
+                                                <!-- Header Card -->
+                                                <Border Background="White" CornerRadius="15" Padding="20" Margin="0,0,0,15">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <Border Grid.Column="0" Width="60" Height="60" CornerRadius="30" Background="#F1F5F9" Margin="0,0,20,0">
+                                                            <TextBlock Text="📱" FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+
+                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                            <TextBlock FontSize="20" FontWeight="Bold" Foreground="#1E293B">
+                                                                <Run Text="{Binding CihazAdi}"/>
+                                                                <Run Text=" - "/>
+                                                                <Run Text="{Binding Marka}"/>
+                                                                <Run Text=" "/>
+                                                                <Run Text="{Binding Model}"/>
+                                                            </TextBlock>
+                                                            <TextBlock Text="{Binding SeriNo}" FontSize="13" Foreground="#64748B" Margin="0,2,0,0"/>
+                                                        </StackPanel>
+
+                                                        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
+                                                            <Button Content="Düzenle" Command="{Binding DataContext.DuzenleOfisCihaziCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                    Padding="15,6" Background="#F59E0B" Foreground="White" BorderThickness="0" FontWeight="SemiBold" Cursor="Hand" Margin="0,0,8,0">
+                                                                <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style></Button.Resources>
+                                                            </Button>
+                                                            <Button Content="Sil" Command="{Binding DataContext.SilOfisCihaziCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                    Padding="15,6" Background="#EF4444" Foreground="White" BorderThickness="0" FontWeight="SemiBold" Cursor="Hand">
+                                                                <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style></Button.Resources>
+                                                            </Button>
+                                                        </StackPanel>
+                                                    </Grid>
                                                 </Border>
-                                                <TextBlock Text="{Binding SelectedOfisCihazi.CihazAdi}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
-                                                <TextBlock Text="{Binding SelectedOfisCihazi.SeriNo}" FontSize="14" Foreground="#6B7280" HorizontalAlignment="Center" Margin="0,0,0,20"/>
-                                                
-                                                <Separator Margin="0,0,0,20"/>
-                                                
-                                                <StackPanel>
-                                                    <TextBlock Text="MARKA / MODEL" FontSize="10" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,0,0,2"/>
-                                                    <TextBlock Text="{Binding SelectedOfisCihazi.Marka}" FontSize="14" Margin="0,0,0,12"/>
 
-                                                    <TextBlock Text="ZİMMETLİ PERSONEL" FontSize="10" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,0,0,2"/>
-                                                    <TextBlock Text="{Binding SelectedOfisCihazi.Not}" FontSize="14" FontWeight="SemiBold" Foreground="#1E2937" Margin="0,0,0,12"/>
-
-                                                    <TextBlock Text="BULUNDUĞU YER" FontSize="10" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,0,0,2"/>
-                                                    <TextBlock Text="{Binding SelectedOfisCihazi.SantiyeKod}" FontSize="14" Margin="0,0,0,12"/>
-                                                </StackPanel>
-                                            </StackPanel>
-
-                                            <!-- GENEL DURUM ÖZETİ (Cihaz Seçili Değilse) -->
-                                            <Grid Visibility="{Binding SelectedOfisCihazi, Converter={StaticResource NullToVisibilityConverter}}">
-                                                <Grid.RowDefinitions>
-                                                    <RowDefinition Height="Auto"/>
-                                                    <RowDefinition Height="*"/>
-                                                </Grid.RowDefinitions>
-                                                <TextBlock Text="Ofis Cihazları Özeti" FontSize="18" FontWeight="Bold" Foreground="#1F2937" Margin="0,0,0,15"/>
-                                                
-                                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                                    <StackPanel>
-                                                        <Border CornerRadius="8" Padding="15" Margin="0,0,0,15">
-                                                            <Border.Background>
-                                                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                                    <GradientStop Color="#EFF6FF" Offset="0.0"/>
-                                                                    <GradientStop Color="#DBEAFE" Offset="1.0"/>
-                                                                </LinearGradientBrush>
-                                                            </Border.Background>
+                                                <UniformGrid Columns="2">
+                                                    <!-- Left Column: Photos & Info -->
+                                                    <StackPanel Margin="0,0,8,0">
+                                                        <!-- Photos Card -->
+                                                        <Border Background="White" CornerRadius="15" Padding="15" Margin="0,0,0,15">
                                                             <StackPanel>
-                                                                <TextBlock Text="Toplam Ofis Cihazı" FontSize="13" FontWeight="SemiBold" Foreground="#2563EB"/>
-                                                                <TextBlock Text="{Binding ToplamOfisCihazi}" FontSize="28" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,5,0,0"/>
+                                                                <TextBlock Text="CİHAZ GÖRSELLERİ" FontWeight="Bold" FontSize="11" Foreground="#2563EB" Margin="0,0,0,15"/>
+                                                                
+                                                                <TextBlock Text="Görsel bulunmuyor." FontStyle="Italic" Foreground="#94A3B8" HorizontalAlignment="Center" Margin="0,20">
+                                                                    <TextBlock.Style>
+                                                                        <Style TargetType="TextBlock">
+                                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding Fotograflar.Count}" Value="0">
+                                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBlock.Style>
+                                                                </TextBlock>
+
+                                                                <Grid>
+                                                                    <Grid.Style>
+                                                                        <Style TargetType="Grid">
+                                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding Fotograflar.Count}" Value="0">
+                                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </Grid.Style>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="30"/>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                        <ColumnDefinition Width="30"/>
+                                                                    </Grid.ColumnDefinitions>
+
+                                                                    <Button Grid.Column="0" Content="❮" Background="Transparent" Foreground="#2563EB" BorderThickness="0" FontSize="20" FontWeight="Bold" Cursor="Hand"
+                                                                            Command="{Binding DataContext.OfisCihaziPrevFotoCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}">
+                                                                        <Button.Style>
+                                                                            <Style TargetType="Button">
+                                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Binding="{Binding IsFirstFoto}" Value="True"><Setter Property="Visibility" Value="Hidden"/></DataTrigger>
+                                                                                    <DataTrigger Binding="{Binding Fotograflar.Count}" Value="1"><Setter Property="Visibility" Value="Hidden"/></DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </Button.Style>
+                                                                    </Button>
+
+                                                                    <Border Grid.Column="1" HorizontalAlignment="Center" Height="180">
+                                                                        <Image Source="{Binding CurrentFoto, Converter={StaticResource FotoPathToImageConverter}}" Stretch="Uniform"/>
+                                                                    </Border>
+
+                                                                    <Button Grid.Column="2" Content="❯" Background="Transparent" Foreground="#2563EB" BorderThickness="0" FontSize="20" FontWeight="Bold" Cursor="Hand"
+                                                                            Command="{Binding DataContext.OfisCihaziNextFotoCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}">
+                                                                        <Button.Style>
+                                                                            <Style TargetType="Button">
+                                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Binding="{Binding IsLastFoto}" Value="True"><Setter Property="Visibility" Value="Hidden"/></DataTrigger>
+                                                                                    <DataTrigger Binding="{Binding Fotograflar.Count}" Value="1"><Setter Property="Visibility" Value="Hidden"/></DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </Button.Style>
+                                                                    </Button>
+                                                                </Grid>
+                                                            </StackPanel>
+                                                        </Border>
+
+                                                        <!-- Description Card -->
+                                                        <Border Background="White" CornerRadius="15" Padding="15">
+                                                            <StackPanel>
+                                                                <TextBlock Text="AÇIKLAMA / NOT" FontWeight="Bold" FontSize="11" Foreground="#2563EB" Margin="0,0,0,10"/>
+                                                                <TextBlock Text="{Binding Not, TargetNullValue='(Not girilmemiş)'}" Foreground="#475569" TextWrapping="Wrap" FontSize="13" FontStyle="Italic"/>
                                                             </StackPanel>
                                                         </Border>
                                                     </StackPanel>
-                                                </ScrollViewer>
-                                            </Grid>
-                                        </Grid>
-                                    </Border>
+
+                                                    <!-- Right Column: Zimmet -->
+                                                    <StackPanel Margin="8,0,0,0">
+                                                        <!-- Zimmet Card -->
+                                                        <Border Background="White" CornerRadius="15" Padding="20">
+                                                            <StackPanel>
+                                                                <TextBlock Text="ZİMMET BİLGİLERİ" FontWeight="Bold" FontSize="11" Foreground="#2563EB" Margin="0,0,0,20"/>
+                                                                
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="Auto"/>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                    </Grid.ColumnDefinitions>
+
+                                                                    <Border Grid.Column="0" Width="50" Height="50" CornerRadius="25" Background="#E2E8F0" Margin="0,0,15,0">
+                                                                        <TextBlock Text="👤" FontSize="25" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                    </Border>
+
+                                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                                        <TextBlock Text="Mevcut Personel" FontSize="11" Foreground="#64748B" Margin="0,0,0,2"/>
+                                                                        <TextBlock Text="{Binding ZimmetliPersonelAd, TargetNullValue='- Zimmet Yok -'}" FontSize="15" FontWeight="Bold" Foreground="#1E293B"/>
+                                                                        <StackPanel Orientation="Horizontal" Visibility="{Binding ZimmetliMi, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                                            <TextBlock Text="Zimmet Tarihi: " FontSize="11" Foreground="#64748B"/>
+                                                                            <TextBlock Text="{Binding ZimmetTarihi, StringFormat=d}" FontSize="11" Foreground="#1E293B" FontWeight="SemiBold"/>
+                                                                        </StackPanel>
+                                                                    </StackPanel>
+                                                                </Grid>
+
+                                                                <StackPanel Orientation="Horizontal" Margin="0,20,0,0" HorizontalAlignment="Center">
+                                                                    <Button Content="İADE AL" Width="100" Height="32" Background="#EF4444" Foreground="White" BorderThickness="0" FontWeight="Bold" Cursor="Hand" Margin="0,0,10,0"
+                                                                            Command="{Binding DataContext.IadeAlOfisCihaziCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"
+                                                                            Visibility="{Binding ZimmetliMi, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                                        <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style></Button.Resources>
+                                                                    </Button>
+                                                                    <Button Content="ZİMMETLE" Width="100" Height="32" Background="#2563EB" Foreground="White" BorderThickness="0" FontWeight="Bold" Cursor="Hand"
+                                                                            Command="{Binding DataContext.ZimmetleOfisCihaziCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}">
+                                                                        <Button.Style>
+                                                                            <Style TargetType="Button">
+                                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Binding="{Binding ZimmetliMi}" Value="True">
+                                                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                                                    </DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </Button.Style>
+                                                                        <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="6"/></Style></Button.Resources>
+                                                                    </Button>
+                                                                </StackPanel>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </UniformGrid>
+                                            </StackPanel>
+                                        </ScrollViewer>
+                                    </Grid>
                                 </Grid>
                             </Border>
                         </TabItem>
@@ -1352,6 +1588,24 @@
                                 <TextBlock Text="Bu bölümden Excel şablonları kullanarak sisteme toplu veri ekleyebilir veya mevcut verileri güncelleyebilirsiniz." 
                                            FontSize="14" Foreground="#6B7280" TextWrapping="Wrap" Margin="0,0,0,30"/>
 
+                                <!-- VERİTABANI İŞLEMLERİ GRUBU -->
+                                <Border Background="#F1F5F9" CornerRadius="12" Padding="20" Margin="0,0,0,30">
+                                    <StackPanel>
+                                        <TextBlock Text="Veritabanı İşlemleri" FontSize="18" FontWeight="Bold" Foreground="#475569" Margin="0,0,0,20"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Button Grid.Column="0" Content="💾 Veritabanı Yedekle" Command="{Binding BackupDatabaseCommand}" IsEnabled="{Binding IsDatabaseBusy, Converter={StaticResource InverseBoolConverter}}" Height="40" Background="#6366F1" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                                            <Button Grid.Column="1" Content="📂 Veritabanı Yükle" Command="{Binding RestoreDatabaseCommand}" IsEnabled="{Binding IsDatabaseBusy, Converter={StaticResource InverseBoolConverter}}" Height="40" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                                        </Grid>
+                                        <ProgressBar IsIndeterminate="True" Height="4" Margin="0,15,0,0" Visibility="{Binding IsDatabaseBusy, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                    </StackPanel>
+                                </Border>
+
                                 <!-- PERSONEL İŞLEMLERİ GRUBU -->
                                 <Border Background="#F1F5F9" CornerRadius="12" Padding="20" Margin="0,0,0,30">
                                     <StackPanel>
@@ -1406,11 +1660,13 @@
                 </TabItem>
 
             </TabControl>
+
+        <Button Grid.Row="1" Content="Çıkış" Height="28" Width="70" FontSize="11" FontWeight="SemiBold" 
+                Command="{Binding LogoutCommand}" Background="#EF4444" Foreground="White" 
+                Style="{StaticResource HeaderButton}" HorizontalAlignment="Right" VerticalAlignment="Top" 
+                Margin="0,8,30,0" Panel.ZIndex="10"/>
             
-            <Button Grid.Row="1" Content="Çıkış" Height="28" Width="70" FontSize="11" FontWeight="SemiBold" 
-                    Command="{Binding LogoutCommand}" Background="#EF4444" Foreground="White" 
-                    Style="{StaticResource HeaderButton}" HorizontalAlignment="Right" VerticalAlignment="Top" 
-                    Margin="0,8,30,0" Panel.ZIndex="10"/>
+
 
 
         <!-- Status Bar -->

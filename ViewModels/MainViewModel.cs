@@ -10,6 +10,7 @@ using PersonelTakip.Helpers;
 using ClosedXML.Excel;
 using Microsoft.Win32;
 using System.Linq;
+using System.IO;
 
 namespace PersonelTakip.ViewModels;
 
@@ -36,6 +37,9 @@ public partial class MainViewModel : BaseViewModel
 
     [ObservableProperty]
     private string _connectionStatus = "Bağlantı kuruluyor...";
+
+    [ObservableProperty]
+    private bool _isDatabaseBusy;
 
     [ObservableProperty]
     private bool _isConnected;
@@ -183,15 +187,21 @@ public partial class MainViewModel : BaseViewModel
 
     // Zimmet Takibi - Ofis Cihazları
     [ObservableProperty]
-    private ObservableCollection<Cihaz> _ofisCihazlari = new();
+    private ObservableCollection<OfisCihazi> _ofisCihazlari = new();
 
     [ObservableProperty]
-    private Cihaz? _selectedOfisCihazi;
+    private OfisCihazi? _selectedOfisCihazi;
 
     public ICollectionView OfisCihazlariView { get; private set; }
 
     [ObservableProperty]
     private int _toplamOfisCihazi;
+
+    [ObservableProperty]
+    private bool _ofisCihaziFilterAvailable = false;
+
+    [ObservableProperty]
+    private bool _ofisCihaziFilterAssigned = false;
 
     // Cihaz Tanımlamalar
     [ObservableProperty]
@@ -309,6 +319,14 @@ public partial class MainViewModel : BaseViewModel
         OfisCihazlariView.Filter = FilterOfisCihazlari;
 
         LoadAllDataAsync().ConfigureAwait(false);
+        
+        // Veritabanı veya ayarlar değiştiğinde tüm verileri otomatik tazele
+        AppConfiguration.Instance.ConfigurationChanged += (s, e) => 
+        {
+            Application.Current.Dispatcher.Invoke(async () => {
+                await LoadAllDataAsync();
+            });
+        };
     }
 
     [RelayCommand]
@@ -384,6 +402,75 @@ public partial class MainViewModel : BaseViewModel
         // Aktif pencereyi owner olarak belirle
         win.Owner = System.Linq.Enumerable.FirstOrDefault(System.Windows.Application.Current.Windows.Cast<System.Windows.Window>(), w => w.IsActive);
         win.ShowDialog();
+    }
+
+    [RelayCommand]
+    private async Task BackupDatabaseAsync()
+    {
+        var sfd = new SaveFileDialog
+        {
+            Filter = "SQL Files (*.sql)|*.sql",
+            FileName = $"PersonelTakip_Yedek {DateTime.Now:dd.MM.yyyy HH.mm}.sql"
+        };
+
+        if (sfd.ShowDialog() == true)
+        {
+            IsDatabaseBusy = true;
+            try
+            {
+                var sql = await _databaseService.GenerateBackupSqlAsync();
+                await File.WriteAllTextAsync(sfd.FileName, sql);
+                ShowSnackbarNotification("Veritabanı yedeği başarıyla oluşturuldu.");
+            }
+            catch (Exception ex)
+            {
+                ShowError($"Yedekleme hatası: {ex.Message}");
+            }
+            finally
+            {
+                IsDatabaseBusy = false;
+            }
+        }
+    }
+
+    [RelayCommand]
+    private async Task RestoreDatabaseAsync()
+    {
+        var ofd = new OpenFileDialog
+        {
+            Filter = "SQL Files (*.sql)|*.sql",
+            Title = "Yedek Dosyası Seçin"
+        };
+
+        if (ofd.ShowDialog() == true)
+        {
+            if (Confirm("Mevcut veriler silinecek ve yedektekiler yüklenecek. Emin misiniz?"))
+            {
+                IsDatabaseBusy = true;
+                try
+                {
+                    await _databaseService.InitializeDatabaseAsync();
+                    var sql = await File.ReadAllTextAsync(ofd.FileName);
+                    await _databaseService.RestoreBackupSqlAsync(sql);
+                    
+                    // Bağlantıyı ve şemayı anında tazele
+                    await _databaseService.InitializeDatabaseAsync();
+                    
+                    // TÜM SİSTEME HABER VER: Veriler değişti, listeleri yenileyin!
+                    AppConfiguration.Instance.TriggerConfigurationChanged();
+                    
+                    ShowSnackbarNotification("Veriler başarıyla geri yüklendi ve sistem güncellendi.");
+                }
+                catch (Exception ex)
+                {
+                    ShowError($"Geri yükleme hatası: {ex.Message}");
+                }
+                finally
+                {
+                    IsDatabaseBusy = false;
+                }
+            }
+        }
     }
 
     private async Task LoadBildirimlerAsync()
@@ -582,7 +669,7 @@ public partial class MainViewModel : BaseViewModel
         OlcumCihaziStats = new ObservableCollection<StatItem>(olcumGrup);
 
         if (OfisCihazlariView == null) return;
-        ToplamOfisCihazi = OfisCihazlariView.Cast<Cihaz>().Count();
+        ToplamOfisCihazi = OfisCihazlariView.Cast<OfisCihazi>().Count();
     }
 
     [RelayCommand]
@@ -750,6 +837,7 @@ public partial class MainViewModel : BaseViewModel
                 ? $"Bağlantı yavaş ({stopwatch.ElapsedMilliseconds / 1000}s)"
                 : "Bağlantı hazır";
 
+            await _databaseService.InitializeDatabaseAsync();
             await LoadPersonellerAsync();
             await LoadLookupsAsync();
             await LoadSantiyelerAsync();
@@ -776,13 +864,24 @@ public partial class MainViewModel : BaseViewModel
 
     private async Task LoadCihazlarAsync()
     {
+        var selectedOlcumId = SelectedOlcumCihazi?.Id;
+        var selectedOfisId = SelectedOfisCihazi?.Id;
+
         var olcum = await _databaseService.CihazlariGetirAsync(CihazTuru.Olcum);
         OlcumCihazlari.Clear();
         foreach (var c in olcum) OlcumCihazlari.Add(c);
 
-        var ofis = await _databaseService.CihazlariGetirAsync(CihazTuru.Ofis);
+        var ofis = await _databaseService.OfisCihazlariniGetirAsync();
         OfisCihazlari.Clear();
         foreach (var c in ofis) OfisCihazlari.Add(c);
+        
+        if (selectedOlcumId.HasValue)
+            SelectedOlcumCihazi = OlcumCihazlari.FirstOrDefault(x => x.Id == selectedOlcumId.Value);
+        
+        if (selectedOfisId.HasValue)
+            SelectedOfisCihazi = OfisCihazlari.FirstOrDefault(x => x.Id == selectedOfisId.Value);
+
+        CalculateDeviceStats();
     }
 
     private bool FilterOlcumCihazlari(object obj)
@@ -805,11 +904,75 @@ public partial class MainViewModel : BaseViewModel
 
     private bool FilterOfisCihazlari(object obj)
     {
-        if (obj is not Cihaz c) return false;
+        if (obj is not OfisCihazi c) return false;
+
+        // Durum Filtresi (Exclusive)
+        if (OfisCihaziFilterAvailable && c.ZimmetliMi) return false;
+        if (OfisCihaziFilterAssigned && !c.ZimmetliMi) return false;
+
         if (string.IsNullOrWhiteSpace(SearchText)) return true;
 
-        var combined = $"{c.CihazAdi} {c.SeriNo} {c.Marka} {c.Model} {c.SantiyeKod} {c.SantiyeAdi} {c.SahipFirma} {c.Durum} {c.Not}";
+        var combined = $"{c.CihazAdi} {c.SeriNo} {c.Marka} {c.Model} {c.Durum} {c.Not} {c.ZimmetliPersonelAd} {c.Ozellik}";
         return StringHelper.SmartSearch(combined, SearchText);
+    }
+
+    partial void OnOfisCihaziFilterAvailableChanged(bool value)
+    {
+        if (value) _ofisCihaziFilterAssigned = false;
+        OnPropertyChanged(nameof(OfisCihaziFilterAssigned));
+        OfisCihazlariView?.Refresh();
+    }
+
+    partial void OnOfisCihaziFilterAssignedChanged(bool value)
+    {
+        if (value) _ofisCihaziFilterAvailable = false;
+        OnPropertyChanged(nameof(OfisCihaziFilterAvailable));
+        OfisCihazlariView?.Refresh();
+    }
+
+    [RelayCommand]
+    private void OfisCihaziNextFoto(OfisCihazi? cihaz)
+    {
+        if (cihaz == null) return;
+        if (cihaz.CurrentFotoIndex < cihaz.Fotograflar.Count - 1)
+            cihaz.CurrentFotoIndex++;
+    }
+
+    [RelayCommand]
+    private void OfisCihaziPrevFoto(OfisCihazi? cihaz)
+    {
+        if (cihaz == null) return;
+        if (cihaz.CurrentFotoIndex > 0)
+            cihaz.CurrentFotoIndex--;
+    }
+
+    [RelayCommand]
+    private async Task ZimmetleOfisCihaziAsync(OfisCihazi? cihaz)
+    {
+        if (cihaz == null) return;
+
+        var window = new Views.OfisCihazZimmetWindow(cihaz, false) { Owner = Application.Current.MainWindow };
+        if (window.ShowDialog() == true)
+        {
+            await LoadCihazlarAsync();
+            OfisCihazlariView?.Refresh();
+            ShowSuccess("Cihaz zimmetlendi.");
+        }
+    }
+
+    [RelayCommand]
+    private async Task IadeAlOfisCihaziAsync(OfisCihazi? cihaz)
+    {
+        if (cihaz == null) return;
+        if (!cihaz.ZimmetliMi) return;
+
+        var window = new Views.OfisCihazZimmetWindow(cihaz, true) { Owner = Application.Current.MainWindow };
+        if (window.ShowDialog() == true)
+        {
+            await LoadCihazlarAsync();
+            OfisCihazlariView?.Refresh();
+            ShowSuccess("Cihaz iade alındı.");
+        }
     }
 
     [RelayCommand]
@@ -1000,12 +1163,9 @@ public partial class MainViewModel : BaseViewModel
     [RelayCommand]
     public async Task YeniOfisCihaziAsync()
     {
-        var vm = new CihazEditViewModel(_databaseService, CihazTuru.Ofis)
-        {
-            SantiyeList = SantiyeList
-        };
+        var vm = new OfisCihazEditViewModel(_databaseService);
 
-        var window = new Views.CihazEditWindow { DataContext = vm };
+        var window = new Views.OfisCihazEditWindow { DataContext = vm };
         if (window.ShowDialog() == true)
         {
             await LoadCihazlarAsync();
@@ -1017,12 +1177,9 @@ public partial class MainViewModel : BaseViewModel
     {
         if (SelectedOfisCihazi == null) return;
 
-        var vm = new CihazEditViewModel(_databaseService, CihazTuru.Ofis, SelectedOfisCihazi)
-        {
-            SantiyeList = SantiyeList
-        };
+        var vm = new OfisCihazEditViewModel(_databaseService, SelectedOfisCihazi);
 
-        var window = new Views.CihazEditWindow { DataContext = vm };
+        var window = new Views.OfisCihazEditWindow { DataContext = vm };
         if (window.ShowDialog() == true)
         {
             await LoadCihazlarAsync();

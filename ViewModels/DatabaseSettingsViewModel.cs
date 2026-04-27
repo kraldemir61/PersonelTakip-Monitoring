@@ -2,6 +2,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PersonelTakip.Services;
 using System.Windows;
+using Microsoft.Win32;
+using System.IO;
 
 namespace PersonelTakip.ViewModels;
 
@@ -107,12 +109,81 @@ public partial class DatabaseSettingsViewModel : ObservableObject
         try
         {
             AppConfiguration.Instance.Save();
-            MessageBox.Show("Ayarlar başarıyla kaydedildi. Değişikliklerin aktif olması için programı yeniden başlatmanız gerekebilir.", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Ayarlar başarıyla kaydedildi ve anında aktif edildi.", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
             window?.Close();
         }
         catch (Exception ex)
         {
             MessageBox.Show($"Kaydetme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    [RelayCommand]
+    private async Task BackupDatabaseAsync()
+    {
+        var sfd = new SaveFileDialog
+        {
+            Filter = "SQL Files (*.sql)|*.sql",
+            FileName = $"PersonelTakip_Yedek {DateTime.Now:dd.MM.yyyy HH.mm}.sql"
+        };
+
+        if (sfd.ShowDialog() == true)
+        {
+            IsTesting = true;
+            try
+            {
+                var sql = await _databaseService.GenerateBackupSqlAsync();
+                await File.WriteAllTextAsync(sfd.FileName, sql);
+                MessageBox.Show("Veritabanı yedeği başarıyla oluşturuldu.", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Yedekleme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsTesting = false;
+            }
+        }
+    }
+
+    [RelayCommand]
+    private async Task RestoreDatabaseAsync()
+    {
+        var ofd = new OpenFileDialog
+        {
+            Filter = "SQL Files (*.sql)|*.sql",
+            Title = "Yedek Dosyası Seçin"
+        };
+
+        if (ofd.ShowDialog() == true)
+        {
+            if (MessageBox.Show("Mevcut veriler silinecek ve yedektekiler yüklenecek. Emin misiniz?", "Onay", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+            {
+                IsTesting = true;
+                try
+                {
+                    await _databaseService.InitializeDatabaseAsync();
+                    var sql = await File.ReadAllTextAsync(ofd.FileName);
+                    await _databaseService.RestoreBackupSqlAsync(sql);
+                    
+                    // Bağlantıyı ve şemayı anında tazele
+                    await _databaseService.InitializeDatabaseAsync();
+                    
+                    // TÜM SİSTEME HABER VER: Veriler değişti, listeleri yenileyin!
+                    AppConfiguration.Instance.TriggerConfigurationChanged();
+                    
+                    MessageBox.Show("Veriler başarıyla geri yüklendi ve sistem güncellendi.", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Geri yükleme hatası: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
+                    IsTesting = false;
+                }
+            }
         }
     }
 

@@ -1,39 +1,31 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace PersonelTakip.Models
 {
-    public enum CihazTuru
+    public class OfisCihazi : INotifyPropertyChanged
     {
-        Olcum = 0,
-        Ofis = 1
-    }
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string? name = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
 
-    public class Cihaz : INotifyPropertyChanged
-    {
         private Guid _id;
         private string? _seriNo;
         private string? _cihazAdi;
         private string? _marka;
         private string? _model;
         private string? _ozellik;
-        private string? _sahipFirma;
         private string? _not;
-        private CihazTuru _tur;
-        private Guid? _santiyeId;
-        private string? _durum; // Boşta, Şantiyede, Arızalı, Bakımda, Kalibrasyonda
+        private string? _durum;
         private DateTime _sonIslemTarihi;
-        
-        // Yeni Zimmet ve Fotoğraf Alanları
         private string? _fotoPath;
         private Guid? _zimmetliPersonelId;
         private string? _zimmetliPersonelAd;
         private DateTime? _zimmetTarihi;
-
-        // Display Properties for UI
-        public string? SantiyeAdi { get; set; }
-        public string? SantiyeKod { get; set; }
 
         public Guid Id
         {
@@ -64,35 +56,17 @@ namespace PersonelTakip.Models
             get => _model;
             set { _model = value; OnPropertyChanged(); }
         }
-        
+
         public string? Ozellik
         {
             get => _ozellik;
             set { _ozellik = value; OnPropertyChanged(); }
         }
 
-        public string? SahipFirma
-        {
-            get => _sahipFirma;
-            set { _sahipFirma = value; OnPropertyChanged(); }
-        }
-
         public string? Not
         {
             get => _not;
             set { _not = value; OnPropertyChanged(); }
-        }
-
-        public CihazTuru Tur
-        {
-            get => _tur;
-            set { _tur = value; OnPropertyChanged(); }
-        }
-
-        public Guid? SantiyeId
-        {
-            get => _santiyeId;
-            set { _santiyeId = value; OnPropertyChanged(); }
         }
 
         public string? Durum
@@ -107,7 +81,6 @@ namespace PersonelTakip.Models
             set { _sonIslemTarihi = value; OnPropertyChanged(); }
         }
 
-        // Yeni Property Implementation
         public string? FotoPath
         {
             get => _fotoPath;
@@ -118,34 +91,11 @@ namespace PersonelTakip.Models
                 OnPropertyChanged(); 
                 OnPropertyChanged(nameof(Fotograflar));
                 OnPropertyChanged(nameof(CurrentFoto));
-                OnPropertyChanged(nameof(IsFirstFoto));
-                OnPropertyChanged(nameof(IsLastFoto));
             }
         }
 
-        public Guid? ZimmetliPersonelId
-        {
-            get => _zimmetliPersonelId;
-            set { _zimmetliPersonelId = value; OnPropertyChanged(); OnPropertyChanged(nameof(ZimmetliMi)); }
-        }
-
-        public string? ZimmetliPersonelAd
-        {
-            get => _zimmetliPersonelAd;
-            set { _zimmetliPersonelAd = value; OnPropertyChanged(); }
-        }
-
-        public DateTime? ZimmetTarihi
-        {
-            get => _zimmetTarihi;
-            set { _zimmetTarihi = value; OnPropertyChanged(); }
-        }
-
-        public bool ZimmetliMi => ZimmetliPersonelId.HasValue;
-
-        // Fotoğraf Navigasyon Yardımcıları
-        public System.Collections.Generic.List<string> Fotograflar => 
-            string.IsNullOrEmpty(FotoPath) ? new System.Collections.Generic.List<string>() : new System.Collections.Generic.List<string>(FotoPath.Split('|', StringSplitOptions.RemoveEmptyEntries));
+        public List<string> Fotograflar => 
+            string.IsNullOrEmpty(FotoPath) ? new List<string>() : new List<string>(FotoPath.Split('|', StringSplitOptions.RemoveEmptyEntries));
 
         private int _currentFotoIndex = 0;
         public int CurrentFotoIndex
@@ -160,15 +110,33 @@ namespace PersonelTakip.Models
                 OnPropertyChanged(nameof(IsLastFoto));
             }
         }
-
-        public string? CurrentFoto => Fotograflar.Count > 0 && CurrentFotoIndex >= 0 && CurrentFotoIndex < Fotograflar.Count ? Fotograflar[CurrentFotoIndex] : null;
+        
         public bool IsFirstFoto => CurrentFotoIndex <= 0;
         public bool IsLastFoto => CurrentFotoIndex >= Fotograflar.Count - 1;
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string? name = null)
+        public string? CurrentFoto => Fotograflar.Count > 0 && CurrentFotoIndex >= 0 && CurrentFotoIndex < Fotograflar.Count ? Fotograflar[CurrentFotoIndex] : null;
+
+        public Guid? ZimmetliPersonelId
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+            get => _zimmetliPersonelId;
+            set { _zimmetliPersonelId = value; OnPropertyChanged(); }
         }
+
+        public string? ZimmetliPersonelAd
+        {
+            get => _zimmetliPersonelAd;
+            set { _zimmetliPersonelAd = value; OnPropertyChanged(); }
+        }
+
+        public DateTime? ZimmetTarihi
+        {
+            get => _zimmetTarihi;
+            set { _zimmetTarihi = value; OnPropertyChanged(); }
+        }
+
+        // Ofis cihazları için Tur her zaman Ofis (1)
+        public int Tur => 1;
+
+        public bool ZimmetliMi => ZimmetliPersonelId.HasValue;
     }
 }

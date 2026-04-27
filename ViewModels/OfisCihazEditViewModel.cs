@@ -10,11 +10,11 @@ using PersonelTakip.Services;
 
 namespace PersonelTakip.ViewModels
 {
-    public partial class CihazEditViewModel : BaseViewModel
+    public partial class OfisCihazEditViewModel : BaseViewModel
     {
         private readonly DatabaseService _databaseService;
         private readonly bool _isEdit;
-        private readonly Cihaz _cihaz;
+        private readonly OfisCihazi _cihaz;
 
         [ObservableProperty]
         private string _title;
@@ -30,24 +30,12 @@ namespace PersonelTakip.ViewModels
 
         [ObservableProperty]
         private string _model;
-        
+
         [ObservableProperty]
         private string _ozellik;
 
         [ObservableProperty]
-        private string _sahipFirma;
-
-        [ObservableProperty]
         private string _not;
-
-        [ObservableProperty]
-        private CihazTuru _tur;
-
-        [ObservableProperty]
-        private Guid? _santiyeId;
-
-        [ObservableProperty]
-        private ObservableCollection<Santiye> _santiyeList = new();
 
         [ObservableProperty]
         private ObservableCollection<LookupItem> _cihazAdlari = new();
@@ -55,23 +43,17 @@ namespace PersonelTakip.ViewModels
         private ObservableCollection<LookupItem> _markalar = new();
         [ObservableProperty]
         private ObservableCollection<LookupItem> _modeller = new();
-        [ObservableProperty]
-        private ObservableCollection<LookupItem> _firmalar = new();
- 
-        [ObservableProperty]
-        private bool _isSuperAdmin;
 
         [ObservableProperty]
         private ObservableCollection<string> _fotograflar = new();
 
-        public CihazEditViewModel(DatabaseService databaseService, CihazTuru tur, Cihaz? cihaz = null)
+        public OfisCihazEditViewModel(DatabaseService databaseService, OfisCihazi? cihaz = null)
         {
             _databaseService = databaseService;
-            Tur = tur;
             _isEdit = cihaz != null;
-            _cihaz = cihaz ?? new Cihaz { Id = Guid.NewGuid(), Tur = tur, Durum = "Boşta", SonIslemTarihi = DateTime.Now };
+            _cihaz = cihaz ?? new OfisCihazi { Id = Guid.NewGuid(), Durum = "Boşta", SonIslemTarihi = DateTime.Now };
 
-            Title = _isEdit ? "Cihaz Düzenle" : (tur == CihazTuru.Olcum ? "Yeni Ölçüm Cihazı Ekle" : "Yeni Ofis Cihazı Ekle");
+            Title = _isEdit ? "Ofis Cihazı Düzenle" : "Yeni Ofis Cihazı Ekle";
             
             if (_isEdit)
             {
@@ -80,9 +62,7 @@ namespace PersonelTakip.ViewModels
                 Marka = _cihaz.Marka;
                 Model = _cihaz.Model;
                 Ozellik = _cihaz.Ozellik;
-                SahipFirma = _cihaz.SahipFirma;
                 Not = _cihaz.Not;
-                SantiyeId = _cihaz.SantiyeId;
 
                 if (!string.IsNullOrEmpty(_cihaz.FotoPath))
                 {
@@ -98,17 +78,11 @@ namespace PersonelTakip.ViewModels
         {
             try
             {
-                var adlar = await _databaseService.LookupGetirAsync("cihaz_adlari");
-                var markalar = await _databaseService.LookupGetirAsync("cihaz_markalari");
-                var modeller = await _databaseService.LookupGetirAsync("cihaz_modelleri");
-                var firmalar = await _databaseService.LookupGetirAsync("cihaz_firmalari");
-
-                CihazAdlari = new ObservableCollection<LookupItem>(adlar);
-                Markalar = new ObservableCollection<LookupItem>(markalar);
-                Modeller = new ObservableCollection<LookupItem>(modeller);
-                Firmalar = new ObservableCollection<LookupItem>(firmalar);
+                CihazAdlari = new ObservableCollection<LookupItem>(await _databaseService.LookupGetirAsync("cihaz_adlari"));
+                Markalar = new ObservableCollection<LookupItem>(await _databaseService.LookupGetirAsync("cihaz_markalari"));
+                Modeller = new ObservableCollection<LookupItem>(await _databaseService.LookupGetirAsync("cihaz_modelleri"));
             }
-            catch { /* Hata yönetimi gerekebilir */ }
+            catch { }
         }
 
         [RelayCommand]
@@ -122,7 +96,6 @@ namespace PersonelTakip.ViewModels
 
             try
             {
-                // Fotoğrafları işle
                 List<string> savedPaths = new List<string>();
                 foreach (var path in Fotograflar)
                 {
@@ -135,16 +108,13 @@ namespace PersonelTakip.ViewModels
                 _cihaz.Marka = Marka;
                 _cihaz.Model = Model;
                 _cihaz.Ozellik = Ozellik;
-                _cihaz.SahipFirma = SahipFirma;
                 _cihaz.Not = Not;
-                _cihaz.SantiyeId = SantiyeId;
-                _cihaz.Durum = SantiyeId.HasValue ? "Şantiyede" : (_cihaz.Durum ?? "Boşta");
                 _cihaz.FotoPath = string.Join("|", savedPaths);
 
                 if (_isEdit)
-                    await _databaseService.CihazGuncelleAsync(_cihaz);
+                    await _databaseService.OfisCihaziGuncelleAsync(_cihaz);
                 else
-                    await _databaseService.CihazEkleAsync(_cihaz);
+                    await _databaseService.OfisCihaziEkleAsync(_cihaz);
 
                 window.DialogResult = true;
                 window.Close();
@@ -183,16 +153,13 @@ namespace PersonelTakip.ViewModels
         [RelayCommand]
         private void RemoveFoto(string path)
         {
-            if (Fotograflar.Contains(path))
-            {
-                Fotograflar.Remove(path);
-            }
+            if (Fotograflar.Contains(path)) Fotograflar.Remove(path);
         }
 
         private string? HandleFotoFile(string path)
         {
             if (string.IsNullOrEmpty(path)) return null;
-            if (!System.IO.Path.IsPathRooted(path)) return path; // Zaten kopyalanmış (düzenleme)
+            if (!System.IO.Path.IsPathRooted(path)) return path;
 
             try
             {
@@ -206,10 +173,7 @@ namespace PersonelTakip.ViewModels
                 System.IO.File.Copy(path, destPath, true);
                 return newFileName;
             }
-            catch
-            {
-                return null;
-            }
+            catch { return null; }
         }
 
         [RelayCommand]

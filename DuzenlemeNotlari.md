@@ -101,3 +101,27 @@ Bu dosya, kullanıcı talimatları ve yapılan işlemlerin kronolojik kaydını 
 - **İşlem**: `DatabaseSettingsWindow` (XAML) ve `DatabaseSettingsViewModel` (C#) oluşturuldu. Modern, koyu tema ile uyumlu ve kullanıcı dostu bir arayüz tasarlandı.
 - **İşlem**: Panelde Host, Port, Database, Username ve Password alanları eklendi. Ayrıca "Bağlantıyı Test Et" özelliği ile kaydetmeden önce doğruluğu kontrol etme imkanı sağlandı.
 - **İşlem**: `MainWindow.xaml` ve `LoginWindow.xaml` içerisine global `Ctrl+Shift+C` kısayolu tanımlandı. Bu kısayol tetiklendiğinde ilgili ViewModel üzerinden ayar penceresi modal olarak açılıyor. Artık hem giriş ekranında hem de ana ekranda bağlantı ayarları değiştirilebilir.
+
+### [27.04.2026 14:33] - Gelişmiş Veritabanı Onarımı ve Hızlı Bildirim Mimarisi
+- **Talimat**: Ana veritabanındaki tüm tablo ve sütunlar yedek alınsın, geri yükleme sonrası programı kapatıp açmak gerekmesin, bildirimler anlık gitsin.
+- **İşlem (Veritabanı Onarımı)**: `DatabaseService.InitializeDatabaseAsync` metodu "Agresif Onarım" moduna geçirildi. Artık veritabanı yedeği geri yüklenirken hedef tabloda eksik olan tüm sütunlar (okundu_mu, silindi_mi, kullanici_id, tetikleyen_kullanici_id vb.) otomatik olarak tespit edilip ekleniyor. Bu sayede ana veritabanından alınan yedekler, yeni kurulan test veritabanlarına %100 uyumla aktarılabiliyor.
+- **İşlem (Dinamik Yenileme)**: `AppConfiguration` sınıfına `ConfigurationChanged` olayı (Event) eklendi. Ayarlar kaydedildiğinde veya veriler geri yüklendiğinde bu olay tetikleniyor.
+- **İşlem (Sıfır-Restart)**: `LoginViewModel` ve `MainViewModel` bu olayı dinlemeye başladı. Artık veritabanı bilgileri değiştiği veya yedek yüklendiği an; programı kapatmaya gerek kalmadan tüm listeler (Şantiyeler, Personeller, Cihazlar) saniyeler içinde otomatik olarak yenileniyor.
+- **İşlem (Bildirim Hızı)**: Cihaz transfer bildirimlerinin başına işlem yapan kullanıcının kimliği (ID) eklenerek format uyumsuzluğu giderildi. `MainViewModel` içindeki bildirim işleme mantığı optimize edildi; artık bildirim alındığı an "Anlık Mesaj" (Live Notification) saniyesinde ekrana düşüyor.
+- **İşlem (Veri Güvenliği)**: `DatabaseService` içindeki SQL onarım blokları geliştirildi. integer olması gereken sütunların otomatik dönüşümü ve tüm yardımcı tabloların (Lookup) öncelikli oluşturulması sağlandı.
+
+### [27.04.2026 17:15] - Ofis Cihazları Modülü ve DataGrid Görsel İyileştirmeleri
+- **Talimat**: 'MainWindow'daki 'DataGrid' tasarım özelliklerini (alternatif satır rengi ve seçili satır fontunun mavi olması) Ofis Cihazları sekmesine de uygula.
+- **İşlem**: 'Ofis Cihazları' listesi için Model, ViewModel ve View katmanları (Ekle/Düzenle/Zimmet pencereleri) tamamlandı.
+- **İşlem**: 'DataGrid' görsel uyumu sağlandı: `AlternatingRowBackground="#F8FAFC"` ve seçili satırda tüm metinlerin mavi (`#2563EB`) olmasını sağlayan `DataTrigger` yapıları `MainWindow.xaml` içerisine entegre edildi.
+
+### [27.04.2026 17:25] - Pencere Boyutlandırma ve Düzen Hatalarının Giderilmesi
+- **Talimat**: Pencere küçülürken bileşenler birbirinin üstünü kaplıyor ve belirlenen 'MinWidth' değerleri yok sayılıyor.
+- **İşlem**: `MainWindow.xaml.cs` dosyasındaki `WM_GETMINMAXINFO` (Win32 Hook) mesaj yönetimi DPI uyumlu hale getirildi. Artık pencere, belirlenen `980x640` sınırlarının altına küçültülemiyor.
+- **İşlem**: 'Çıkış' butonu, başlık çubuğundan alınarak sağ üstteki orijinal konumuna geri döndürüldü.
+- **İşlem**: Dar pencerelerde içeriklerin kesilmemesi için ana içerik alanına yatay kaydırma desteği (`ScrollViewer`) eklendi.
+
+### [27.04.2026 17:35] - Git ve Filtreleme Mantığı Güncellemeleri
+- **İşlem**: 'Boşta' ve 'Zimmetli' filtre butonlarının aynı anda aktif olmama (exclusive) kuralı eklendi. Aktif olan filtrenin arka plan rengiyle vurgulanması sağlandı.
+- **İşlem**: Veri yenileme (`LoadData`) sonrası tabloda seçili olan satırın kaybolması engellendi, seçim durumu korundu.
+- **İşlem**: Yapılan tüm değişiklikler Visual Studio Git aracı kullanılarak Türkçe ve detaylı açıklama ile GitHub'a push edildi.

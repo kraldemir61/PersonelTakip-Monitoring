@@ -71,6 +71,14 @@ public partial class LoginViewModel : BaseViewModel
         _connectionTimer.Tick += async (s, e) => await CheckConnectionAsync();
         _connectionTimer.Start();
 
+        AppConfiguration.Instance.ConfigurationChanged += async (s, e) => 
+        {
+            await Task.Delay(1000); // Veritabanının kendine gelmesi için 1 saniye bekle
+            _connectionTimer.Interval = TimeSpan.FromMilliseconds(500);
+            _ = CheckConnectionAsync();
+            _ = LoadSantiyelerAsync();
+        };
+
         _ = CheckConnectionAsync();
         _ = LoadSantiyelerAsync();
     }
@@ -80,9 +88,14 @@ public partial class LoginViewModel : BaseViewModel
         try
         {
             var santiyeler = await _databaseService.SantiyeleriGetirAsync();
-            SantiyeList = new ObservableCollection<Santiye>(santiyeler);
+            Application.Current.Dispatcher.Invoke(() => {
+                SantiyeList = new ObservableCollection<Santiye>(santiyeler);
+            });
         }
-        catch { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Santiye Yükleme Hatası: {ex.Message}");
+        }
     }
 
     private async Task CheckConnectionAsync()
@@ -97,32 +110,24 @@ public partial class LoginViewModel : BaseViewModel
             {
                 IsConnected = false;
                 IsSlowConnection = false;
-                ConnectionStatus = "Bağlantı kesik";
-            }
-            else if (stopwatch.ElapsedMilliseconds > 5000)
-            {
-                IsConnected = true;
-                IsSlowConnection = true;
-                ConnectionStatus = $"Bağlantı çok yavaş ({stopwatch.ElapsedMilliseconds / 1000}s)";
-            }
-            else if (stopwatch.ElapsedMilliseconds > 2000)
-            {
-                IsConnected = true;
-                IsSlowConnection = true;
-                ConnectionStatus = $"Bağlantı yavaş ({stopwatch.ElapsedMilliseconds / 1000}s)";
+                ConnectionStatus = "Sunucu Korumada (Lütfen Bekleyin)";
+                // Bağlantı yoksa kontrolü yavaşlat (60 saniye)
+                _connectionTimer.Interval = TimeSpan.FromSeconds(60);
             }
             else
             {
                 IsConnected = true;
-                IsSlowConnection = false;
-                ConnectionStatus = "Bağlantı hazır";
+                IsSlowConnection = stopwatch.ElapsedMilliseconds > 2000;
+                ConnectionStatus = "Bağlantı Hazır";
+                // Bağlantı sağlandıysa normal hıza dön (10 saniye)
+                _connectionTimer.Interval = TimeSpan.FromSeconds(10);
             }
         }
         catch
         {
             IsConnected = false;
-            IsSlowConnection = false;
-            ConnectionStatus = "Bağlantı hatası";
+            ConnectionStatus = "Bağlantı Hatası";
+            _connectionTimer.Interval = TimeSpan.FromSeconds(60);
         }
     }
 

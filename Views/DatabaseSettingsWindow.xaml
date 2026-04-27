@@ -7,13 +7,14 @@
         xmlns:vm="clr-namespace:PersonelTakip.ViewModels"
         xmlns:h="clr-namespace:PersonelTakip.Helpers"
         mc:Ignorable="d"
-        Title="Veritabanı Bağlantı Ayarları" Height="590" Width="400"
+        Title="Veritabanı Bağlantı Ayarları" Height="640" Width="400"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         WindowStartupLocation="CenterScreen" MouseLeftButtonDown="Window_MouseLeftButtonDown">
 
     <Window.Resources>
         <h:BoolToVisibilityConverter x:Key="BoolToVis"/>
         <h:InverseBooleanConverter x:Key="InverseBoolToVis"/>
+        <h:BooleanInverter x:Key="BoolInverter"/>
         
         <Style x:Key="ModernTextBox" TargetType="TextBox">
             <Setter Property="Background" Value="#FFFFFF"/>
@@ -155,6 +156,17 @@
                     <Button Style="{StaticResource ModernButton}" Content="Bağlantıyı Test Et" Background="#3B82F6" Foreground="White" 
                             Command="{Binding TestConnectionCommand}" Visibility="{Binding IsTesting, Converter={StaticResource InverseBoolToVis}}"/>
                     
+                    <Grid Margin="0,15,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Style="{StaticResource ModernButton}" Content="Yedek Al" Background="#6366F1" Foreground="White" Margin="0,0,5,0"
+                                Command="{Binding BackupDatabaseCommand}" IsEnabled="{Binding IsTesting, Converter={StaticResource BoolInverter}}"/>
+                        <Button Grid.Column="1" Style="{StaticResource ModernButton}" Content="Geri Yükle" Background="#F59E0B" Foreground="White" Margin="5,0,0,0"
+                                Command="{Binding RestoreDatabaseCommand}" IsEnabled="{Binding IsTesting, Converter={StaticResource BoolInverter}}"/>
+                    </Grid>
+
                     <ProgressBar IsIndeterminate="True" Height="4" Margin="0,10,0,0" Visibility="{Binding IsTesting, Converter={StaticResource BoolToVis}}"/>
                 </StackPanel>
             </ScrollViewer>

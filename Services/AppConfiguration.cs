@@ -13,12 +13,20 @@ public class AppConfiguration
     private static AppConfiguration? _instance;
     public static AppConfiguration Instance => _instance ??= Load();
 
+    public event EventHandler? ConfigurationChanged;
+
     public void Save()
     {
         var options = new JsonSerializerOptions { WriteIndented = true };
         var json = JsonSerializer.Serialize(this, options);
         var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
         File.WriteAllText(path, json);
+        TriggerConfigurationChanged();
+    }
+
+    public void TriggerConfigurationChanged()
+    {
+        ConfigurationChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private static AppConfiguration Load()

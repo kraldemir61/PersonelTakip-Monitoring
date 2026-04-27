@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Runtime.InteropServices;
 using System;
+using System.Windows.Media;
 using PersonelTakip.ViewModels;
 
 namespace PersonelTakip.Views;
@@ -43,6 +44,11 @@ public partial class MainWindow : Window
                 mmi.ptMaxPosition.y = Math.Abs(rcWorkArea.top - rcMonitorArea.top);
                 mmi.ptMaxSize.x = Math.Abs(rcWorkArea.right - rcWorkArea.left);
                 mmi.ptMaxSize.y = Math.Abs(rcWorkArea.bottom - rcWorkArea.top);
+
+                // Minimum boyut sınırlarını belirle (DPI uyumlu)
+                var dpi = VisualTreeHelper.GetDpi(this);
+                mmi.ptMinTrackSize.x = (int)(this.MinWidth * dpi.DpiScaleX);
+                mmi.ptMinTrackSize.y = (int)(this.MinHeight * dpi.DpiScaleY);
             }
             Marshal.StructureToPtr(mmi, lParam, true);
             handled = true;

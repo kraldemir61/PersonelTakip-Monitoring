@@ -1,16 +1,15 @@
-<Window x:Class="PersonelTakip.Views.CihazEditWindow"
+<Window x:Class="PersonelTakip.Views.OfisCihazEditWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:conv="clr-namespace:PersonelTakip.Converters"
         mc:Ignorable="d"
-        Title="{Binding Title}" Height="750" Width="450"
+        Title="{Binding Title}" Height="650" Width="450"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         Background="#F8FAFC">
     <Window.Resources>
         <ResourceDictionary>
-            <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
             <conv:FotoPathToImageConverter x:Key="FotoPathToImageConverter"/>
         </ResourceDictionary>
     </Window.Resources>
@@ -43,20 +42,10 @@
                           DisplayMemberPath="Adi" SelectedValuePath="Adi" IsEditable="True"
                           Height="35" VerticalContentAlignment="Center" Margin="0,0,0,15"/>
 
-                <TextBlock Text="Sahip Firma" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
-                <ComboBox Text="{Binding SahipFirma, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Firmalar}" 
-                          DisplayMemberPath="Adi" SelectedValuePath="Adi" IsEditable="True" IsEnabled="{Binding IsSuperAdmin}"
-                          Height="35" VerticalContentAlignment="Center" Margin="0,0,0,15"/>
-
-                <TextBlock Text="Bulunduğu Yer (Şantiye)" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
-                <ComboBox ItemsSource="{Binding SantiyeList}" SelectedValue="{Binding SantiyeId}" 
-                          SelectedValuePath="Id" DisplayMemberPath="Kod"
-                          Height="35" VerticalContentAlignment="Center" Margin="0,0,0,15"/>
-
                 <TextBlock Text="Özellikler / Spesifikasyonlar" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
                 <TextBox Text="{Binding Ozellik, UpdateSourceTrigger=PropertyChanged}" Height="35" VerticalContentAlignment="Center" Padding="10,0" Margin="0,0,0,15"/>
 
-                <TextBlock Text="Not / Zimmet Bilgisi" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
+                <TextBlock Text="Cihaz Notu / Açıklama" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
                 <TextBox Text="{Binding Not, UpdateSourceTrigger=PropertyChanged}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" VerticalContentAlignment="Top" Padding="10,5" Margin="0,0,0,15"/>
 
                 <!-- Fotoğraflar Bölümü -->
