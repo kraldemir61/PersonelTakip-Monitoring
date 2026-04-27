@@ -88,3 +88,9 @@ Bu dosya, kullanıcı talimatları ve yapılan işlemlerin kronolojik kaydını 
 - **Talimat**: Kullanıcılar, Ölçüm Cihazları sekmesinde "Cihaz Ekle" ve "Düzenle" butonlarını göremesin.
 - **İşlem**: `MainWindow.xaml` içerisindeki "Ölçüm Cihazları" sekmesinde bulunan "Cihaz Ekle" ve "Düzenle" butonlarına `Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}"` eklendi. Sadece Admin yetkisine sahip hesaplar bu butonları görebilecek. Normal kullanıcılar sadece cihaz transferi yapabilecek ve geçmişini görüntüleyebilecek.
 - **İşlem**: `MainViewModel.cs` içindeki dinleyici, gelen sinyalin kendi ID'sine ait bir RESTART komutu olduğunu tespit ederse, doğrudan ekrana bir uyarı (MessageBox) çıkartıyor ve onaylandığında `Application.Current.Shutdown()` ile programı güvenli şekilde sonlandırıyor.
+
+### [27.04.2026 09:41] - Kullanıcı Bazlı Bildirim Yönetimi
+- **Talimat**: Kullanıcılar veya adminler bildirimleri silince diğer kullanıcılardan silinmesin. Bildirim yönetimi her kullanıcıya özel olmalı.
+- **İşlem**: `bildirim_durumlari` adında yeni bir tablo oluşturuldu. Bu tablo, her bildirimin hangi kullanıcı tarafından okunduğunu (`okundu_mu`) ve silindiğini (`silindi_mi`) takip eder.
+- **İşlem**: `DatabaseService.cs` içerisindeki bildirim çekme, okundu yapma ve silme metodları `kullanici_id` parametresi alacak şekilde güncellendi. Artık bir bildirim silindiğinde veritabanından tamamen kaldırılmıyor, sadece o kullanıcı için "silindi" olarak işaretleniyor.
+- **İşlem**: `MainViewModel.cs` üzerinde bildirimlerle ilgili tüm işlemler (yükleme, popup açma, tekli/toplu silme) mevcut kullanıcının ID'sini veritabanına gönderecek şekilde revize edildi.

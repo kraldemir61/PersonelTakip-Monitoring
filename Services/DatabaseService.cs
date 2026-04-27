@@ -34,8 +34,16 @@ public class DatabaseService
                     id SERIAL PRIMARY KEY,
                     mesaj TEXT NOT NULL,
                     tetikleyen_kullanici_id UUID NOT NULL,
-                    tarih TIMESTAMP NOT NULL DEFAULT NOW(),
-                    okundu_mu BOOLEAN NOT NULL DEFAULT FALSE
+                    tarih TIMESTAMP NOT NULL DEFAULT NOW()
+                );
+
+                CREATE TABLE IF NOT EXISTS bildirim_durumlari (
+                    kullanici_id UUID NOT NULL,
+                    bildirim_id INT NOT NULL,
+                    okundu_mu BOOLEAN NOT NULL DEFAULT FALSE,
+                    silindi_mi BOOLEAN NOT NULL DEFAULT FALSE,
+                    PRIMARY KEY (kullanici_id, bildirim_id),
+                    FOREIGN KEY (bildirim_id) REFERENCES bildirimler(id) ON DELETE CASCADE
                 );
 
                 -- Bildirim Tetikleyici Fonksiyonu
@@ -834,34 +842,50 @@ public class DatabaseService
         await cmd.ExecuteNonQueryAsync();
     }
 
-    public async Task<List<Bildirim>> GetSonBildirimlerAsync(int limit = 20)
+    public async Task<List<Bildirim>> GetSonBildirimlerAsync(Guid kullaniciId, int limit = 20)
     {
         using var conn = CreateConnection();
         await conn.OpenAsync();
-        return (await conn.QueryAsync<Bildirim>(
-            "SELECT * FROM bildirimler ORDER BY tarih DESC LIMIT @Limit", 
-            new { Limit = limit })).ToList();
+        return (await conn.QueryAsync<Bildirim>(@"
+            SELECT b.*, COALESCE(bd.okundu_mu, FALSE) as okundu_mu 
+            FROM bildirimler b
+            LEFT JOIN bildirim_durumlari bd ON b.id = bd.bildirim_id AND bd.kullanici_id = @KullaniciId
+            WHERE bd.silindi_mi IS NOT TRUE
+            ORDER BY b.tarih DESC LIMIT @Limit", 
+            new { KullaniciId = kullaniciId, Limit = limit })).ToList();
     }
 
-    public async Task OkunmadiIseOkunduYapAsync(int bildirimId)
+    public async Task OkunmadiIseOkunduYapAsync(int bildirimId, Guid kullaniciId)
     {
         using var conn = CreateConnection();
         await conn.OpenAsync();
-        await conn.ExecuteAsync("UPDATE bildirimler SET okundu_mu = true WHERE id = @Id", new { Id = bildirimId });
+        await conn.ExecuteAsync(@"
+            INSERT INTO bildirim_durumlari (kullanici_id, bildirim_id, okundu_mu) 
+            VALUES (@KullaniciId, @BildirimId, TRUE)
+            ON CONFLICT (kullanici_id, bildirim_id) DO UPDATE SET okundu_mu = TRUE", 
+            new { KullaniciId = kullaniciId, BildirimId = bildirimId });
     }
 
-    public async Task BildirimSilAsync(int bildirimId)
+    public async Task BildirimSilAsync(int bildirimId, Guid kullaniciId)
     {
         using var conn = CreateConnection();
         await conn.OpenAsync();
-        await conn.ExecuteAsync("DELETE FROM bildirimler WHERE id = @Id", new { Id = bildirimId });
+        await conn.ExecuteAsync(@"
+            INSERT INTO bildirim_durumlari (kullanici_id, bildirim_id, silindi_mi) 
+            VALUES (@KullaniciId, @BildirimId, TRUE)
+            ON CONFLICT (kullanici_id, bildirim_id) DO UPDATE SET silindi_mi = TRUE", 
+            new { KullaniciId = kullaniciId, BildirimId = bildirimId });
     }
 
-    public async Task TumBildirimleriSilAsync()
+    public async Task TumBildirimleriSilAsync(Guid kullaniciId)
     {
         using var conn = CreateConnection();
         await conn.OpenAsync();
-        await conn.ExecuteAsync("DELETE FROM bildirimler");
+        await conn.ExecuteAsync(@"
+            INSERT INTO bildirim_durumlari (kullanici_id, bildirim_id, silindi_mi)
+            SELECT @KullaniciId, id, TRUE FROM bildirimler
+            ON CONFLICT (kullanici_id, bildirim_id) DO UPDATE SET silindi_mi = TRUE", 
+            new { KullaniciId = kullaniciId });
     }
     
     public async Task StartListeningNotifications(Action<string, string> onNotificationReceived, CancellationToken cancellationToken)

@@ -316,12 +316,12 @@ public partial class MainViewModel : BaseViewModel
     {
         IsBildirimPopupOpen = !IsBildirimPopupOpen;
         
-        if (IsBildirimPopupOpen && HasUnreadBildirimler)
+        if (IsBildirimPopupOpen && HasUnreadBildirimler && CurrentUser != null)
         {
             // Okundu işaretle
             foreach (var b in BildirimlerListesi.Where(x => !x.OkunduMu))
             {
-                await _databaseService.OkunmadiIseOkunduYapAsync(b.Id);
+                await _databaseService.OkunmadiIseOkunduYapAsync(b.Id, CurrentUser.Id);
                 b.OkunduMu = true;
             }
             HasUnreadBildirimler = false;
@@ -336,8 +336,11 @@ public partial class MainViewModel : BaseViewModel
         
         try
         {
-            await _databaseService.BildirimSilAsync(bildirim.Id);
-            BildirimlerListesi.Remove(bildirim);
+            if (CurrentUser != null)
+            {
+                await _databaseService.BildirimSilAsync(bildirim.Id, CurrentUser.Id);
+                BildirimlerListesi.Remove(bildirim);
+            }
             
             // Eğer silinen okunmamışsa sayacı güncelle
             if (!bildirim.OkunduMu)
@@ -360,8 +363,11 @@ public partial class MainViewModel : BaseViewModel
 
         try
         {
-            await _databaseService.TumBildirimleriSilAsync();
-            BildirimlerListesi.Clear();
+            if (CurrentUser != null)
+            {
+                await _databaseService.TumBildirimleriSilAsync(CurrentUser.Id);
+                BildirimlerListesi.Clear();
+            }
             UnreadBildirimCount = 0;
             HasUnreadBildirimler = false;
         }
@@ -373,7 +379,8 @@ public partial class MainViewModel : BaseViewModel
 
     private async Task LoadBildirimlerAsync()
     {
-        var liste = await _databaseService.GetSonBildirimlerAsync(20);
+        if (CurrentUser == null) return;
+        var liste = await _databaseService.GetSonBildirimlerAsync(CurrentUser.Id, 20);
         BildirimlerListesi = new ObservableCollection<Bildirim>(liste);
         UnreadBildirimCount = BildirimlerListesi.Count(x => !x.OkunduMu);
         HasUnreadBildirimler = UnreadBildirimCount > 0;
