@@ -94,3 +94,10 @@ Bu dosya, kullanıcı talimatları ve yapılan işlemlerin kronolojik kaydını 
 - **İşlem**: `bildirim_durumlari` adında yeni bir tablo oluşturuldu. Bu tablo, her bildirimin hangi kullanıcı tarafından okunduğunu (`okundu_mu`) ve silindiğini (`silindi_mi`) takip eder.
 - **İşlem**: `DatabaseService.cs` içerisindeki bildirim çekme, okundu yapma ve silme metodları `kullanici_id` parametresi alacak şekilde güncellendi. Artık bir bildirim silindiğinde veritabanından tamamen kaldırılmıyor, sadece o kullanıcı için "silindi" olarak işaretleniyor.
 - **İşlem**: `MainViewModel.cs` üzerinde bildirimlerle ilgili tüm işlemler (yükleme, popup açma, tekli/toplu silme) mevcut kullanıcının ID'sini veritabanına gönderecek şekilde revize edildi.
+
+### [27.04.2026 09:52] - Veritabanı Bağlantı Paneli ve Kısayol
+- **Talimat**: Programın farklı veritabanı bilgileriyle çalışabilmesi için şık bir bağlantı paneli tasarlanmalı. Erişim sadece "Ctrl+Shift+C" kısayoluyla olmalı.
+- **İşlem**: `AppConfiguration.cs` dosyasına ayarları `appsettings.json` dosyasına kalıcı olarak kaydeden `Save()` metodu eklendi.
+- **İşlem**: `DatabaseSettingsWindow` (XAML) ve `DatabaseSettingsViewModel` (C#) oluşturuldu. Modern, koyu tema ile uyumlu ve kullanıcı dostu bir arayüz tasarlandı.
+- **İşlem**: Panelde Host, Port, Database, Username ve Password alanları eklendi. Ayrıca "Bağlantıyı Test Et" özelliği ile kaydetmeden önce doğruluğu kontrol etme imkanı sağlandı.
+- **İşlem**: `MainWindow.xaml` ve `LoginWindow.xaml` içerisine global `Ctrl+Shift+C` kısayolu tanımlandı. Bu kısayol tetiklendiğinde ilgili ViewModel üzerinden ayar penceresi modal olarak açılıyor. Artık hem giriş ekranında hem de ana ekranda bağlantı ayarları değiştirilebilir.

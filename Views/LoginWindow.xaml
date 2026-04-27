@@ -6,6 +6,11 @@
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
         Style="{StaticResource ModernWindowStyle}"
         Loaded="Window_Loaded">
+
+    <Window.InputBindings>
+        <KeyBinding Key="C" Modifiers="Ctrl+Shift" Command="{Binding OpenDatabaseSettingsCommand}"/>
+    </Window.InputBindings>
+
     <Window.Resources>
         <!-- Modern Input Styles -->
         <Style x:Key="ModernInput" TargetType="Control">

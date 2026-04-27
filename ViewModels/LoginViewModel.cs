@@ -234,6 +234,15 @@ public partial class LoginViewModel : BaseViewModel
         TemizleFormu();
     }
 
+    [RelayCommand]
+    private void OpenDatabaseSettings()
+    {
+        var win = new PersonelTakip.Views.DatabaseSettingsWindow();
+        // Aktif pencereyi owner olarak belirle
+        win.Owner = System.Linq.Enumerable.FirstOrDefault(System.Windows.Application.Current.Windows.Cast<System.Windows.Window>(), w => w.IsActive);
+        win.ShowDialog();
+    }
+
     private void TemizleFormu()
     {
         LoginKullaniciAdi = string.Empty;

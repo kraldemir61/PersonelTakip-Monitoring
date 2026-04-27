@@ -28,7 +28,103 @@ public class DatabaseService
             using var conn = CreateConnection();
             await conn.OpenAsync();
             
-            // Bildirim tablosunu kontrol et ve yoksa oluştur
+            // 1. Bağımsız Tablolar
+            await conn.ExecuteAsync(@"
+                CREATE TABLE IF NOT EXISTS santiyeler (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    adi TEXT NOT NULL,
+                    kod TEXT UNIQUE NOT NULL,
+                    adres TEXT,
+                    telefon TEXT,
+                    aktif BOOLEAN DEFAULT true,
+                    created_at TIMESTAMPTZ DEFAULT now(),
+                    updated_at TIMESTAMPTZ DEFAULT now()
+                );
+
+                CREATE TABLE IF NOT EXISTS bolumler (id SERIAL PRIMARY KEY, adi TEXT UNIQUE NOT NULL);
+                CREATE TABLE IF NOT EXISTS gorevler (id SERIAL PRIMARY KEY, adi TEXT UNIQUE NOT NULL);
+                CREATE TABLE IF NOT EXISTS uyruklar (id SERIAL PRIMARY KEY, adi TEXT UNIQUE NOT NULL);
+                CREATE TABLE IF NOT EXISTS para_birimleri (id SERIAL PRIMARY KEY, adi VARCHAR(50) NOT NULL);
+                
+                CREATE TABLE IF NOT EXISTS cihaz_adlari (id SERIAL PRIMARY KEY, adi VARCHAR(100) NOT NULL);
+                CREATE TABLE IF NOT EXISTS cihaz_markalari (id SERIAL PRIMARY KEY, adi VARCHAR(100) NOT NULL);
+                CREATE TABLE IF NOT EXISTS cihaz_modelleri (id SERIAL PRIMARY KEY, adi VARCHAR(100) NOT NULL);
+                CREATE TABLE IF NOT EXISTS cihaz_firmalari (id SERIAL PRIMARY KEY, adi VARCHAR(100) NOT NULL);
+            ");
+
+            // 2. Kullanıcılar ve Audit
+            await conn.ExecuteAsync(@"
+                CREATE TABLE IF NOT EXISTS kullanicilar (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    kullanici_adi TEXT UNIQUE NOT NULL,
+                    email TEXT UNIQUE NOT NULL,
+                    sifre_hash TEXT NOT NULL,
+                    rol TEXT NOT NULL DEFAULT 'User',
+                    santiye_id UUID REFERENCES santiyeler(id),
+                    aktif BOOLEAN DEFAULT true,
+                    son_giris TIMESTAMPTZ,
+                    created_at TIMESTAMPTZ DEFAULT now()
+                );
+
+                CREATE TABLE IF NOT EXISTS audit_log (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    kullanici_id UUID REFERENCES kullanicilar(id),
+                    kullanici_adi TEXT,
+                    tablo_adi TEXT NOT NULL,
+                    kayit_id TEXT,
+                    islem_tipi TEXT NOT NULL,
+                    eski_deger JSONB,
+                    yeni_deger JSONB,
+                    ip_adresi TEXT,
+                    aciklama TEXT,
+                    tarih TIMESTAMPTZ DEFAULT now()
+                );
+            ");
+
+            // 3. Personeller ve Cihazlar
+            await conn.ExecuteAsync(@"
+                CREATE TABLE IF NOT EXISTS personeller (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    santiye_id UUID REFERENCES santiyeler(id),
+                    adi_soyadi TEXT NOT NULL,
+                    bolumu INTEGER REFERENCES bolumler(id),
+                    gorevi INTEGER REFERENCES gorevler(id),
+                    uyrugu INTEGER REFERENCES uyruklar(id),
+                    para_birimi INTEGER REFERENCES para_birimleri(id),
+                    ise_giris_tarihi DATE,
+                    telefon_numarasi TEXT,
+                    maas NUMERIC(15, 2),
+                    aktif BOOLEAN DEFAULT true,
+                    created_at TIMESTAMPTZ DEFAULT now()
+                );
+
+                CREATE TABLE IF NOT EXISTS cihazlar (
+                    id UUID PRIMARY KEY,
+                    seri_no TEXT,
+                    cihaz_adi TEXT,
+                    marka TEXT,
+                    model TEXT,
+                    sahip_firma TEXT,
+                    not_text TEXT,
+                    tur INTEGER,
+                    santiye_id UUID REFERENCES santiyeler(id),
+                    durum TEXT,
+                    son_islem_tarihi TIMESTAMP
+                );
+
+                CREATE TABLE IF NOT EXISTS cihaz_hareketleri (
+                    id UUID PRIMARY KEY,
+                    cihaz_id UUID REFERENCES cihazlar(id),
+                    nereden_santiye_id UUID REFERENCES santiyeler(id),
+                    nereye_santiye_id UUID REFERENCES santiyeler(id),
+                    tarih TIMESTAMP NOT NULL,
+                    kullanici_id UUID REFERENCES kullanicilar(id),
+                    aciklama TEXT,
+                    islem_turu TEXT
+                );
+            ");
+
+            // 4. Bildirimler
             await conn.ExecuteAsync(@"
                 CREATE TABLE IF NOT EXISTS bildirimler (
                     id SERIAL PRIMARY KEY,
@@ -45,8 +141,10 @@ public class DatabaseService
                     PRIMARY KEY (kullanici_id, bildirim_id),
                     FOREIGN KEY (bildirim_id) REFERENCES bildirimler(id) ON DELETE CASCADE
                 );
+            ");
 
-                -- Bildirim Tetikleyici Fonksiyonu
+            // 5. Fonksiyon ve Tetikleyiciler
+            await conn.ExecuteAsync(@"
                 CREATE OR REPLACE FUNCTION fn_cihaz_hareket_bildirim()
                 RETURNS TRIGGER AS $$
                 DECLARE
@@ -55,83 +153,37 @@ public class DatabaseService
                     v_santiye_kod TEXT;
                     v_mesaj TEXT;
                 BEGIN
-                    -- Cihaz bilgilerini al
                     SELECT cihaz_adi, seri_no INTO v_cihaz_adi, v_seri_no FROM cihazlar WHERE id = NEW.cihaz_id;
-                    -- Şantiye kodunu al
                     SELECT kod INTO v_santiye_kod FROM santiyeler WHERE id = NEW.nereye_santiye_id;
-                    
                     IF v_santiye_kod IS NULL THEN v_santiye_kod := 'Merkez'; END IF;
-                    
                     v_mesaj := v_cihaz_adi || ' (' || v_seri_no || ') ' || v_santiye_kod || ' konumuna (' || NEW.islem_turu || ') transfer edildi.';
-                    
-                    -- Bildirimi kaydet
-                    INSERT INTO bildirimler (mesaj, tetikleyen_kullanici_id, tarih)
-                    VALUES (v_mesaj, NEW.kullanici_id, NEW.tarih);
-                    
-                    -- LISTEN/NOTIFY gönder
+                    INSERT INTO bildirimler (mesaj, tetikleyen_kullanici_id, tarih) VALUES (v_mesaj, NEW.kullanici_id, NEW.tarih);
                     PERFORM pg_notify('personel_bildirim', NEW.kullanici_id || '|' || v_mesaj);
-                    
                     RETURN NEW;
-                END;
-                $$ LANGUAGE plpgsql;
+                END; $$ LANGUAGE plpgsql;
 
-                -- Tetikleyiciyi oluştur (varsa önce sil)
                 DROP TRIGGER IF EXISTS trg_cihaz_hareket_bildirim ON cihaz_hareketleri;
                 CREATE TRIGGER trg_cihaz_hareket_bildirim
                 AFTER INSERT ON cihaz_hareketleri
-                FOR EACH ROW
-                EXECUTE FUNCTION fn_cihaz_hareket_bildirim();
-
-                CREATE TABLE IF NOT EXISTS cihazlar (
-                    id UUID PRIMARY KEY,
-                    seri_no TEXT,
-                    cihaz_adi TEXT,
-                    marka TEXT,
-                    model TEXT,
-                    sahip_firma TEXT,
-                    not_text TEXT,
-                    tur INTEGER,
-                    santiye_id UUID,
-                    durum TEXT,
-                    son_islem_tarihi TIMESTAMP
-                );
-
-                CREATE TABLE IF NOT EXISTS cihaz_adlari (
-                    id SERIAL PRIMARY KEY,
-                    adi VARCHAR(100) NOT NULL
-                );
-
-                CREATE TABLE IF NOT EXISTS cihaz_markalari (
-                    id SERIAL PRIMARY KEY,
-                    adi VARCHAR(100) NOT NULL
-                );
-
-                CREATE TABLE IF NOT EXISTS cihaz_modelleri (
-                    id SERIAL PRIMARY KEY,
-                    adi VARCHAR(100) NOT NULL
-                );
-
-                CREATE TABLE IF NOT EXISTS cihaz_firmalari (
-                    id SERIAL PRIMARY KEY,
-                    adi VARCHAR(100) NOT NULL
-                );
-
-                CREATE TABLE IF NOT EXISTS cihaz_hareketleri (
-                    id UUID PRIMARY KEY,
-                    cihaz_id UUID NOT NULL,
-                    nereden_santiye_id UUID,
-                    nereye_santiye_id UUID,
-                    tarih TIMESTAMP NOT NULL,
-                    kullanici_id UUID NOT NULL,
-                    aciklama TEXT,
-                    islem_turu TEXT
-                );
+                FOR EACH ROW EXECUTE FUNCTION fn_cihaz_hareket_bildirim();
             ");
-            
+
+            // 6. Varsayılan Admin Kullanıcısı
+            var adminCount = await conn.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM kullanicilar");
+            if (adminCount == 0)
+            {
+                var adminHash = BCrypt.Net.BCrypt.HashPassword("Admin123");
+                await conn.ExecuteAsync(@"
+                    INSERT INTO kullanicilar (id, kullanici_adi, email, sifre_hash, rol, aktif) 
+                    VALUES (@Id, 'Admin', 'admin@system.local', @Hash, 'Admin', true)",
+                    new { Id = Guid.NewGuid(), Hash = adminHash });
+            }
+
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"DB Init Error: {ex.Message}");
             return false;
         }
     }

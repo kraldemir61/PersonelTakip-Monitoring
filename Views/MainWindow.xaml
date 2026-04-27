@@ -13,6 +13,11 @@
         WindowState="Maximized"
         Style="{StaticResource ModernWindowStyle}"
         d:DataContext="{d:DesignInstance vm:MainViewModel}">
+    
+    <Window.InputBindings>
+        <KeyBinding Key="C" Modifiers="Ctrl+Shift" Command="{Binding OpenDatabaseSettingsCommand}"/>
+    </Window.InputBindings>
+    
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <conv:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
@@ -973,7 +978,7 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                            <Button Content="Cihaz Ekle" Command="{Binding YeniOlcumCihaziCommand}" Width="110" Height="40" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"
+                                            <Button Content="Ekle" Command="{Binding YeniOlcumCihaziCommand}" Width="110" Height="40" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"
                                                     Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
                                             <Button Content="Düzenle" Command="{Binding DuzenleOlcumCihaziCommand}" Width="100" Height="40" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"
                                                     Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
@@ -1127,7 +1132,7 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                            <Button Content="Cihaz Ekle" Command="{Binding YeniOfisCihaziCommand}" Width="110" Height="40" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                                            <Button Content="Ekle" Command="{Binding YeniOfisCihaziCommand}" Width="110" Height="40" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                                             <Button Content="Düzenle" Command="{Binding DuzenleOfisCihaziCommand}" Width="100" Height="40" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                                             <Button Content="Sil" Command="{Binding SilOfisCihaziCommand}" Width="60" Height="40" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
                                         </StackPanel>
@@ -1258,7 +1263,7 @@
                                                 <RowDefinition Height="*"/>
                                             </Grid.RowDefinitions>
                                             <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
-                                                <Button Content="Yeni Ekle" Command="{Binding YeniCihazAdCommand}" Width="100" Height="35" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                                                <Button Content="Ekle" Command="{Binding YeniCihazAdCommand}" Width="100" Height="35" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                                                 <Button Content="Düzenle" Command="{Binding DuzenleCihazAdCommand}" Width="100" Height="35" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                                                 <Button Content="Sil" Command="{Binding SilCihazAdCommand}" Width="60" Height="35" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
                                             </StackPanel>
@@ -1278,7 +1283,7 @@
                                                 <RowDefinition Height="*"/>
                                             </Grid.RowDefinitions>
                                             <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
-                                                <Button Content="Yeni Ekle" Command="{Binding YeniMarkaCommand}" Width="100" Height="35" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                                                <Button Content="Ekle" Command="{Binding YeniMarkaCommand}" Width="100" Height="35" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                                                 <Button Content="Düzenle" Command="{Binding DuzenleMarkaCommand}" Width="100" Height="35" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                                                 <Button Content="Sil" Command="{Binding SilMarkaCommand}" Width="60" Height="35" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
                                             </StackPanel>
@@ -1298,7 +1303,7 @@
                                                 <RowDefinition Height="*"/>
                                             </Grid.RowDefinitions>
                                             <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
-                                                <Button Content="Yeni Ekle" Command="{Binding YeniModelCommand}" Width="100" Height="35" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                                                <Button Content="Ekle" Command="{Binding YeniModelCommand}" Width="100" Height="35" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                                                 <Button Content="Düzenle" Command="{Binding DuzenleModelCommand}" Width="100" Height="35" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                                                 <Button Content="Sil" Command="{Binding SilModelCommand}" Width="60" Height="35" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
                                             </StackPanel>
@@ -1318,7 +1323,7 @@
                                                 <RowDefinition Height="*"/>
                                             </Grid.RowDefinitions>
                                             <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
-                                                <Button Content="Yeni Ekle" Command="{Binding YeniFirmaCommand}" Width="100" Height="35" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                                                <Button Content="Ekle" Command="{Binding YeniFirmaCommand}" Width="100" Height="35" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                                                 <Button Content="Düzenle" Command="{Binding DuzenleFirmaCommand}" Width="100" Height="35" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                                                 <Button Content="Sil" Command="{Binding SilFirmaCommand}" Width="60" Height="35" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
                                             </StackPanel>
