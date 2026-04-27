@@ -973,8 +973,10 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                            <Button Content="Cihaz Ekle" Command="{Binding YeniOlcumCihaziCommand}" Width="110" Height="40" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
-                                            <Button Content="Düzenle" Command="{Binding DuzenleOlcumCihaziCommand}" Width="100" Height="40" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                                            <Button Content="Cihaz Ekle" Command="{Binding YeniOlcumCihaziCommand}" Width="110" Height="40" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"
+                                                    Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                            <Button Content="Düzenle" Command="{Binding DuzenleOlcumCihaziCommand}" Width="100" Height="40" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"
+                                                    Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
                                             <Button Content="Transfer / Hareket" Command="{Binding OlcumCihaziHareketCommand}" Width="140" Height="40" Background="#3B82F6" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                                             <Button Content="Geçmiş" Command="{Binding OlcumCihaziGecmisCommand}" Width="80" Height="40" Background="#6B7280" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                                             <Button Content="Sil" Command="{Binding SilOlcumCihaziCommand}" Width="60" Height="40" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"

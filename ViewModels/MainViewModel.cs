@@ -388,6 +388,20 @@ public partial class MainViewModel : BaseViewModel
         {
             await _databaseService.StartListeningNotifications((tetikleyenIdStr, mesaj) => 
             {
+                if (tetikleyenIdStr != null && tetikleyenIdStr.StartsWith("RESTART_TARGET:"))
+                {
+                    var targetIdStr = tetikleyenIdStr.Replace("RESTART_TARGET:", "");
+                    if (Guid.TryParse(targetIdStr, out var targetId) && targetId == CurrentUser?.Id)
+                    {
+                        Application.Current.Dispatcher.Invoke(() => 
+                        {
+                            MessageBox.Show("Sistem yöneticisi tarafından yetkileriniz güncellendi.\nDeğişikliklerin aktif olması için program şimdi kapatılacaktır.", "Yetki Güncellemesi", MessageBoxButton.OK, MessageBoxImage.Information);
+                            Application.Current.Shutdown();
+                        });
+                    }
+                    return;
+                }
+
                 if (Guid.TryParse(tetikleyenIdStr, out var tetikleyenId))
                 {
                     // Tüm güncellemeleri doğrudan UI thread'i üzerinde sırayla yapıyoruz

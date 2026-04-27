@@ -824,6 +824,16 @@ public class DatabaseService
         await cmd.ExecuteNonQueryAsync();
     }
 
+    public async Task SistemBildirimiGonderAsync(string payload)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        
+        var safePayload = payload.Replace("'", "''");
+        using var cmd = new NpgsqlCommand($"NOTIFY personel_bildirim, '{safePayload}';", conn);
+        await cmd.ExecuteNonQueryAsync();
+    }
+
     public async Task<List<Bildirim>> GetSonBildirimlerAsync(int limit = 20)
     {
         using var conn = CreateConnection();
@@ -871,6 +881,10 @@ public class DatabaseService
                         if (parts.Length == 2)
                         {
                             onNotificationReceived?.Invoke(parts[0], parts[1]);
+                        }
+                        else
+                        {
+                            onNotificationReceived?.Invoke(e.Payload, string.Empty);
                         }
                     }
                 };

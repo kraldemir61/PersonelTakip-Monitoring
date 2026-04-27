@@ -78,3 +78,13 @@ Bu dosya, kullanıcı talimatları ve yapılan işlemlerin kronolojik kaydını 
 - **Talimat**: Personel silindiğinde bildirim gitmiyor, düzeltilmeli. Eklenen/Silinen personeller anında admin ekranına yansımalı. Süper admin tanımlaması bulunmadığından metin değiştirilmeli.
 - **İşlem**: `MainViewModel.cs` içindeki `SilPersonelAsync` ve `PersonelEditViewModel` içerisine daha akıcı bir bildirim eklendi (Örn: "Ali Yılmaz, Admin tarafından BWC şantiyesinden çıkartıldı.").
 - **İşlem**: `StartNotificationListener` içindeki yenileme metoduna `LoadPersonellerAsync()` eklendi. Böylece bir personel eklendiğinde veya silindiğinde, bildirim anında tüm açık ekranlarda personel tablosu da otomatik olarak güncellenecek.
+
+### [27.04.2026 08:45] - Admin Yetkisi Bildirimi ve Otomatik Kapanma
+- **Talimat**: Süper admin, bir Kullanıcıya adminlik verdiğinde veya adminlikten çıkardığında ilgili kullanıcıya bildirim gitmeli ve programı yeniden başlatması istenmeli.
+- **İşlem**: `DatabaseService.cs` içerisine `SistemBildirimiGonderAsync` eklendi. Bu yapı sayesinde veritabanına kayıt atılmadan, sadece LISTEN/NOTIFY kanalı üzerinden özel sistem komutları gönderilebilmesi sağlandı.
+- **İşlem**: `KullaniciEditViewModel.cs` güncellendi. Kullanıcının orijinal yetkisi değişirse (Admin <-> User), bu kullanıcıya özel `RESTART_TARGET` sistem sinyali yollanıyor ve sisteme "Yetkisi ... olarak güncellendi" tarzı global bir bildirim ekleniyor.
+
+### [27.04.2026 09:07] - Cihaz Ekle/Düzenle Yetkilendirmesi
+- **Talimat**: Kullanıcılar, Ölçüm Cihazları sekmesinde "Cihaz Ekle" ve "Düzenle" butonlarını göremesin.
+- **İşlem**: `MainWindow.xaml` içerisindeki "Ölçüm Cihazları" sekmesinde bulunan "Cihaz Ekle" ve "Düzenle" butonlarına `Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}"` eklendi. Sadece Admin yetkisine sahip hesaplar bu butonları görebilecek. Normal kullanıcılar sadece cihaz transferi yapabilecek ve geçmişini görüntüleyebilecek.
+- **İşlem**: `MainViewModel.cs` içindeki dinleyici, gelen sinyalin kendi ID'sine ait bir RESTART komutu olduğunu tespit ederse, doğrudan ekrana bir uyarı (MessageBox) çıkartıyor ve onaylandığında `Application.Current.Shutdown()` ile programı güvenli şekilde sonlandırıyor.

@@ -14,6 +14,7 @@ public partial class KullaniciEditViewModel : BaseViewModel
     private readonly Kullanici _currentUser;
     private readonly Guid? _kullaniciId;
     private readonly string? _orijinalKullaniciAdi;
+    private readonly string? _orijinalRol;
 
     [ObservableProperty]
     private string _kullaniciAdi = string.Empty;
@@ -50,6 +51,7 @@ public partial class KullaniciEditViewModel : BaseViewModel
         _currentUser = currentUser;
         _kullaniciId = kullanici?.Id;
         _orijinalKullaniciAdi = kullanici?.KullaniciAdi;
+        _orijinalRol = kullanici?.Rol;
 
         if (kullanici != null)
         {
@@ -135,6 +137,18 @@ public partial class KullaniciEditViewModel : BaseViewModel
             if (IsEditMode)
             {
                 await _databaseService.KullaniciGuncelleAsync(kullanici, _currentUser.Id);
+                
+                // Eğer rol değişmişse özel bir tetikleme gönderiyoruz
+                if (_orijinalRol != Rol && _kullaniciId.HasValue)
+                {
+                    // Otomatik kapatma sinyali
+                    await _databaseService.SistemBildirimiGonderAsync($"RESTART_TARGET:{_kullaniciId.Value}");
+                    
+                    // Sisteme kalıcı bildirim ekle
+                    var yetkiDurumu = Rol == "Admin" ? "Admin yetkisi verildi" : "User (Kullanıcı) yetkisine düşürüldü";
+                    var bildirimMesaji = $"{KullaniciAdi} kişisine Sistem Yöneticisi tarafından {yetkiDurumu}.";
+                    await _databaseService.BildirimEkleAsync(bildirimMesaji, _currentUser.Id);
+                }
             }
             else
             {
