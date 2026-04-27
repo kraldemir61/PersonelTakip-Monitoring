@@ -69,3 +69,12 @@ Bu dosya, kullanıcı talimatları ve yapılan işlemlerin kronolojik kaydını 
 - **İşlem**: "Ölçüm Cihazları" ve "Ofis Cihazları" sekmeleri, Personel sekmesiyle aynı 3 sütunlu yapıya (Liste + Detay Kartı) dönüştürüldü.
 - **İşlem**: Cihazlar için sağ tarafta dinamik detay kartı ve cihaz seçili değilken görünen "Genel Durum Özeti" eklendi.
 - **İşlem**: `MainViewModel` üzerinde cihaz istatistiklerini hesaplayan `CalculateDeviceStats` mantığı kuruldu ve arama ile entegre edildi.
+
+### [27.04.2026 08:15] - Gerçek Zamanlı Cihaz Transfer Senkronizasyonu
+- **Talimat**: Kullanıcının yapmış olduğu transfer, anında transferi alan kullanıcının ve adminlerin ekranına yansımalı. Programı kapatıp açmak gerekmemeli.
+- **İşlem**: `MainViewModel.cs` içindeki PostgreSQL `LISTEN/NOTIFY` bildirim dinleyicisi (`StartNotificationListener`) güncellendi. Artık bir transfer veya sistem bildirimi alındığında, uygulamanın cihaz verileri (`LoadCihazlarAsync`) ve istatistikleri arkaplanda anında yeniden yükleniyor ve ekranlara (OlcumCihazlariView, OfisCihazlariView) anlık olarak yansıtılıyor.
+
+### [27.04.2026 08:31] - Personel Silme Bildirimi ve Senkronizasyonu
+- **Talimat**: Personel silindiğinde bildirim gitmiyor, düzeltilmeli. Eklenen/Silinen personeller anında admin ekranına yansımalı. Süper admin tanımlaması bulunmadığından metin değiştirilmeli.
+- **İşlem**: `MainViewModel.cs` içindeki `SilPersonelAsync` ve `PersonelEditViewModel` içerisine daha akıcı bir bildirim eklendi (Örn: "Ali Yılmaz, Admin tarafından BWC şantiyesinden çıkartıldı.").
+- **İşlem**: `StartNotificationListener` içindeki yenileme metoduna `LoadPersonellerAsync()` eklendi. Böylece bir personel eklendiğinde veya silindiğinde, bildirim anında tüm açık ekranlarda personel tablosu da otomatik olarak güncellenecek.

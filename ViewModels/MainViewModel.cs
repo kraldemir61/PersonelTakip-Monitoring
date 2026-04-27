@@ -386,18 +386,34 @@ public partial class MainViewModel : BaseViewModel
         
         _ = Task.Run(async () =>
         {
-            await _databaseService.StartListeningNotifications(async (tetikleyenIdStr, mesaj) => 
+            await _databaseService.StartListeningNotifications((tetikleyenIdStr, mesaj) => 
             {
                 if (Guid.TryParse(tetikleyenIdStr, out var tetikleyenId))
                 {
-                    // Snack bar göster
-                    Application.Current.Dispatcher.Invoke(() => 
+                    // Tüm güncellemeleri doğrudan UI thread'i üzerinde sırayla yapıyoruz
+                    Application.Current.Dispatcher.InvokeAsync(async () => 
                     {
-                        ShowSnackbarNotification(mesaj);
+                        try
+                        {
+                            // 1. Snack bar göster
+                            ShowSnackbarNotification(mesaj);
+                            
+                            // 2. Bildirimleri tazele
+                            await LoadBildirimlerAsync();
+
+                            // 3. Verileri tazele (Cihazlar ve Personeller)
+                            await LoadCihazlarAsync();
+                            OlcumCihazlariView?.Refresh();
+                            OfisCihazlariView?.Refresh();
+                            CalculateDeviceStats();
+
+                            await LoadPersonellerAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Gerçek zamanlı güncelleme hatası: {ex.Message}");
+                        }
                     });
-                    
-                    // Listeyi her halükarda güncelle (anında düşmesi için)
-                    await LoadBildirimlerAsync();
                 }
             }, _notificationCts.Token);
         });
@@ -820,6 +836,11 @@ public partial class MainViewModel : BaseViewModel
         try
         {
             await _databaseService.PersonelSilAsync(SelectedPersonel.Id, CurrentUser!.Id);
+
+            var santiyeKodu = SelectedPersonel.SantiyeKod ?? "Merkez";
+            var mesaj = $"{SelectedPersonel.AdiSoyadi}, {CurrentUser.KullaniciAdi} tarafından {santiyeKodu} şantiyesinden çıkartıldı.";
+            await _databaseService.BildirimEkleAsync(mesaj, CurrentUser.Id);
+
             ShowSuccess("Personel işten çıkarıldı.");
             await LoadPersonellerAsync();
             UpdateSidebarSantiyeler();

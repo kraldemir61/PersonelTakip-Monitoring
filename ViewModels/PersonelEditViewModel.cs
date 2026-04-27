@@ -158,8 +158,8 @@ public partial class PersonelEditViewModel : BaseViewModel
                 // Sadece yeni kayıt eklenirken bildirim yolla
                 var santiye = SantiyeIdList?.FirstOrDefault(s => s.Id == SantiyeId);
                 var santiyeAdi = santiye?.Adi ?? "Bilinmeyen Şantiye";
-                var santiyeKodu = santiye?.Kod ?? "???";
-                var mesaj = $"{santiyeKodu} {_currentUser.KullaniciAdi}, {AdiSoyadi.Trim()} kişisini şantiyesine ekledi.";
+                var santiyeKodu = santiye?.Kod ?? "Merkez";
+                var mesaj = $"{AdiSoyadi.Trim()}, {_currentUser.KullaniciAdi} tarafından {santiyeKodu} şantiyesine eklendi.";
                 
                 await _databaseService.BildirimEkleAsync(mesaj, _currentUser.Id);
             }
