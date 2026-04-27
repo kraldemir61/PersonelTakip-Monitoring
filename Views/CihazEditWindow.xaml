@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:conv="clr-namespace:PersonelTakip.Converters"
         mc:Ignorable="d"
-        Title="{Binding Title}" Height="750" Width="450"
+        Title="{Binding Title}" Height="550" Width="450"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         Background="#F8FAFC">
     <Window.Resources>
@@ -59,35 +59,6 @@
                 <TextBlock Text="Not / Zimmet Bilgisi" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
                 <TextBox Text="{Binding Not, UpdateSourceTrigger=PropertyChanged}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" VerticalContentAlignment="Top" Padding="10,5" Margin="0,0,0,15"/>
 
-                <!-- Fotoğraflar Bölümü -->
-                <TextBlock Text="Cihaz Fotoğrafları (En fazla 3)" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
-                <Border BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="10" Background="White">
-                    <StackPanel>
-                        <ItemsControl ItemsSource="{Binding Fotograflar}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="0,0,0,5">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Border Width="40" Height="40" CornerRadius="4" Background="#F1F5F9" Margin="0,0,10,0">
-                                            <Image Source="{Binding Converter={StaticResource FotoPathToImageConverter}}" Stretch="UniformToFill"/>
-                                        </Border>
-                                        <TextBlock Grid.Column="1" Text="{Binding}" VerticalAlignment="Center" FontSize="11" TextTrimming="CharacterEllipsis" Foreground="#64748B"/>
-                                        <Button Grid.Column="2" Content="✕" Width="24" Height="24" Background="Transparent" Foreground="#EF4444" BorderThickness="0" Cursor="Hand"
-                                                Command="{Binding DataContext.RemoveFotoCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                        <Button Content="+ Fotoğraf Ekle" Command="{Binding SelectFotoCommand}" Height="30" Margin="0,5,0,0"
-                                Background="Transparent" Foreground="#3B82F6" BorderBrush="#3B82F6" BorderThickness="1" Cursor="Hand">
-                            <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style></Button.Resources>
-                        </Button>
-                    </StackPanel>
-                </Border>
             </StackPanel>
         </ScrollViewer>
 

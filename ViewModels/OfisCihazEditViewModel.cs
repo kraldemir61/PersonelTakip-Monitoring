@@ -44,8 +44,7 @@ namespace PersonelTakip.ViewModels
         [ObservableProperty]
         private ObservableCollection<LookupItem> _modeller = new();
 
-        [ObservableProperty]
-        private ObservableCollection<string> _fotograflar = new();
+
 
         public OfisCihazEditViewModel(DatabaseService databaseService, OfisCihazi? cihaz = null)
         {
@@ -64,11 +63,6 @@ namespace PersonelTakip.ViewModels
                 Ozellik = _cihaz.Ozellik;
                 Not = _cihaz.Not;
 
-                if (!string.IsNullOrEmpty(_cihaz.FotoPath))
-                {
-                    var paths = _cihaz.FotoPath.Split('|', StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var p in paths) Fotograflar.Add(p);
-                }
             }
 
             _ = LoadLookupsAsync();
@@ -96,20 +90,12 @@ namespace PersonelTakip.ViewModels
 
             try
             {
-                List<string> savedPaths = new List<string>();
-                foreach (var path in Fotograflar)
-                {
-                    var dest = HandleFotoFile(path);
-                    if (!string.IsNullOrEmpty(dest)) savedPaths.Add(dest);
-                }
-
                 _cihaz.SeriNo = SeriNo;
                 _cihaz.CihazAdi = CihazAdi;
                 _cihaz.Marka = Marka;
                 _cihaz.Model = Model;
                 _cihaz.Ozellik = Ozellik;
                 _cihaz.Not = Not;
-                _cihaz.FotoPath = string.Join("|", savedPaths);
 
                 if (_isEdit)
                     await _databaseService.OfisCihaziGuncelleAsync(_cihaz);
@@ -125,56 +111,7 @@ namespace PersonelTakip.ViewModels
             }
         }
 
-        [RelayCommand]
-        private void SelectFoto()
-        {
-            if (Fotograflar.Count >= 3)
-            {
-                MessageBox.Show("En fazla 3 fotoğraf ekleyebilirsiniz.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
 
-            var op = new Microsoft.Win32.OpenFileDialog
-            {
-                Title = "Fotoğraf Seç",
-                Filter = "Görsel Dosyaları|*.jpg;*.jpeg;*.png;*.bmp",
-                Multiselect = true
-            };
-
-            if (op.ShowDialog() == true)
-            {
-                foreach (var file in op.FileNames)
-                {
-                    if (Fotograflar.Count < 3) Fotograflar.Add(file);
-                }
-            }
-        }
-
-        [RelayCommand]
-        private void RemoveFoto(string path)
-        {
-            if (Fotograflar.Contains(path)) Fotograflar.Remove(path);
-        }
-
-        private string? HandleFotoFile(string path)
-        {
-            if (string.IsNullOrEmpty(path)) return null;
-            if (!System.IO.Path.IsPathRooted(path)) return path;
-
-            try
-            {
-                string folder = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Photos");
-                if (!System.IO.Directory.Exists(folder)) System.IO.Directory.CreateDirectory(folder);
-
-                string ext = System.IO.Path.GetExtension(path);
-                string newFileName = $"Cihaz_{Guid.NewGuid()}{ext}";
-                string destPath = System.IO.Path.Combine(folder, newFileName);
-
-                System.IO.File.Copy(path, destPath, true);
-                return newFileName;
-            }
-            catch { return null; }
-        }
 
         [RelayCommand]
         private void Iptal(Window window)

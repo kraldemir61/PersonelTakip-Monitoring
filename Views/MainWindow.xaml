@@ -1048,8 +1048,7 @@
                                                 <Border Width="60" Height="60" Background="#DCFCE7" CornerRadius="40" Margin="0,0,0,5">
                                                     <TextBlock Text="🛠️" FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </Border>
-                                                <TextBlock Text="{Binding SelectedOlcumCihazi.CihazAdi}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
-                                                <TextBlock Text="{Binding SelectedOlcumCihazi.SeriNo}" FontSize="14" Foreground="#6B7280" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+                                                <TextBlock Text="{Binding SelectedOlcumCihazi.CihazAdi}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,20"/>
                                                 
                                                 <Separator Margin="0,0,0,20"/>
                                                 
@@ -1304,14 +1303,7 @@
                                                         </Border>
 
                                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                            <TextBlock FontSize="20" FontWeight="Bold" Foreground="#1E293B">
-                                                                <Run Text="{Binding CihazAdi}"/>
-                                                                <Run Text=" - "/>
-                                                                <Run Text="{Binding Marka}"/>
-                                                                <Run Text=" "/>
-                                                                <Run Text="{Binding Model}"/>
-                                                            </TextBlock>
-                                                            <TextBlock Text="{Binding SeriNo}" FontSize="13" Foreground="#64748B" Margin="0,2,0,0"/>
+                                                            <TextBlock Text="{Binding CihazAdi}" FontSize="20" FontWeight="Bold" Foreground="#1E293B"/>
                                                         </StackPanel>
 
                                                         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
@@ -1333,68 +1325,22 @@
                                                         <!-- Photos Card -->
                                                         <Border Background="White" CornerRadius="15" Padding="15" Margin="0,0,0,15">
                                                             <StackPanel>
-                                                                <TextBlock Text="CİHAZ GÖRSELLERİ" FontWeight="Bold" FontSize="11" Foreground="#2563EB" Margin="0,0,0,15"/>
+                                                                <TextBlock Text="CİHAZ BİLGİLERİ" FontWeight="Bold" FontSize="11" Foreground="#2563EB" Margin="0,0,0,15"/>
                                                                 
-                                                                <TextBlock Text="Görsel bulunmuyor." FontStyle="Italic" Foreground="#94A3B8" HorizontalAlignment="Center" Margin="0,20">
-                                                                    <TextBlock.Style>
-                                                                        <Style TargetType="TextBlock">
-                                                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                                                            <Style.Triggers>
-                                                                                <DataTrigger Binding="{Binding Fotograflar.Count}" Value="0">
-                                                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                                                </DataTrigger>
-                                                                            </Style.Triggers>
-                                                                        </Style>
-                                                                    </TextBlock.Style>
-                                                                </TextBlock>
+                                                                <StackPanel Margin="5,0">
+                                                                    <TextBlock Text="MARKA / MODEL" FontSize="10" FontWeight="Bold" Foreground="#94A3B8" Margin="0,0,0,4"/>
+                                                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                                                        <TextBlock Text="{Binding Marka}" FontSize="14" FontWeight="SemiBold" Foreground="#1E293B"/>
+                                                                        <TextBlock Text=" " />
+                                                                        <TextBlock Text="{Binding Model}" FontSize="14" Foreground="#1E293B"/>
+                                                                    </StackPanel>
 
-                                                                <Grid>
-                                                                    <Grid.Style>
-                                                                        <Style TargetType="Grid">
-                                                                            <Setter Property="Visibility" Value="Visible"/>
-                                                                            <Style.Triggers>
-                                                                                <DataTrigger Binding="{Binding Fotograflar.Count}" Value="0">
-                                                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                                                </DataTrigger>
-                                                                            </Style.Triggers>
-                                                                        </Style>
-                                                                    </Grid.Style>
-                                                                    <Grid.ColumnDefinitions>
-                                                                        <ColumnDefinition Width="30"/>
-                                                                        <ColumnDefinition Width="*"/>
-                                                                        <ColumnDefinition Width="30"/>
-                                                                    </Grid.ColumnDefinitions>
-
-                                                                    <Button Grid.Column="0" Content="❮" Background="Transparent" Foreground="#2563EB" BorderThickness="0" FontSize="20" FontWeight="Bold" Cursor="Hand"
-                                                                            Command="{Binding DataContext.OfisCihaziPrevFotoCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}">
-                                                                        <Button.Style>
-                                                                            <Style TargetType="Button">
-                                                                                <Setter Property="Visibility" Value="Visible"/>
-                                                                                <Style.Triggers>
-                                                                                    <DataTrigger Binding="{Binding IsFirstFoto}" Value="True"><Setter Property="Visibility" Value="Hidden"/></DataTrigger>
-                                                                                    <DataTrigger Binding="{Binding Fotograflar.Count}" Value="1"><Setter Property="Visibility" Value="Hidden"/></DataTrigger>
-                                                                                </Style.Triggers>
-                                                                            </Style>
-                                                                        </Button.Style>
-                                                                    </Button>
-
-                                                                    <Border Grid.Column="1" HorizontalAlignment="Center" Height="180">
-                                                                        <Image Source="{Binding CurrentFoto, Converter={StaticResource FotoPathToImageConverter}}" Stretch="Uniform"/>
-                                                                    </Border>
-
-                                                                    <Button Grid.Column="2" Content="❯" Background="Transparent" Foreground="#2563EB" BorderThickness="0" FontSize="20" FontWeight="Bold" Cursor="Hand"
-                                                                            Command="{Binding DataContext.OfisCihaziNextFotoCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}">
-                                                                        <Button.Style>
-                                                                            <Style TargetType="Button">
-                                                                                <Setter Property="Visibility" Value="Visible"/>
-                                                                                <Style.Triggers>
-                                                                                    <DataTrigger Binding="{Binding IsLastFoto}" Value="True"><Setter Property="Visibility" Value="Hidden"/></DataTrigger>
-                                                                                    <DataTrigger Binding="{Binding Fotograflar.Count}" Value="1"><Setter Property="Visibility" Value="Hidden"/></DataTrigger>
-                                                                                </Style.Triggers>
-                                                                            </Style>
-                                                                        </Button.Style>
-                                                                    </Button>
-                                                                </Grid>
+                                                                    <TextBlock Text="SERİ NO" FontSize="10" FontWeight="Bold" Foreground="#94A3B8" Margin="0,0,0,4"/>
+                                                                    <TextBlock Text="{Binding SeriNo}" FontSize="14" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,12"/>
+                                                                    
+                                                                    <TextBlock Text="ÖZELLİKLER" FontSize="10" FontWeight="Bold" Foreground="#94A3B8" Margin="0,0,0,4"/>
+                                                                    <TextBlock Text="{Binding Ozellik}" FontSize="13" TextWrapping="Wrap" Foreground="#475569" Margin="0,0,0,12"/>
+                                                                </StackPanel>
                                                             </StackPanel>
                                                         </Border>
 

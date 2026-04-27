@@ -125,3 +125,12 @@ Bu dosya, kullanıcı talimatları ve yapılan işlemlerin kronolojik kaydını 
 - **İşlem**: 'Boşta' ve 'Zimmetli' filtre butonlarının aynı anda aktif olmama (exclusive) kuralı eklendi. Aktif olan filtrenin arka plan rengiyle vurgulanması sağlandı.
 - **İşlem**: Veri yenileme (`LoadData`) sonrası tabloda seçili olan satırın kaybolması engellendi, seçim durumu korundu.
 - **İşlem**: Yapılan tüm değişiklikler Visual Studio Git aracı kullanılarak Türkçe ve detaylı açıklama ile GitHub'a push edildi.
+
+### [27.04.2026 17:45] - Cihaz Detay Kartı ve Görsel Özelliğinin Kaldırılması
+- **Talimat**: Cihaz görselleri kartını 'Cihaz Bilgileri' olarak değiştir, görsel ekleme özelliğini kaldır. Başlıkta sadece cihaz adı görünsün, diğer tüm detaylar bilgi kartına taşınsın.
+- **İşlem**: 'Ölçüm Cihazları' ve 'Ofis Cihazları' detay kartı başlıklarından Seri No, Marka ve Model bilgileri kaldırıldı; sadece 'Cihaz Adı' bırakıldı.
+- **İşlem**: 'Ofis Cihazları' sekmesindeki "CİHAZ GÖRSELLERİ" kartı "CİHAZ BİLGİLERİ" olarak yeniden adlandırıldı.
+- **İşlem**: Marka, Model, Seri No ve Özellikler bilgileri bu yeni 'CİHAZ BİLGİLERİ' kartına taşınarak görselleştirildi.
+- **İşlem**: `CihazEditWindow` ve `OfisCihazEditWindow` pencerelerinden fotoğraf ekleme/listeleme alanları tamamen kaldırıldı ve pencere boyutları optimize edildi.
+- **İşlem**: `CihazEditViewModel` ve `OfisCihazEditViewModel` sınıflarındaki tüm fotoğraf işleme, kopyalama ve komut mantığı temizlendi.
+
