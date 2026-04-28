@@ -3,20 +3,25 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:PersonelTakip.Controls"
         mc:Ignorable="d"
-        Title="Cihaz Hareket Geçmişi" Height="700" Width="1100"
+        Title="Cihaz Hareket Geçmişi" Height="750" Width="1200"
         WindowStartupLocation="CenterScreen"
-        Background="#F8FAFC"
+        Style="{StaticResource ModernWindowStyle}"
+        Background="#0F172A"
         FontFamily="Segoe UI">
     
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Custom Title Bar -->
             <RowDefinition Height="Auto"/> <!-- Header -->
             <RowDefinition Height="*"/>    <!-- Content -->
         </Grid.RowDefinitions>
 
+        <controls:CustomTitleBar Grid.Row="0"/>
+
         <!-- Header Panel -->
-        <Border Grid.Row="0" Background="White" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="25,20">
+        <Border Grid.Row="1" Background="#1E293B" BorderBrush="#334155" BorderThickness="0,0,0,1" Padding="25,20">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -24,22 +29,23 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel>
-                    <TextBlock Text="Cihaz Hareket Geçmişi" FontSize="24" FontWeight="Bold" Foreground="#1E293B"/>
-                    <TextBlock Text="Sistemdeki tüm cihazların transfer ve işlem kayıtları" FontSize="13" Foreground="#64748B" Margin="0,5,0,0"/>
+                    <TextBlock Text="Cihaz Hareket Geçmişi" FontSize="26" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock Text="Sistemdeki tüm cihazların transfer ve işlem kayıtları" FontSize="14" Foreground="#94A3B8" Margin="0,5,0,0"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border CornerRadius="20" Background="#F1F5F9" BorderBrush="#E2E8F0" BorderThickness="1" Height="40" Width="300" Margin="0,0,15,0">
+                    <Border CornerRadius="12" Background="#0F172A" BorderBrush="#334155" BorderThickness="1" Height="45" Width="350" Margin="0,0,15,0">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="40"/>
+                                <ColumnDefinition Width="45"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="🔍" VerticalAlignment="Center" HorizontalAlignment="Center" Opacity="0.5"/>
+                            <TextBlock Text="🔍" VerticalAlignment="Center" HorizontalAlignment="Center" Opacity="0.7" Foreground="#94A3B8"/>
                             <TextBox x:Name="SearchBox" Grid.Column="1" BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center" 
-                                     Padding="5,0,15,0" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
-                            <TextBlock Grid.Column="1" Text="Seri no, şantiye, işlem ara..." Foreground="#94A3B8" VerticalAlignment="Center" 
-                                       IsHitTestVisible="False" Margin="10,0,0,0">
+                                     Foreground="White" CaretBrush="White" Padding="5,0,15,0" FontSize="14"
+                                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Grid.Column="1" Text="Seri no, şantiye, işlem ara..." Foreground="#475569" VerticalAlignment="Center" 
+                                       IsHitTestVisible="False" Margin="10,0,0,0" FontSize="14">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -55,18 +61,13 @@
                     </Border>
                     
                     <Button Content="Excel'e Aktar" Command="{Binding ExcelAktarCommand}" 
-                            Width="130" Height="40" Background="#10B981" Foreground="White" FontWeight="SemiBold">
-                        <Button.Resources>
-                            <Style TargetType="Border">
-                                <Setter Property="CornerRadius" Value="8"/>
-                            </Style>
-                        </Button.Resources>
+                            Width="150" Height="45" Background="#10B981" Foreground="White" FontWeight="Bold" FontSize="14" Cursor="Hand">
                         <Button.Style>
                             <Style TargetType="Button">
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="Button">
-                                            <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                                            <Border Background="{TemplateBinding Background}" CornerRadius="10">
                                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             </Border>
                                         </ControlTemplate>
@@ -75,6 +76,9 @@
                                 <Style.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
                                         <Setter Property="Opacity" Value="0.9"/>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter Property="Opacity" Value="0.8"/>
                                     </Trigger>
                                 </Style.Triggers>
                             </Style>
@@ -85,35 +89,41 @@
         </Border>
 
         <!-- Data Area -->
-        <Border Grid.Row="1" Margin="25" Background="White" CornerRadius="12" BorderBrush="#E2E8F0" BorderThickness="1">
+        <Border Grid.Row="2" Margin="25" Background="#1E293B" CornerRadius="16" BorderBrush="#334155" BorderThickness="1">
             <Border.Effect>
-                <DropShadowEffect BlurRadius="15" ShadowDepth="2" Opacity="0.05" Direction="270"/>
+                <DropShadowEffect BlurRadius="25" ShadowDepth="0" Opacity="0.4" Color="Black"/>
             </Border.Effect>
             <Grid>
                 <DataGrid ItemsSource="{Binding HareketlerView}" AutoGenerateColumns="False" IsReadOnly="True" 
                           HeadersVisibility="Column" GridLinesVisibility="None" BorderThickness="0"
-                          Background="White" RowHeight="40" AlternationCount="2">
+                          Background="Transparent" RowHeight="45" AlternationCount="2"
+                          SelectionMode="Single" SelectionUnit="FullRow">
                     <DataGrid.Resources>
                         <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="Background" Value="#F1F5F9"/>
-                            <Setter Property="Foreground" Value="#FFA2172A"/>
+                            <Setter Property="Background" Value="#111827"/>
+                            <Setter Property="Foreground" Value="#94A3B8"/>
                             <Setter Property="Padding" Value="15,12"/>
-                            <Setter Property="FontWeight" Value="SemiBold"/>
-                            <Setter Property="FontSize" Value="12"/>
-                            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="FontSize" Value="13"/>
+                            <Setter Property="BorderBrush" Value="#334155"/>
                             <Setter Property="BorderThickness" Value="0,0,0,1"/>
                         </Style>
                         <Style TargetType="DataGridRow">
                             <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="Foreground" Value="#CBD5E1"/>
                             <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                            <Setter Property="BorderBrush" Value="#F1F5F9"/>
+                            <Setter Property="BorderBrush" Value="#334155"/>
                             <Style.Triggers>
                                 <Trigger Property="AlternationIndex" Value="1">
-                                    <Setter Property="Background" Value="#F8FAFC"/>
+                                    <Setter Property="Background" Value="#162133"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#334155"/>
+                                    <Setter Property="Foreground" Value="White"/>
                                 </Trigger>
                                 <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="#E5E7EB"/>
-                                    <Setter Property="Foreground" Value="#1F2937"/>
+                                    <Setter Property="Background" Value="#3B82F6"/>
+                                    <Setter Property="Foreground" Value="White"/>
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -123,7 +133,6 @@
                             <Style.Triggers>
                                 <Trigger Property="IsSelected" Value="True">
                                     <Setter Property="Background" Value="Transparent"/>
-                                    <Setter Property="Foreground" Value="#1F2937"/>
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -134,45 +143,48 @@
                         </Style>
                     </DataGrid.Resources>
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Tarih" Binding="{Binding Tarih, StringFormat='dd.MM.yyyy HH:mm'}" Width="140" ElementStyle="{StaticResource CenterLeftStyle}"/>
-                        <DataGridTextColumn Header="Seri No" Binding="{Binding CihazSeriNo}" Width="120">
+                        <DataGridTextColumn Header="Tarih" Binding="{Binding Tarih, StringFormat='dd.MM.yyyy HH:mm'}" Width="150" ElementStyle="{StaticResource CenterLeftStyle}"/>
+                        <DataGridTextColumn Header="Seri No" Binding="{Binding CihazSeriNo}" Width="140">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource CenterLeftStyle}">
                                     <Setter Property="FontWeight" Value="Bold"/>
-                                    <Setter Property="Foreground" Value="#1E293B"/>
+                                    <Setter Property="Foreground" Value="White"/>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
-                        <DataGridTextColumn Header="Cihaz Adı" Binding="{Binding CihazAdi}" Width="130" ElementStyle="{StaticResource CenterLeftStyle}"/>
-                        <DataGridTextColumn Header="İşlem" Binding="{Binding IslemTuru}" Width="100">
+                        <DataGridTextColumn Header="Cihaz Adı" Binding="{Binding CihazAdi}" Width="150" ElementStyle="{StaticResource CenterLeftStyle}"/>
+                        <DataGridTextColumn Header="İşlem" Binding="{Binding IslemTuru}" Width="120">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource CenterLeftStyle}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IslemTuru}" Value="Transfer">
-                                            <Setter Property="Foreground" Value="#3B82F6"/>
+                                            <Setter Property="Foreground" Value="#60A5FA"/>
+                                            <Setter Property="FontWeight" Value="Bold"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding IslemTuru}" Value="Arıza">
-                                            <Setter Property="Foreground" Value="#EF4444"/>
+                                            <Setter Property="Foreground" Value="#F87171"/>
+                                            <Setter Property="FontWeight" Value="Bold"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding IslemTuru}" Value="Bakım">
-                                            <Setter Property="Foreground" Value="#F59E0B"/>
+                                            <Setter Property="Foreground" Value="#FBBF24"/>
+                                            <Setter Property="FontWeight" Value="Bold"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
-                        <DataGridTextColumn Header="Nereden" Binding="{Binding NeredenSantiyeKod}" Width="100" ElementStyle="{StaticResource CenterLeftStyle}"/>
-                        <DataGridTextColumn Header="Nereye" Binding="{Binding NereyeSantiyeKod}" Width="100" ElementStyle="{StaticResource CenterLeftStyle}"/>
+                        <DataGridTextColumn Header="Nereden" Binding="{Binding NeredenSantiyeKod}" Width="120" ElementStyle="{StaticResource CenterLeftStyle}"/>
+                        <DataGridTextColumn Header="Nereye" Binding="{Binding NereyeSantiyeKod}" Width="120" ElementStyle="{StaticResource CenterLeftStyle}"/>
                         <DataGridTextColumn Header="Açıklama" Binding="{Binding Aciklama}" Width="*" ElementStyle="{StaticResource CenterLeftStyle}"/>
-                        <DataGridTextColumn Header="Yapan" Binding="{Binding KullaniciAdi}" Width="100" ElementStyle="{StaticResource CenterLeftStyle}"/>
+                        <DataGridTextColumn Header="Yapan" Binding="{Binding KullaniciAdi}" Width="120" ElementStyle="{StaticResource CenterLeftStyle}"/>
                     </DataGrid.Columns>
                 </DataGrid>
 
                 <!-- Loading Overlay -->
-                <Border Background="#80FFFFFF" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Border Background="#CC0F172A" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" CornerRadius="16">
                     <StackPanel VerticalAlignment="Center">
-                        <ProgressBar IsIndeterminate="True" Width="200" Height="4" Background="#E2E8F0" Foreground="#3B82F6"/>
-                        <TextBlock Text="Yükleniyor..." HorizontalAlignment="Center" Margin="0,10,0,0" Foreground="#64748B"/>
+                        <ProgressBar IsIndeterminate="True" Width="250" Height="6" Background="#1E293B" Foreground="#3B82F6" BorderThickness="0"/>
+                        <TextBlock Text="Veriler Yükleniyor..." HorizontalAlignment="Center" Margin="0,15,0,0" Foreground="#94A3B8" FontSize="14" FontWeight="SemiBold"/>
                     </StackPanel>
                 </Border>
             </Grid>
