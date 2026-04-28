@@ -194,7 +194,6 @@
                     <RowDefinition Height="Auto"/> <!-- Logo Section -->
                     <RowDefinition Height="Auto"/> <!-- Toggle Section -->
                     <RowDefinition Height="*"/>    <!-- Content Section -->
-                    <RowDefinition Height="Auto"/> <!-- Status Section -->
                 </Grid.RowDefinitions>
 
                 <!-- 1. Logo Section -->
@@ -266,27 +265,6 @@
 
 
                 </Grid>
-
-                <!-- 4. Status Section -->
-                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15,0,0">
-                    <Ellipse x:Name="ConnStatus" Width="12" Height="12" Margin="0,0,6,0">
-                        <Ellipse.Style>
-                            <Style TargetType="Ellipse">
-                                <Setter Property="Fill" Value="#EF4444"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsSlowConnection}" Value="True"><Setter Property="Fill" Value="#F59E0B"/></DataTrigger>
-                                    <MultiDataTrigger>
-                                        <MultiDataTrigger.Conditions>
-                                            <Condition Binding="{Binding IsSlowConnection}" Value="False"/><Condition Binding="{Binding IsConnected}" Value="True"/>
-                                        </MultiDataTrigger.Conditions>
-                                        <Setter Property="Fill" Value="#10B981"/>
-                                    </MultiDataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Ellipse.Style>
-                    </Ellipse>
-                    <TextBlock Text="{Binding ConnectionStatus}" FontSize="12" Foreground="#9CA3AF" VerticalAlignment="Center"/>
-                </StackPanel>
             </Grid>
         </Border>
     </Grid>

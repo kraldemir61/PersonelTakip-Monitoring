@@ -174,7 +174,6 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <controls:CustomTitleBar Grid.Row="0">
@@ -188,7 +187,28 @@
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <!-- User Info -->
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,15,0">
-                            <Ellipse Width="8" Height="8" Fill="#10B981" Margin="0,0,8,0"/>
+                            <Ellipse Width="10" Height="10" Margin="0,0,8,0">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Fill" Value="#EF4444"/> <!-- Red default -->
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                                <Setter Property="Fill" Value="#10B981"/> <!-- Green -->
+                                            </DataTrigger>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding IsConnected}" Value="True"/>
+                                                    <Condition Binding="{Binding IsSlowConnection}" Value="True"/>
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="Fill" Value="#F59E0B"/> <!-- Orange -->
+                                            </MultiDataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                                <Ellipse.ToolTip>
+                                    <ToolTip Content="{Binding ConnectionStatus}"/>
+                                </Ellipse.ToolTip>
+                            </Ellipse>
                             <TextBlock Text="{Binding CurrentUser.KullaniciAdi}" FontWeight="Bold" Foreground="White" FontSize="13"/>
                             <TextBlock Text=" / " Foreground="#9CA3AF" Margin="4,0,4,0"/>
                             <TextBlock Text="{Binding CurrentUser.Rol}" Foreground="#9CA3AF" FontSize="11" VerticalAlignment="Center"/>
@@ -977,9 +997,8 @@
                             </Style>
                         </TabControl.Resources>
 
-                        <!-- ÖLÇÜM CİHAZLARI -->
                         <TabItem Header="Ölçüm Cihazları">
-                            <Border Background="White" CornerRadius="12,12,12,12" Padding="20">
+                            <Border Background="#0F172A" CornerRadius="0,0,12,12" Padding="20">
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
@@ -991,6 +1010,7 @@
                                         <ColumnDefinition Width="320" MinWidth="250" MaxWidth="600"/>
                                     </Grid.ColumnDefinitions>
 
+                                    <!-- Action Bar -->
                                     <Grid Grid.Row="0" Grid.ColumnSpan="3" Margin="0,0,0,20">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
@@ -1006,16 +1026,18 @@
                                             <Button Content="Sil" Command="{Binding SilOlcumCihaziCommand}" Width="60" Height="40" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"
                                                     Visibility="{Binding IsSuperAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
                                         </StackPanel>
-                                        <Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="White" BorderBrush="#E5E7EB" BorderThickness="1" Height="40">
+                                        
+                                        <!-- Search Box (Dark) -->
+                                        <Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="40">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="40"/>
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
-                                                <TextBlock Text="🔍" VerticalAlignment="Center" HorizontalAlignment="Center" Opacity="0.5"/>
-                                                <TextBox x:Name="SearchBoxOlcum" Grid.Column="1" BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center" Padding="5,0,15,0"
-                                                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
-                                                <TextBlock Grid.Column="1" Text="Seri no, marka, model ara..." Foreground="#9CA3AF" VerticalAlignment="Center" IsHitTestVisible="False" Margin="10,0,0,0">
+                                                <TextBlock Text="🔍" VerticalAlignment="Center" HorizontalAlignment="Center" Opacity="0.5" Foreground="White"/>
+                                                <TextBox x:Name="SearchBoxOlcum" Grid.Column="1" BorderThickness="0" Background="Transparent" Foreground="White" VerticalContentAlignment="Center" Padding="5,0,15,0"
+                                                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" CaretBrush="White"/>
+                                                <TextBlock Grid.Column="1" Text="Seri no, marka, model ara..." Foreground="#64748B" VerticalAlignment="Center" IsHitTestVisible="False" Margin="10,0,0,0">
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
                                                             <Setter Property="Visibility" Value="Collapsed"/>
@@ -1031,57 +1053,97 @@
                                         </Border>
                                     </Grid>
 
-                                    <DataGrid Grid.Row="1" Grid.Column="0" ItemsSource="{Binding OlcumCihazlariView}" SelectedItem="{Binding SelectedOlcumCihazi}" 
-                                              AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="None" BorderThickness="1" BorderBrush="#E5E7EB" Margin="0,0,5,0">
-                                        <DataGrid.Columns>
-                                            <DataGridTextColumn Header="Seri No" Binding="{Binding SeriNo}" Width="120"/>
-                                            <DataGridTextColumn Header="Cihaz Adı" Binding="{Binding CihazAdi}" Width="120"/>
-                                            <DataGridTextColumn Header="Marka" Binding="{Binding Marka}" Width="100"/>
-                                            <DataGridTextColumn Header="Durum" Binding="{Binding Durum}" Width="*"/>
-                                        </DataGrid.Columns>
-                                    </DataGrid>
+                                    <!-- DataGrid Area (Rounded & Dark) -->
+                                    <Border Grid.Row="1" Grid.Column="0" CornerRadius="12,12,12,12" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Padding="1" Margin="0,0,5,0">
+                                        <DataGrid ItemsSource="{Binding OlcumCihazlariView}" SelectedItem="{Binding SelectedOlcumCihazi}" 
+                                                  AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column" 
+                                                  Background="Transparent" BorderThickness="0" RowHeight="45">
+                                            <DataGrid.Resources>
+                                                <Style TargetType="DataGridColumnHeader">
+                                                    <Setter Property="Background" Value="#334155"/>
+                                                    <Setter Property="Foreground" Value="White"/>
+                                                    <Setter Property="Padding" Value="15,10"/>
+                                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                                    <Setter Property="BorderBrush" Value="#475569"/>
+                                                </Style>
+                                                <Style TargetType="DataGridRow">
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Setter Property="Foreground" Value="#E2E8F0"/>
+                                                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                                    <Setter Property="BorderBrush" Value="#334155"/>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#2D3748"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsSelected" Value="True">
+                                                        <Setter Property="Background" Value="#FF151515"/>
+                                                            <Setter Property="Foreground" Value="White"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
 
-                                    <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="Transparent" ShowsPreview="True" Cursor="SizeWE" Margin="0,0,5,0"/>
+                                                <!-- Overriding system colors for selection persistence -->
+                                                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#334155"/>
+                                                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#334155"/>
+                                                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="White"/>
+                                                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="White"/>
+                                            </DataGrid.Resources>
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="Cihaz Adı" Binding="{Binding CihazAdi}" Width="*"/>
+                                                <DataGridTextColumn Header="Seri No" Binding="{Binding SeriNo}" Width="150"/>
+                                                <DataGridTextColumn Header="Bulunduğu Yer" Binding="{Binding SantiyeKod}" Width="120"/>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </Border>
 
-                                    <Border Grid.Row="1" Grid.Column="2" Background="#FFFFFF" CornerRadius="12" BorderBrush="#E2E8F0" BorderThickness="1" Padding="15" Margin="5,0,0,0">
-                                        <Border.Effect>
-                                            <DropShadowEffect BlurRadius="15" ShadowDepth="2" Opacity="0.05" Direction="270" Color="#000000"/>
-                                        </Border.Effect>
+                                    <GridSplitter Grid.Row="1" Grid.Column="1" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="Transparent" ShowsPreview="True" Cursor="SizeWE" Padding="0" Margin="0,0,5,0"/>
+
+                                    <!-- Right Detail Card (Dark Premium) -->
+                                    <Border Grid.Row="1" Grid.Column="2" Background="#1E293B" CornerRadius="12" BorderBrush="#334155" BorderThickness="1" Padding="20" Margin="5,0,0,0">
                                         <Grid>
                                             <!-- CİHAZ DETAY -->
                                             <StackPanel Visibility="{Binding SelectedOlcumCihazi, Converter={StaticResource NullToVisibilityConverter}, ConverterParameter=Invert}">
-                                                <Border Width="60" Height="60" Background="#DCFCE7" CornerRadius="40" Margin="0,0,0,5">
+                                                <Border Width="60" Height="60" Background="#10B981" CornerRadius="40" Margin="0,0,0,15">
                                                     <TextBlock Text="🛠️" FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </Border>
-                                                <TextBlock Text="{Binding SelectedOlcumCihazi.CihazAdi}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+                                                <TextBlock Text="{Binding SelectedOlcumCihazi.CihazAdi}" FontSize="20" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,25"/>
                                                 
-                                                <Separator Margin="0,0,0,20"/>
+                                                <Separator Background="#334155" Margin="0,0,0,20"/>
                                                 
-                                                <StackPanel>
-                                                    <TextBlock Text="MARKA / MODEL" FontSize="10" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,0,0,2"/>
-                                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                                        <TextBlock Text="{Binding SelectedOlcumCihazi.Marka}" FontSize="14" FontWeight="SemiBold"/>
-                                                        <TextBlock Text=" / " Foreground="#9CA3AF"/>
-                                                        <TextBlock Text="{Binding SelectedOlcumCihazi.Model}" FontSize="14"/>
+                                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                                    <StackPanel>
+                                                        <TextBlock Text="MARKA / MODEL" FontSize="10" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,4"/>
+                                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                                            <TextBlock Text="{Binding SelectedOlcumCihazi.Marka}" FontSize="15" FontWeight="SemiBold" Foreground="White"/>
+                                                            <TextBlock Text=" / " Foreground="#64748B"/>
+                                                            <TextBlock Text="{Binding SelectedOlcumCihazi.Model}" FontSize="15" Foreground="#CBD5E1"/>
+                                                        </StackPanel>
+
+                                                        <TextBlock Text="SERİ NUMARASI" FontSize="10" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,4"/>
+                                                        <TextBlock Text="{Binding SelectedOlcumCihazi.SeriNo}" FontSize="15" Foreground="White" Margin="0,0,0,15"/>
+
+                                                        <TextBlock Text="SAHİP FİRMA" FontSize="10" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,4"/>
+                                                        <TextBlock Text="{Binding SelectedOlcumCihazi.SahipFirma}" FontSize="15" Foreground="White" Margin="0,0,0,15"/>
+
+                                                        <TextBlock Text="BULUNDUĞU YER" FontSize="10" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,4"/>
+                                                        <StackPanel Margin="0,0,0,15">
+                                                            <TextBlock Text="{Binding SelectedOlcumCihazi.SantiyeKod}" FontSize="15" FontWeight="Bold" Foreground="#3B82F6"/>
+                                                            <TextBlock Text="{Binding SelectedOlcumCihazi.SantiyeAdi}" FontSize="12" Foreground="#94A3B8"/>
+                                                        </StackPanel>
+
+                                                        <TextBlock Text="DURUM" FontSize="10" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,4"/>
+                                                        <Border Background="#2D3748" HorizontalAlignment="Left" Padding="12,5" CornerRadius="6" Margin="0,0,0,15">
+                                                            <TextBlock Text="{Binding SelectedOlcumCihazi.Durum}" FontSize="13" FontWeight="SemiBold" Foreground="#10B981"/>
+                                                        </Border>
+
+                                                        <TextBlock Text="SON İŞLEM" FontSize="10" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,4"/>
+                                                        <TextBlock Text="{Binding SelectedOlcumCihazi.SonIslemTarihi, StringFormat=dd.MM.yyyy HH:mm}" FontSize="14" Foreground="#94A3B8" Margin="0,0,0,15"/>
+
+                                                        <TextBlock Text="NOT" FontSize="10" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,4"/>
+                                                        <TextBlock Text="{Binding SelectedOlcumCihazi.Not}" FontSize="13" Foreground="#CBD5E1" TextWrapping="Wrap" Opacity="0.9"/>
                                                     </StackPanel>
-
-                                                    <TextBlock Text="SAHİP FİRMA" FontSize="10" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,0,0,2"/>
-                                                    <TextBlock Text="{Binding SelectedOlcumCihazi.SahipFirma}" FontSize="14" Margin="0,0,0,12"/>
-
-                                                    <TextBlock Text="BULUNDUĞU YER" FontSize="10" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,0,0,2"/>
-                                                    <TextBlock Text="{Binding SelectedOlcumCihazi.SantiyeKod}" FontSize="14" FontWeight="Bold" Foreground="#1E2937" Margin="0,0,0,12"/>
-
-                                                    <TextBlock Text="DURUM" FontSize="10" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,0,0,2"/>
-                                                    <Border Background="#F3F4F6" HorizontalAlignment="Left" Padding="10,4" CornerRadius="4" Margin="0,0,0,12">
-                                                        <TextBlock Text="{Binding SelectedOlcumCihazi.Durum}" FontSize="13" FontWeight="SemiBold" Foreground="#374151"/>
-                                                    </Border>
-
-                                                    <TextBlock Text="SON İŞLEM" FontSize="10" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,0,0,2"/>
-                                                    <TextBlock Text="{Binding SelectedOlcumCihazi.SonIslemTarihi, StringFormat=dd.MM.yyyy HH:mm}" FontSize="14" Margin="0,0,0,12"/>
-
-                                                    <TextBlock Text="NOT" FontSize="10" FontWeight="Bold" Foreground="#9CA3AF" Margin="0,0,0,2"/>
-                                                    <TextBlock Text="{Binding SelectedOlcumCihazi.Not}" FontSize="13" TextWrapping="Wrap" Opacity="0.8"/>
-                                                </StackPanel>
+                                                </ScrollViewer>
                                             </StackPanel>
 
                                             <!-- GENEL DURUM ÖZETİ (Cihaz Seçili Değilse) -->
@@ -1090,32 +1152,32 @@
                                                     <RowDefinition Height="Auto"/>
                                                     <RowDefinition Height="*"/>
                                                 </Grid.RowDefinitions>
-                                                <TextBlock Text="Ölçüm Cihazları Özeti" FontSize="18" FontWeight="Bold" Foreground="#1F2937" Margin="0,0,0,15"/>
+                                                <TextBlock Text="Ölçüm Cihazları Özeti" FontSize="18" FontWeight="Bold" Foreground="White" Margin="0,0,0,20"/>
                                                 
                                                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                                                     <StackPanel>
-                                                        <Border CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                                                        <Border CornerRadius="10" Padding="20" Margin="0,0,0,20">
                                                             <Border.Background>
                                                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                                                    <GradientStop Color="#ECFDF5" Offset="0.0"/>
-                                                                    <GradientStop Color="#D1FAE5" Offset="1.0"/>
+                                                                    <GradientStop Color="#064E3B" Offset="0.0"/>
+                                                                    <GradientStop Color="#065F46" Offset="1.0"/>
                                                                 </LinearGradientBrush>
                                                             </Border.Background>
                                                             <StackPanel>
-                                                                <TextBlock Text="Toplam Ölçüm Cihazı" FontSize="13" FontWeight="SemiBold" Foreground="#059669"/>
-                                                                <TextBlock Text="{Binding ToplamOlcumCihazi}" FontSize="28" FontWeight="Bold" Foreground="#064E3B" Margin="0,5,0,0"/>
+                                                                <TextBlock Text="Toplam Ölçüm Cihazı" FontSize="13" FontWeight="SemiBold" Foreground="#34D399"/>
+                                                                <TextBlock Text="{Binding ToplamOlcumCihazi}" FontSize="32" FontWeight="Bold" Foreground="White" Margin="0,5,0,0"/>
                                                             </StackPanel>
                                                         </Border>
 
-                                                        <TextBlock Text="Cihaz Dağılımı" FontSize="14" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,10"/>
+                                                        <TextBlock Text="Cihaz Dağılımı" FontSize="14" FontWeight="SemiBold" Foreground="#94A3B8" Margin="0,0,0,12"/>
                                                         <ItemsControl ItemsSource="{Binding OlcumCihaziStats}">
                                                             <ItemsControl.ItemTemplate>
                                                                 <DataTemplate>
-                                                                    <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="6" Margin="0,0,0,8" Padding="10">
+                                                                    <Border Background="#2D3748" BorderBrush="#334155" BorderThickness="1" CornerRadius="8" Margin="0,0,0,10" Padding="12">
                                                                         <Grid>
                                                                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="#374151"/>
-                                                                            <TextBlock Grid.Column="1" Text="{Binding Count}" FontWeight="Bold" Foreground="#059669"/>
+                                                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="#E2E8F0"/>
+                                                                            <TextBlock Grid.Column="1" Text="{Binding Count}" FontWeight="Bold" Foreground="#10B981"/>
                                                                         </Grid>
                                                                     </Border>
                                                                 </DataTemplate>
@@ -1661,16 +1723,7 @@
 
 
 
-        <!-- Status Bar -->
-        <Border Grid.Row="2" Background="White" BorderBrush="#E5E7EB" CornerRadius="12,12,12,12" BorderThickness="0,1,0,0" Margin="14,0,20,10" Padding="20,10">
-            <Grid>
-                <StackPanel Orientation="Horizontal">
-                    <Ellipse Width="8" Height="8" Fill="#10B981" Margin="0,0,8,0"/>
-                    <TextBlock Text="{Binding ConnectionStatus}" Foreground="#64748B" FontSize="12"/>
-                </StackPanel>
-                <TextBlock Text="Test@system.local" Foreground="#94A3B8" FontSize="11" HorizontalAlignment="Right"/>
-            </Grid>
-        </Border>
+        <!-- Status Bar Removed -->
         <!-- Global Notification Snackbar -->
         <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,20,40"
                 Background="#3B82F6" CornerRadius="6" Padding="15,10"
