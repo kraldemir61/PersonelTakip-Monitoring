@@ -144,3 +144,19 @@ Bu dosya, kullanÄ±cÄ± talimatlarÄ± ve yapÄ±lan iÅŸlemlerin kronolojik kaydÄ±nÄ± 
     - 4. Satir: Açiklama (Tam genislik)
     - (Ölçüm cihazlari için ek olarak Santiye ve Sahip Firma bilgileri 3. satira eklendi).
 - **Islem**: Pencerelerin genisligi yan yana yerlesim için 500px'e çikarildi, yükseklikleri optimize edildi.
+
+### [28.04.2026 08:02] - Ofis Cihazi Ekleme Butonu Konum ve Stil Güncellemesi
+- **Talimat**: Ofis cihazi ekleme butonunu liste basligina tasi, yesil yap ve hover efekti ekle.
+- **Islem**: Sag alttaki yüzer mavi '+' butonu kaldirildi.
+- **Islem**: Ofis cihazlari listesi (Cihaz Listesi) basligina yeni bir yesil '+' butonu eklendi.
+- **Islem**: Buton rengi yesil (#10B981), üzerine gelindiginde ise koyu yesil (#059669) olacak sekilde güncellendi.
+- **Islem**: Liste basligi yazisi (Cihaz Listesi) görselle uyumlu olmasi için kirmizi (#EF4444) renge boyandi.
+
+### [28.04.2026 08:04] - Ofis Cihazi Ekleme Butonu Iyilestirmesi
+- **Hata Giderimi**: Butonun baslik yazisi üzerine binmesi sorunu 'DockPanel' ve header style düzenlemeleri ile giderildi.
+- **Hata Giderimi**: Butonun çalismama (binding) sorunu, 'x:Reference root' ve 'CanUserSort=False' kullanilarak çözüldü.
+
+### [28.04.2026 08:07] - Döngüsel Bagimlilik (Cyclical Dependency) ve Çalismama Sorunu Giderildi
+- **Hata Giderimi**: Uygulamanin açilista çökmesine neden olan 'cyclical dependency' hatasi, butonun DataGrid basligindan disariya (üst satira) tasinmasiyla giderildi.
+- **Hata Giderimi**: Butonun çalismama sorunu, DataGrid sablon kapsamindan çikarilip dogrudan ViewModel baglamina alinarak çözüldü.
+- **Tasarim**: Liste basligi ('Cihaz Listesi' yazisi ve yesil '+' butonu) artik DataGrid'in hemen üzerinde, ayri bir satirda daha stabil bir sekilde durmaktadir.
