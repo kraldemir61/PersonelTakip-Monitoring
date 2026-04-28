@@ -134,3 +134,13 @@ Bu dosya, kullanıcı talimatları ve yapılan işlemlerin kronolojik kaydını 
 - **İşlem**: `CihazEditWindow` ve `OfisCihazEditWindow` pencerelerinden fotoğraf ekleme/listeleme alanları tamamen kaldırıldı ve pencere boyutları optimize edildi.
 - **İşlem**: `CihazEditViewModel` ve `OfisCihazEditViewModel` sınıflarındaki tüm fotoğraf işleme, kopyalama ve komut mantığı temizlendi.
 
+
+### [28.04.2026 07:55] - Cihaz D�zenleme Penceresi Tasarim G�ncellemesi
+- **Talimat**: Cihaz ekleme/d�zenleme pencerelerindeki 6 satirlik dikey yapiyi 4 satira indir.
+- **Islem**: OfisCihazEditWindow ve CihazEditWindow pencereleri yeniden tasarlandi:
+    - 1. Satir: Cihaz Adi (Tam genislik)
+    - 2. Satir: Marka ve Model (Yan yana)
+    - 3. Satir: �zellikler ve Seri No (Yan yana)
+    - 4. Satir: A�iklama (Tam genislik)
+    - (�l��m cihazlari i�in ek olarak Santiye ve Sahip Firma bilgileri 3. satira eklendi).
+- **Islem**: Pencerelerin genisligi yan yana yerlesim i�in 500px'e �ikarildi, y�kseklikleri optimize edildi.

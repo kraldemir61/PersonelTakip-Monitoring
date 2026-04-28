@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:conv="clr-namespace:PersonelTakip.Converters"
         mc:Ignorable="d"
-        Title="{Binding Title}" Height="520" Width="450"
+        Title="{Binding Title}" Height="450" Width="500"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         Background="#F8FAFC">
     <Window.Resources>
@@ -24,27 +24,51 @@
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel>
-                <TextBlock Text="Seri Numarası" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
-                <TextBox Text="{Binding SeriNo, UpdateSourceTrigger=PropertyChanged}" Height="35" VerticalContentAlignment="Center" Padding="10,0" Margin="0,0,0,15"/>
-
+                <!-- Satır 1: Cihaz Adı -->
                 <TextBlock Text="Cihaz Adı" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
                 <ComboBox Text="{Binding CihazAdi, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding CihazAdlari}" 
                           DisplayMemberPath="Adi" SelectedValuePath="Adi" IsEditable="True"
                           Height="35" VerticalContentAlignment="Center" Margin="0,0,0,15"/>
 
-                <TextBlock Text="Markası" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
-                <ComboBox Text="{Binding Marka, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Markalar}" 
-                          DisplayMemberPath="Adi" SelectedValuePath="Adi" IsEditable="True"
-                          Height="35" VerticalContentAlignment="Center" Margin="0,0,0,15"/>
+                <!-- Satır 2: Markası | Modeli -->
+                <Grid Margin="0,0,0,15">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Markası" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
+                        <ComboBox Text="{Binding Marka, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Markalar}" 
+                                  DisplayMemberPath="Adi" SelectedValuePath="Adi" IsEditable="True"
+                                  Height="35" VerticalContentAlignment="Center"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Modeli" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
+                        <ComboBox Text="{Binding Model, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Modeller}" 
+                                  DisplayMemberPath="Adi" SelectedValuePath="Adi" IsEditable="True"
+                                  Height="35" VerticalContentAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
 
-                <TextBlock Text="Modeli" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
-                <ComboBox Text="{Binding Model, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Modeller}" 
-                          DisplayMemberPath="Adi" SelectedValuePath="Adi" IsEditable="True"
-                          Height="35" VerticalContentAlignment="Center" Margin="0,0,0,15"/>
+                <!-- Satır 3: Özellikleri | Seri no -->
+                <Grid Margin="0,0,0,15">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Özellikler / Spesifikasyonlar" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
+                        <TextBox Text="{Binding Ozellik, UpdateSourceTrigger=PropertyChanged}" Height="35" VerticalContentAlignment="Center" Padding="10,0"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Seri Numarası" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
+                        <TextBox Text="{Binding SeriNo, UpdateSourceTrigger=PropertyChanged}" Height="35" VerticalContentAlignment="Center" Padding="10,0"/>
+                    </StackPanel>
+                </Grid>
 
-                <TextBlock Text="Özellikler / Spesifikasyonlar" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
-                <TextBox Text="{Binding Ozellik, UpdateSourceTrigger=PropertyChanged}" Height="35" VerticalContentAlignment="Center" Padding="10,0" Margin="0,0,0,15"/>
-
+                <!-- Satır 4: Açıklama -->
                 <TextBlock Text="Cihaz Notu / Açıklama" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
                 <TextBox Text="{Binding Not, UpdateSourceTrigger=PropertyChanged}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" VerticalContentAlignment="Top" Padding="10,5" Margin="0,0,0,15"/>
 
