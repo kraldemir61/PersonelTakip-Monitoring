@@ -145,6 +145,13 @@ public class DatabaseService
                     aciklama TEXT
                 );
 
+                CREATE TABLE IF NOT EXISTS cihaz_lisanslari (
+                    hardware_id TEXT PRIMARY KEY,
+                    license_key TEXT,
+                    demo_data TEXT,
+                    updated_at TIMESTAMPTZ DEFAULT now()
+                );
+
                 -- 3. HAREKET VE LOG TABLOLARI
                 CREATE TABLE IF NOT EXISTS hareketler (
                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1498,5 +1505,34 @@ public class DatabaseService
             await trans.RollbackAsync();
             throw;
         }
+    }
+
+    public async Task<(string? licenseKey, string? demoData)> GetLicenseDataAsync(string hardwareId)
+    {
+        try
+        {
+            using var conn = CreateConnection();
+            var result = await conn.QueryFirstOrDefaultAsync("SELECT license_key, demo_data FROM cihaz_lisanslari WHERE hardware_id = @id", new { id = hardwareId });
+            if (result == null) return (null, null);
+            return (result.license_key, result.demo_data);
+        }
+        catch { return (null, null); }
+    }
+
+    public async Task SaveLicenseDataAsync(string hardwareId, string? licenseKey, string? demoData)
+    {
+        try
+        {
+            using var conn = CreateConnection();
+            await conn.ExecuteAsync(@"
+                INSERT INTO cihaz_lisanslari (hardware_id, license_key, demo_data, updated_at)
+                VALUES (@id, @key, @demo, now())
+                ON CONFLICT (hardware_id) DO UPDATE SET
+                    license_key = EXCLUDED.license_key,
+                    demo_data = EXCLUDED.demo_data,
+                    updated_at = now()",
+                new { id = hardwareId, key = licenseKey, demo = demoData });
+        }
+        catch { }
     }
 }

@@ -160,3 +160,16 @@ Bu dosya, kullanÄ±cÄ± talimatlarÄ± ve yapÄ±lan iÅŸlemlerin kronolojik kaydÄ±nÄ± 
 - **Hata Giderimi**: Uygulamanin açilista çökmesine neden olan 'cyclical dependency' hatasi, butonun DataGrid basligindan disariya (üst satira) tasinmasiyla giderildi.
 - **Hata Giderimi**: Butonun çalismama sorunu, DataGrid sablon kapsamindan çikarilip dogrudan ViewModel baglamina alinarak çözüldü.
 - **Tasarim**: Liste basligi ('Cihaz Listesi' yazisi ve yesil '+' butonu) artik DataGrid'in hemen üzerinde, ayri bir satirda daha stabil bir sekilde durmaktadir.
+
+### [28.04.2026 09:44] - Lisanslama Sistemi Entegrasyonu (Triple Lock)
+- **Yeni Ozellik**: 3 asamali (Dosya, Kayit Defteri, Bulut) lisanslama sistemi entegre edildi.
+- **Teknoloji**: Supabase (PostgreSQL) uzerinden cihaz_lisanslari tablosu ile bulut dogrulamasi eklendi.
+- **Guvenlik**: Donanim ID (CPU ID) tabanli dogrulama ve 7 gunluk demo suresi (tarih geri alma korumali) uygulandi.
+- **Arayuz**: Modern tasarimli LicenseWindow olusturuldu.
+- **Gizli Anahtar**: Projeye ozel WpfPersonelVeZimmetTakibi61@@!! anahtari tanimlandi.
+
+### [28.04.2026 11:15] - Uclu Kilit Lisanslama ve Arayuz Iyilestirmeleri
+- Yeni Ozellik: Profesyonel Uclu Kilit lisanslama sistemi entegre edildi.
+- Guvenlik: Hardware ID tabanli dogrulama saÄŸlandÄ±.
+- Arayuz: Hover efektleri, kopyala butonu ve focus/enter Ã¶zellikleri eklendi.
+- Keygen: Bagimsiz ProKod_Keygen uygulamasi gelistirildi.

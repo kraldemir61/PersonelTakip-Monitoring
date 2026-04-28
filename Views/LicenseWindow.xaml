@@ -1,0 +1,138 @@
+<Window x:Class="PersonelTakip.Views.LicenseWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Lisans Doğrulama" Height="450" Width="400"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        WindowStartupLocation="CenterScreen">
+    <Border Background="#FF04132B" CornerRadius="20" BorderBrush="#3B82F6" BorderThickness="1">
+        <Grid Margin="30">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <StackPanel Grid.Row="0" Margin="0,0,0,20">
+                <TextBlock Text="Lisans Doğrulama" Foreground="White" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center"/>
+                <TextBlock Text="Lütfen geçerli bir lisans anahtarı girin" Foreground="#94A3B8" FontSize="12" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+            </StackPanel>
+
+            <!-- Form -->
+            <StackPanel Grid.Row="1">
+                <TextBlock Text="Donanım Kimliği (Hardware ID)" Foreground="#94A3B8" FontSize="11" Margin="0,0,0,5"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Background="#FF0F172A" Height="40" CornerRadius="8" Padding="8">
+                        <TextBox x:Name="TxtHardwareId" Text="Loading..." IsReadOnly="True" Background="Transparent" BorderThickness="0" Foreground="#3B82F6" FontSize="18" FontWeight="SemiBold"/>
+                    </Border>
+                    <Button Grid.Column="1" Content="Kopyala" Click="BtnCopy_Click" Margin="5,0,0,0" Padding="12,0" Foreground="White" BorderThickness="0" Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="#1E293B"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" Width="60" CornerRadius="8">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#334155"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+
+                <TextBlock Text="Lisans Anahtarı" Foreground="#94A3B8" FontSize="11" Margin="0,20,0,5"/>
+                <Border Background="#FF0F172A" CornerRadius="8" Padding="10">
+                    <TextBox x:Name="TxtLicenseKey" Background="Transparent" BorderThickness="0" Foreground="White" FontSize="16" CharacterCasing="Upper" HorizontalContentAlignment="Center"/>
+                </Border>
+            </StackPanel>
+
+            <!-- Status Message -->
+            <TextBlock x:Name="TxtStatus" Grid.Row="2" Foreground="#EF4444" FontSize="12" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,10"/>
+
+            <!-- Buttons -->
+            <StackPanel Grid.Row="3">
+                <!-- ETKİNLEŞTİR -->
+                <Button x:Name="BtnActivate" Content="ETKİNLEŞTİR" Click="BtnActivate_Click" Height="45" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="#4E702D"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#6A8F43"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <!-- DEMO -->
+                <Button x:Name="BtnTrial" Content="Deneme Süresini Başlat (7 Gün)" Click="BtnTrial_Click" Height="35" Margin="0,10,0,0" Foreground="White" BorderThickness="0" Cursor="Hand" FontSize="12">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="#9E480E"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#C16226"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                
+                <!-- KAPAT -->
+                <Button Content="Kapat" Click="BtnClose_Click" Height="35" Margin="0,10,0,0" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" FontSize="13">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="Red"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#FF4D4D"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

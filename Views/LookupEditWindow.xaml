@@ -4,7 +4,8 @@
         xmlns:controls="clr-namespace:PersonelTakip.Controls"
         Title="{Binding WindowTitle}" Height="365" Width="400"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
-        Style="{StaticResource ModernDialogStyle}">
+        Style="{StaticResource ModernDialogStyle}"
+        FocusManager.FocusedElement="{Binding ElementName=TxtInput}">
     <Window.Resources>
         <Style x:Key="ModernTextBox" TargetType="TextBox">
             <Setter Property="Padding" Value="12,6"/>
@@ -98,11 +99,11 @@
                 </StackPanel>
 
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                    <TextBox Text="{Binding Adi, UpdateSourceTrigger=PropertyChanged}" Tag="{Binding LookupAdiLabel}" Style="{StaticResource ModernTextBox}"/>
+                    <TextBox x:Name="TxtInput" Text="{Binding Adi, UpdateSourceTrigger=PropertyChanged}" Tag="{Binding LookupAdiLabel}" Style="{StaticResource ModernTextBox}"/>
                 </ScrollViewer>
 
                 <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
-                    <Button Content="Kaydet" Command="{Binding SaveCommand}" Background="#10B981" Foreground="White" Style="{StaticResource ModernButton}" Width="100" Height="36"/>
+                    <Button Content="Kaydet" IsDefault="True" Command="{Binding SaveCommand}" Background="#10B981" Foreground="White" Style="{StaticResource ModernButton}" Width="100" Height="36"/>
                     <Button Content="İptal" Command="{Binding CancelCommand}" Background="#F3F4F6" Foreground="#374151" Style="{StaticResource ModernButton}" Width="100" Height="36"/>
                 </StackPanel>
             </Grid>

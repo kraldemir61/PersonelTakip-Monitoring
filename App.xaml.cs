@@ -14,9 +14,13 @@ public partial class App : Application
         };
     }
 
-    protected override void OnStartup(StartupEventArgs e)
+    protected override async void OnStartup(StartupEventArgs e)
     {
-        this.ShutdownMode = ShutdownMode.OnLastWindowClose;
+        base.OnStartup(e);
+        // ÖNEMLİ: Lisans penceresi kapandığında uygulamanın tamamen kapanmaması için 
+        // ShutdownMode'u geçici olarak OnExplicitShutdown yapıyoruz.
+        this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
         // Global hata yakalayıcı
         this.DispatcherUnhandledException += (s, ex) =>
         {
@@ -25,21 +29,45 @@ public partial class App : Application
             ex.Handled = true;
         };
 
-        AppDomain.CurrentDomain.UnhandledException += (s, ex) =>
-        {
-            LogException(ex.ExceptionObject as Exception, "AppDomain.UnhandledException");
-        };
-
         try 
         {
+            // Veritabanı ön yükleme (Tablo kontrolü)
+            var db = new Services.DatabaseService();
+            _ = db.InitializeDatabaseAsync();
+
+            // LİSANS KONTROLÜ: Eğer program zaten lisanslıysa pencereyi hiç açma
+            bool isLicensed = await Task.Run(async () => await Services.LicenseManager.IsLicensedAsync());
+            if (!isLicensed)
+            {
+                // Lisans Ekranı (Lisanssızsa veya Demo modundaysa her çalıştırmada açılsın istendi)
+                var licenseWindow = new Views.LicenseWindow();
+                bool? result = licenseWindow.ShowDialog();
+                
+                // Eğer DialogResult=true değilse (Kapat'a basılmışsa veya X ile kapatılmışsa)
+                // Yine de arka planda geçerli lisans/demo var mı bakıyoruz.
+                if (result != true)
+                {
+                    var demoInfo = await Task.Run(async () => await Services.LicenseManager.GetDemoSummaryAsync());
+                    
+                    if (demoInfo.Status != Services.LicenseManager.DemoStatus.Active)
+                    {
+                        Application.Current.Shutdown();
+                        return;
+                    }
+                }
+            }
+
+            // Giriş ekranına geçiyoruz
             var loginWindow = new Views.LoginWindow();
+            this.MainWindow = loginWindow;
+            this.ShutdownMode = ShutdownMode.OnMainWindowClose; // Artık login/main kapanınca uygulama kapansın
             loginWindow.Show();
         }
         catch (Exception ex)
         {
-            LogException(ex, "OnStartup Exception during window creation");
-            MessageBox.Show($"Uygulama başlatılamadı (Pencere oluşturma hatası):\n{ex.Message}\n\nDetaylar crash_log.txt dosyasına kaydedildi.", "Başlatma Hatası", MessageBoxButton.OK, MessageBoxImage.Error);
-            Environment.Exit(1);
+            LogException(ex, "OnStartup Exception");
+            MessageBox.Show($"Uygulama başlatılamadı:\n{ex.Message}", "Başlatma Hatası", MessageBoxButton.OK, MessageBoxImage.Error);
+            Application.Current.Shutdown();
         }
     }
 
