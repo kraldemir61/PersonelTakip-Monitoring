@@ -288,35 +288,35 @@
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate TargetType="TabItem">
-                                <Border x:Name="TabBorder" Background="Transparent" Padding="15,12" CornerRadius="8,8,0,0" Margin="0,0,2,0">
+                                <Border x:Name="TabBorder" Cursor="Hand" Background="#FF04132B" Padding="15,12" CornerRadius="8,8,8,8" Margin="0,0,2,0">
                                     <ContentPresenter x:Name="ContentSite" ContentSource="Header"/>
                                 </Border>
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="IsSelected" Value="True">
-                                        <Setter TargetName="TabBorder" Property="Background" Value="White"/>
-                                        <Setter TargetName="TabBorder" Property="BorderBrush" Value="#3B82F6"/>
-                                        <Setter TargetName="TabBorder" Property="BorderThickness" Value="0,0,0,2"/>
+                                        <Setter TargetName="TabBorder" Property="Background" Value="#FF3C0505"/>
+                                        <Setter TargetName="TabBorder" Property="BorderBrush" Value="White"/>
+                                        <Setter TargetName="TabBorder" Property="BorderThickness" Value="2,2,2,2"/>
                                     </Trigger>
                                     <MultiTrigger>
                                         <MultiTrigger.Conditions>
                                             <Condition Property="IsMouseOver" Value="True"/>
                                             <Condition Property="IsSelected" Value="False"/>
                                         </MultiTrigger.Conditions>
-                                        <Setter TargetName="TabBorder" Property="Background" Value="#E5E7EB"/>
+                                        <Setter TargetName="TabBorder" Property="Background" Value="#FF0C2C61"/>
                                     </MultiTrigger>
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Setter.Value>
                     </Setter>
-                    <Setter Property="Foreground" Value="#6B7280"/>
+                    <Setter Property="Foreground" Value="Gray"/>
                     <Setter Property="FontSize" Value="14"/>
                     <Style.Triggers>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter Property="Foreground" Value="#111827"/>
+                            <Setter Property="Foreground" Value="White"/>
                             <Setter Property="FontWeight" Value="SemiBold"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Foreground" Value="#374151"/>
+                            <Setter Property="Foreground" Value="White"/>
                         </Trigger>
                     </Style.Triggers>
                 </Style>
@@ -1127,7 +1127,7 @@
 
                         <!-- OFİS CİHAZLARI -->
                         <TabItem Header="Ofis Cihazları">
-                            <Border Background="#F8FAFC" CornerRadius="0,12,12,12" Padding="0">
+                            <Border Background="#F8FAFC" CornerRadius="12,12,12,12" Padding="0">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="320"/>
@@ -1639,7 +1639,7 @@
 
 
         <!-- Status Bar -->
-        <Border Grid.Row="2" Background="White" BorderBrush="#E5E7EB" BorderThickness="0,1,0,0" Margin="14,0,20,10" Padding="20,10">
+        <Border Grid.Row="2" Background="White" BorderBrush="#E5E7EB" CornerRadius="12,12,12,12" BorderThickness="0,1,0,0" Margin="14,0,20,10" Padding="20,10">
             <Grid>
                 <StackPanel Orientation="Horizontal">
                     <Ellipse Width="8" Height="8" Fill="#10B981" Margin="0,0,8,0"/>
