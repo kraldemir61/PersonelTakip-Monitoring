@@ -134,6 +134,13 @@ namespace PersonelTakip.Models
             set { _zimmetTarihi = value; OnPropertyChanged(); }
         }
 
+        private string? _bulunduguSantiyeKod;
+        public string? BulunduguSantiyeKod
+        {
+            get => _bulunduguSantiyeKod;
+            set { _bulunduguSantiyeKod = value; OnPropertyChanged(); }
+        }
+
         // Ofis cihazları için Tur her zaman Ofis (1)
         public int Tur => 1;
 

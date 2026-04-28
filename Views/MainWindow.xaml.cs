@@ -3,6 +3,7 @@ using System.Windows.Interop;
 using System.Runtime.InteropServices;
 using System;
 using System.Windows.Media;
+using System.Windows.Controls;
 using PersonelTakip.ViewModels;
 
 namespace PersonelTakip.Views;
@@ -114,6 +115,14 @@ public partial class MainWindow : Window
         if (!hasOtherMainWindow)
         {
             Application.Current.Shutdown();
+        }
+    }
+
+    private void CopyMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem menuItem && menuItem.Parent is ContextMenu contextMenu && contextMenu.PlacementTarget is TextBlock textBlock)
+        {
+            Clipboard.SetText(textBlock.Text);
         }
     }
 }

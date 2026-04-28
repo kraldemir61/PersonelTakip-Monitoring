@@ -392,4 +392,152 @@ public class ExcelService
     }
 
     #endregion
+
+    #region Ofis Cihaz Excel İşlemleri
+
+    public void OfisCihazTemplateIndir()
+    {
+        var saveFileDialog = new SaveFileDialog
+        {
+            Filter = "Excel Files (*.xlsx)|*.xlsx",
+            FileName = "Ofis_Cihaz_Sablon.xlsx"
+        };
+
+        if (saveFileDialog.ShowDialog() == true)
+        {
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("OfisCihazlari");
+                SetOfisCihazTemplateHeaders(worksheet);
+                worksheet.Columns().AdjustToContents();
+                workbook.SaveAs(saveFileDialog.FileName);
+            }
+        }
+    }
+
+    public async Task<string> OfisCihazlariDisariAktarAsync(List<OfisCihazi> cihazlar)
+    {
+        var saveFileDialog = new SaveFileDialog
+        {
+            Filter = "Excel Files (*.xlsx)|*.xlsx",
+            FileName = $"Ofis_Cihaz_Listesi_{DateTime.Now:dd.MM.yyyy HH.mm.ss}.xlsx"
+        };
+
+        if (saveFileDialog.ShowDialog() == true)
+        {
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("OfisCihazlari");
+                SetOfisCihazHeaders(worksheet, true);
+
+                int row = 2;
+                foreach (var c in cihazlar)
+                {
+                    worksheet.Cell(row, 1).Value = c.Id.ToString();
+                    worksheet.Cell(row, 2).Value = c.CihazAdi;
+                    worksheet.Cell(row, 3).Value = c.Marka;
+                    worksheet.Cell(row, 4).Value = c.Model;
+                    worksheet.Cell(row, 5).Value = c.Ozellik;
+                    worksheet.Cell(row, 6).Value = c.SeriNo;
+                    worksheet.Cell(row, 7).Value = c.Not;
+                    row++;
+                }
+
+                worksheet.Columns().AdjustToContents();
+                workbook.SaveAs(saveFileDialog.FileName);
+                return saveFileDialog.FileName;
+            }
+        }
+        return string.Empty;
+    }
+
+    public async Task<(List<OfisCihazi> cihazlar, string error)> OfisCihazExceldenOkuAsync(bool isUpdate)
+    {
+        var openFileDialog = new OpenFileDialog
+        {
+            Filter = "Excel Files (*.xlsx)|*.xlsx"
+        };
+
+        if (openFileDialog.ShowDialog() != true) return (new(), "Dosya seçilmedi.");
+
+        try
+        {
+            using (var workbook = new XLWorkbook(openFileDialog.FileName))
+            {
+                var worksheet = workbook.Worksheet(1);
+                var rows = worksheet.RangeUsed().RowsUsed().Skip(1);
+
+                var list = new List<OfisCihazi>();
+
+                foreach (var row in rows)
+                {
+                    var c = new OfisCihazi { Durum = "Boşta", SonIslemTarihi = DateTime.Now };
+                    int startCol = 1;
+
+                    if (isUpdate)
+                    {
+                        var idStr = row.Cell(1).GetValue<string>();
+                        if (Guid.TryParse(idStr, out Guid id)) c.Id = id;
+                        else continue;
+                        startCol = 2;
+                    }
+                    else
+                    {
+                        c.Id = Guid.NewGuid();
+                    }
+
+                    c.CihazAdi = row.Cell(startCol).GetValue<string>();
+                    if (string.IsNullOrWhiteSpace(c.CihazAdi)) continue;
+
+                    c.Marka = row.Cell(startCol + 1).GetValue<string>();
+                    c.Model = row.Cell(startCol + 2).GetValue<string>();
+                    c.Ozellik = row.Cell(startCol + 3).GetValue<string>();
+                    c.SeriNo = row.Cell(startCol + 4).GetValue<string>();
+                    c.Not = row.Cell(startCol + 5).GetValue<string>();
+
+                    if (string.IsNullOrWhiteSpace(c.SeriNo)) continue;
+
+                    list.Add(c);
+                }
+
+                return (list, string.Empty);
+            }
+        }
+        catch (Exception ex)
+        {
+            return (new(), ex.Message);
+        }
+    }
+
+    private void SetOfisCihazHeaders(IXLWorksheet worksheet, bool includeId)
+    {
+        int col = 1;
+        if (includeId) worksheet.Cell(1, col++).Value = "ID (Güncelleme İçin)";
+        worksheet.Cell(1, col++).Value = "Cihaz Adı";
+        worksheet.Cell(1, col++).Value = "Marka";
+        worksheet.Cell(1, col++).Value = "Model";
+        worksheet.Cell(1, col++).Value = "Özellik";
+        worksheet.Cell(1, col++).Value = "Seri No";
+        worksheet.Cell(1, col++).Value = "Not";
+
+        var headerRange = worksheet.Range(1, 1, 1, col - 1);
+        headerRange.Style.Font.Bold = true;
+        headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
+    }
+
+    private void SetOfisCihazTemplateHeaders(IXLWorksheet worksheet)
+    {
+        worksheet.Cell(1, 1).Value = "Cihaz Adı";
+        worksheet.Cell(1, 2).Value = "Marka";
+        worksheet.Cell(1, 3).Value = "Model";
+        worksheet.Cell(1, 4).Value = "Özellik";
+        worksheet.Cell(1, 5).Value = "Seri No";
+        worksheet.Cell(1, 6).Value = "Not";
+
+        var headerRange = worksheet.Range(1, 1, 1, 6);
+        headerRange.Style.Font.Bold = true;
+        headerRange.Style.Fill.BackgroundColor = XLColor.Khaki;
+    }
+
+    #endregion
 }

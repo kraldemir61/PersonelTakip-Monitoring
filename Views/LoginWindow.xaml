@@ -194,6 +194,7 @@
                     <RowDefinition Height="Auto"/> <!-- Logo Section -->
                     <RowDefinition Height="Auto"/> <!-- Toggle Section -->
                     <RowDefinition Height="*"/>    <!-- Content Section -->
+                    <RowDefinition Height="Auto"/> <!-- Status Section -->
                 </Grid.RowDefinitions>
 
                 <!-- 1. Logo Section -->
@@ -262,9 +263,27 @@
                         </Grid>
                         <Button Content="Kayıt Ol" Click="BtnKayit_Click" Style="{StaticResource PrimaryButton}" Height="40"/>
                     </StackPanel>
-
-
                 </Grid>
+
+                <!-- 4. Status Section (ESKİ HALİ) -->
+                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
+                    <Ellipse Width="10" Height="10" Margin="0,0,8,0" VerticalAlignment="Center">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="#EF4444"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                        <Setter Property="Fill" Value="#10B981"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsSlowConnection}" Value="True">
+                                        <Setter Property="Fill" Value="#F59E0B"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
+                    <TextBlock Text="{Binding ConnectionStatus}" FontSize="12" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                </StackPanel>
             </Grid>
         </Border>
     </Grid>

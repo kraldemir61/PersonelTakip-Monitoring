@@ -133,6 +133,7 @@ public partial class MainViewModel : BaseViewModel
                 SearchText = string.Empty;
                 SelectedFilterSantiye = null;
                 SelectedKullaniciFilterSantiye = null;
+                SelectedOfisFilterSantiye = null;
 
                 // Tüm görünümleri tazele
                 PersonellerView?.Refresh();
@@ -202,6 +203,73 @@ public partial class MainViewModel : BaseViewModel
 
     [ObservableProperty]
     private bool _ofisCihaziFilterAssigned = false;
+
+    [ObservableProperty] private ObservableCollection<Santiye> _sidebarOfisCihaziSantiyeler;
+    [ObservableProperty] private string _selectedOfisFilterSantiye;
+    [ObservableProperty] private ObservableCollection<Santiye> _sidebarOlcumCihaziSantiyeler;
+    [ObservableProperty] private string _selectedOlcumFilterSantiye;
+
+    [RelayCommand]
+    private void OfisSantiyeFiltrele(string santiyeKod)
+    {
+        SelectedOfisFilterSantiye = SelectedOfisFilterSantiye == santiyeKod ? null : santiyeKod;
+        OfisCihazlariView.Refresh();
+    }
+
+    [RelayCommand]
+    private void OlcumSantiyeFiltrele(string santiyeKod)
+    {
+        SelectedOlcumFilterSantiye = SelectedOlcumFilterSantiye == santiyeKod ? null : santiyeKod;
+        OlcumCihazlariView.Refresh();
+    }
+
+    private void UpdateSidebarOfisCihaziSantiyeler()
+    {
+        if (OfisCihazlari == null || SantiyeList == null) return;
+
+        // Cihazların zimmetli olduğu personellerin şantiye kodlarını al
+        var aktifSantiyeKodlari = OfisCihazlari
+            .Where(c => c.ZimmetliMi && !string.IsNullOrEmpty(c.BulunduguSantiyeKod))
+            .Select(c => c.BulunduguSantiyeKod)
+            .Distinct()
+            .ToList();
+
+        var filtrelenmişListe = SantiyeList.Where(s => aktifSantiyeKodlari.Contains(s.Kod)).OrderBy(s => s.Kod).ToList();
+        
+        var sidebarListe = new ObservableCollection<Santiye>(filtrelenmişListe);
+
+        // Eğer boşta cihaz varsa "Boşta" butonunu ekle
+        if (OfisCihazlari.Any(c => !c.ZimmetliMi))
+        {
+            sidebarListe.Add(new Santiye { Kod = "Boşta", Adi = "Boşta" });
+        }
+
+        SidebarOfisCihaziSantiyeler = sidebarListe;
+    }
+
+    private void UpdateSidebarOlcumCihaziSantiyeler()
+    {
+        if (OlcumCihazlari == null || SantiyeList == null) return;
+
+        // Ölçüm cihazlarının bulunduğu şantiye kodlarını al
+        var aktifSantiyeKodlari = OlcumCihazlari
+            .Where(c => !string.IsNullOrEmpty(c.SantiyeKod))
+            .Select(c => c.SantiyeKod)
+            .Distinct()
+            .ToList();
+
+        var filtrelenmişListe = SantiyeList.Where(s => aktifSantiyeKodlari.Contains(s.Kod)).OrderBy(s => s.Kod).ToList();
+        
+        var sidebarListe = new ObservableCollection<Santiye>(filtrelenmişListe);
+
+        // Eğer boşta cihaz varsa "Boşta" butonunu ekle
+        if (OlcumCihazlari.Any(c => c.SantiyeId == null))
+        {
+            sidebarListe.Add(new Santiye { Kod = "Boşta", Adi = "Boşta" });
+        }
+
+        SidebarOlcumCihaziSantiyeler = sidebarListe;
+    }
 
     // Cihaz Tanımlamalar
     [ObservableProperty]
@@ -599,6 +667,11 @@ public partial class MainViewModel : BaseViewModel
                 var combined = $"{p.AdiSoyadi} {p.SantiyeKod} {p.BolumuDisplay} {p.GoreviDisplay}";
                 return StringHelper.SmartSearch(combined, SearchText);
             };
+            SelectedOlcumCihazi = null;
+            SelectedOfisFilterSantiye = null;
+            SelectedOlcumFilterSantiye = null;
+            UpdateSidebarOfisCihaziSantiyeler();
+            UpdateSidebarOlcumCihaziSantiyeler();
             UpdateSidebarSantiyeler();
             CalculateDashboardStats();
             OnPropertyChanged(nameof(PersonellerView));
@@ -882,11 +955,27 @@ public partial class MainViewModel : BaseViewModel
             SelectedOfisCihazi = OfisCihazlari.FirstOrDefault(x => x.Id == selectedOfisId.Value);
 
         CalculateDeviceStats();
+        UpdateSidebarOfisCihaziSantiyeler();
+        UpdateSidebarOlcumCihaziSantiyeler();
     }
 
     private bool FilterOlcumCihazlari(object obj)
     {
         if (obj is not Cihaz c) return false;
+
+        // Şantiye Filtresi (Sol Menü)
+        if (!string.IsNullOrEmpty(SelectedOlcumFilterSantiye))
+        {
+            if (SelectedOlcumFilterSantiye == "Boşta")
+            {
+                if (c.SantiyeId != null) return false;
+            }
+            else
+            {
+                if (c.SantiyeKod != SelectedOlcumFilterSantiye)
+                    return false;
+            }
+        }
 
         // Süper admin ve admin her şeyi görür, normal kullanıcılar sadece kendi şantiyesini ve boştakileri görür
         if (!IsAdmin)
@@ -906,13 +995,26 @@ public partial class MainViewModel : BaseViewModel
     {
         if (obj is not OfisCihazi c) return false;
 
-        // Durum Filtresi (Exclusive)
+        // Şantiye Filtresi (Sol Menü)
+        if (!string.IsNullOrEmpty(SelectedOfisFilterSantiye))
+        {
+            if (SelectedOfisFilterSantiye == "Boşta")
+            {
+                if (c.ZimmetliMi) return false;
+            }
+            else
+            {
+                if (!c.ZimmetliMi || c.BulunduguSantiyeKod != SelectedOfisFilterSantiye)
+                    return false;
+            }
+        }
+
+        // Hızlı Durum Filtreleri (Butonlar)
         if (OfisCihaziFilterAvailable && c.ZimmetliMi) return false;
         if (OfisCihaziFilterAssigned && !c.ZimmetliMi) return false;
 
-        if (string.IsNullOrWhiteSpace(SearchText)) return true;
-
-        var combined = $"{c.CihazAdi} {c.SeriNo} {c.Marka} {c.Model} {c.Durum} {c.Not} {c.ZimmetliPersonelAd} {c.Ozellik}";
+        // Arama Kutusu Filtresi
+        var combined = $"{c.Marka} {c.Model} {c.SeriNo} {c.ZimmetliPersonelAd} {c.BulunduguSantiyeKod} {c.Ozellik}";
         return StringHelper.SmartSearch(combined, SearchText);
     }
 
@@ -2116,6 +2218,142 @@ public partial class MainViewModel : BaseViewModel
             ShowSuccess($"{cihazlar.Count} adet cihaz başarıyla güncellendi.");
             await LoadCihazlarAsync();
             await LoadLookupsAsync(); // Tanımlamalar güncellenmiş olabilir
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Güncelleme sırasında hata: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    #endregion
+    #region Ofis Cihaz Excel İşlemleri
+
+    [RelayCommand]
+    private void ExcelOfisCihazSablonIndir()
+    {
+        if (!IsSuperAdmin) return;
+        _excelService.OfisCihazTemplateIndir();
+    }
+
+    [RelayCommand]
+    private async Task ExcelOfisCihazTopluYukleAsync()
+    {
+        if (!IsSuperAdmin) return;
+
+        var (cihazlar, error) = await _excelService.OfisCihazExceldenOkuAsync(isUpdate: false);
+        if (!string.IsNullOrEmpty(error))
+        {
+            ShowError($"Excel okuma hatası: {error}");
+            return;
+        }
+
+        if (cihazlar.Count == 0) return;
+
+        if (!Confirm($"{cihazlar.Count} adet ofis cihazı sisteme toplu olarak eklenecek. Tanımlı olmayan Cihaz Adı, Marka ve Modeller otomatik olarak eklenecektir. Onaylıyor musunuz?")) return;
+
+        IsBusy = true;
+        try
+        {
+            // 1. Tanımlamaları kontrol et ve eksikleri ekle
+            await EnsureOfisCihazLookupsAsync(cihazlar);
+
+            // 2. Cihazları ekle
+            foreach (var c in cihazlar)
+            {
+                await _databaseService.OfisCihaziEkleAsync(c);
+            }
+            ShowSuccess($"{cihazlar.Count} adet ofis cihazı başarıyla eklendi.");
+            await LoadCihazlarAsync();
+            await LoadLookupsAsync(); 
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Yükleme sırasında hata: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task EnsureOfisCihazLookupsAsync(List<OfisCihazi> cihazlar)
+    {
+        var adlar = await _databaseService.LookupGetirAsync("cihaz_adlari");
+        var markalar = await _databaseService.LookupGetirAsync("cihaz_markalari");
+        var modeller = await _databaseService.LookupGetirAsync("cihaz_modelleri");
+
+        foreach (var c in cihazlar)
+        {
+            if (!string.IsNullOrWhiteSpace(c.CihazAdi))
+                await CheckAndAddLookupAsync("cihaz_adlari", adlar, c.CihazAdi);
+
+            if (!string.IsNullOrWhiteSpace(c.Marka))
+                await CheckAndAddLookupAsync("cihaz_markalari", markalar, c.Marka);
+
+            if (!string.IsNullOrWhiteSpace(c.Model))
+                await CheckAndAddLookupAsync("cihaz_modelleri", modeller, c.Model);
+        }
+    }
+
+    [RelayCommand]
+    private async Task ExcelOfisCihazDisariAktarAsync()
+    {
+        if (!IsSuperAdmin) return;
+
+        IsBusy = true;
+        try
+        {
+            var cihazlar = await _databaseService.OfisCihazlariniGetirAsync();
+            var path = await _excelService.OfisCihazlariDisariAktarAsync(cihazlar);
+            if (!string.IsNullOrEmpty(path))
+            {
+                ShowSuccess("Ofis cihaz verileri başarıyla dışarı aktarıldı.");
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Dışarı aktarma hatası: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task ExcelOfisCihazTopluGuncelleAsync()
+    {
+        if (!IsSuperAdmin) return;
+
+        var (cihazlar, error) = await _excelService.OfisCihazExceldenOkuAsync(isUpdate: true);
+        if (!string.IsNullOrEmpty(error))
+        {
+            ShowError($"Excel okuma hatası: {error}");
+            return;
+        }
+
+        if (cihazlar.Count == 0) return;
+
+        if (!Confirm($"{cihazlar.Count} adet ofis cihazı kaydı güncellenecek. Yeni tanımlanan Cihaz Adı, Marka ve Modeller otomatik olarak eklenecektir. Onaylıyor musunuz?")) return;
+
+        IsBusy = true;
+        try
+        {
+            // 1. Tanımlamaları kontrol et ve eksikleri ekle
+            await EnsureOfisCihazLookupsAsync(cihazlar);
+
+            // 2. Cihazları güncelle
+            foreach (var c in cihazlar)
+            {
+                await _databaseService.OfisCihaziGuncelleAsync(c);
+            }
+            ShowSuccess($"{cihazlar.Count} adet ofis cihazı başarıyla güncellendi.");
+            await LoadCihazlarAsync();
+            await LoadLookupsAsync();
         }
         catch (Exception ex)
         {

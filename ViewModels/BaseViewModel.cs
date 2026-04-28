@@ -56,8 +56,9 @@ public abstract partial class BaseViewModel : ObservableObject
 
     protected void ShowError(string message)
     {
-        ErrorMessage = message;
-        MessageBox.Show(message, "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+        var translatedMessage = TranslateExceptionMessage(message);
+        ErrorMessage = translatedMessage;
+        MessageBox.Show(translatedMessage, "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
     }
 
     protected static void ShowSuccess(string message)
