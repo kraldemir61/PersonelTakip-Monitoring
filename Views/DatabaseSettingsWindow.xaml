@@ -17,23 +17,29 @@
         <h:BooleanInverter x:Key="BoolInverter"/>
         
         <Style x:Key="ModernTextBox" TargetType="TextBox">
-            <Setter Property="Background" Value="#FFFFFF"/>
-            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="Background" Value="#0F172A"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#334155"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Padding" Value="10,10"/>
             <Setter Property="FontSize" Value="14"/>
+            <Setter Property="CaretBrush" Value="White"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
-                        <Border Background="{TemplateBinding Background}" 
+                        <Border x:Name="Border" Background="{TemplateBinding Background}" 
                                 BorderBrush="{TemplateBinding BorderBrush}" 
                                 BorderThickness="{TemplateBinding BorderThickness}" 
-                                CornerRadius="6">
-                            <ScrollViewer x:Name="PART_ContentHost" />
+                                CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center" Margin="5,0"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsFocused" Value="True">
-                                <Setter Property="BorderBrush" Value="#3B82F6"/>
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#3B82F6"/>
+                                <Setter TargetName="Border" Property="Background" Value="#111827"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#475569"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -42,23 +48,29 @@
         </Style>
 
         <Style x:Key="ModernPasswordBox" TargetType="PasswordBox">
-            <Setter Property="Background" Value="#FFFFFF"/>
-            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="Background" Value="#0F172A"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#334155"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Padding" Value="10,10"/>
             <Setter Property="FontSize" Value="14"/>
+            <Setter Property="CaretBrush" Value="White"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="PasswordBox">
-                        <Border Background="{TemplateBinding Background}" 
+                        <Border x:Name="Border" Background="{TemplateBinding Background}" 
                                 BorderBrush="{TemplateBinding BorderBrush}" 
                                 BorderThickness="{TemplateBinding BorderThickness}" 
-                                CornerRadius="6">
-                            <ScrollViewer x:Name="PART_ContentHost" />
+                                CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center" Margin="5,0"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsFocused" Value="True">
-                                <Setter Property="BorderBrush" Value="#3B82F6"/>
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#3B82F6"/>
+                                <Setter TargetName="Border" Property="Background" Value="#111827"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#475569"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -69,8 +81,8 @@
         <Style x:Key="CloseButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Width" Value="40"/>
-            <Setter Property="Height" Value="40"/>
+            <Setter Property="Width" Value="45"/>
+            <Setter Property="Height" Value="45"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -96,15 +108,18 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Border" Background="{TemplateBinding Background}" CornerRadius="6">
+                        <Border x:Name="Border" Background="{TemplateBinding Background}" CornerRadius="8">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Border" Property="Opacity" Value="0.9"/>
                             </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Border" Property="Opacity" Value="0.8"/>
+                            </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Border" Property="Opacity" Value="0.5"/>
+                                <Setter TargetName="Border" Property="Opacity" Value="0.3"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -113,9 +128,9 @@
         </Style>
     </Window.Resources>
 
-    <Border CornerRadius="12" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1">
+    <Border CornerRadius="12" Background="#1E293B" BorderBrush="#334155" BorderThickness="1">
         <Border.Effect>
-            <DropShadowEffect BlurRadius="20" ShadowDepth="0" Opacity="0.2"/>
+            <DropShadowEffect BlurRadius="30" ShadowDepth="0" Opacity="0.5" Color="Black"/>
         </Border.Effect>
         
         <Grid>
@@ -126,7 +141,7 @@
             </Grid.RowDefinitions>
 
             <!-- Header -->
-            <Border Grid.Row="0" Background="#1E2937" CornerRadius="12,12,0,0">
+            <Border Grid.Row="0" Background="#0F172A" CornerRadius="12,12,0,0">
                 <Grid>
                     <TextBlock Text="Veritabanı Yapılandırması" Foreground="White" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" Margin="20,15"/>
                     <Button Content="✕" HorizontalAlignment="Right" Foreground="White" Style="{StaticResource CloseButton}"
@@ -135,48 +150,48 @@
             </Border>
 
             <!-- Content -->
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="30,20">
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="30,25">
                 <StackPanel>
-                    <TextBlock Text="SUNUCU ADRESİ (HOST)" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,5"/>
-                    <TextBox Style="{StaticResource ModernTextBox}" Text="{Binding Host}" Margin="0,0,0,15"/>
+                    <TextBlock Text="SUNUCU ADRESİ (HOST)" FontSize="11" FontWeight="Bold" Foreground="#3B82F6" Margin="0,0,0,8"/>
+                    <TextBox Style="{StaticResource ModernTextBox}" Text="{Binding Host}" Margin="0,0,0,20"/>
 
-                    <TextBlock Text="PORT" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,5"/>
-                    <TextBox Style="{StaticResource ModernTextBox}" Text="{Binding Port}" Margin="0,0,0,15"/>
+                    <TextBlock Text="PORT" FontSize="11" FontWeight="Bold" Foreground="#3B82F6" Margin="0,0,0,8"/>
+                    <TextBox Style="{StaticResource ModernTextBox}" Text="{Binding Port}" Margin="0,0,0,20"/>
 
-                    <TextBlock Text="VERİTABANI ADI (DATABASE)" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,5"/>
-                    <TextBox Style="{StaticResource ModernTextBox}" Text="{Binding Database}" Margin="0,0,0,15"/>
+                    <TextBlock Text="VERİTABANI ADI (DATABASE)" FontSize="11" FontWeight="Bold" Foreground="#3B82F6" Margin="0,0,0,8"/>
+                    <TextBox Style="{StaticResource ModernTextBox}" Text="{Binding Database}" Margin="0,0,0,20"/>
 
-                    <TextBlock Text="KULLANICI ADI (USERNAME)" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,5"/>
-                    <TextBox Style="{StaticResource ModernTextBox}" Text="{Binding Username}" Margin="0,0,0,15"/>
+                    <TextBlock Text="KULLANICI ADI (USERNAME)" FontSize="11" FontWeight="Bold" Foreground="#3B82F6" Margin="0,0,0,8"/>
+                    <TextBox Style="{StaticResource ModernTextBox}" Text="{Binding Username}" Margin="0,0,0,20"/>
 
-                    <TextBlock Text="ŞİFRE (PASSWORD)" FontSize="12" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,5"/>
+                    <TextBlock Text="ŞİFRE (PASSWORD)" FontSize="11" FontWeight="Bold" Foreground="#3B82F6" Margin="0,0,0,8"/>
                     <PasswordBox Style="{StaticResource ModernPasswordBox}" h:PasswordBoxHelper.BindPassword="True" 
-                                 h:PasswordBoxHelper.BoundPassword="{Binding Password, Mode=TwoWay}" Margin="0,0,0,20"/>
+                                 h:PasswordBoxHelper.BoundPassword="{Binding Password, Mode=TwoWay}" Margin="0,0,0,25"/>
 
                     <Button Style="{StaticResource ModernButton}" Content="Bağlantıyı Test Et" Background="#3B82F6" Foreground="White" 
-                            Command="{Binding TestConnectionCommand}" Visibility="{Binding IsTesting, Converter={StaticResource InverseBoolToVis}}"/>
+                            Command="{Binding TestConnectionCommand}" Visibility="{Binding IsTesting, Converter={StaticResource InverseBoolToVis}}" Height="45"/>
                     
                     <Grid Margin="0,15,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Style="{StaticResource ModernButton}" Content="Yedek Al" Background="#6366F1" Foreground="White" Margin="0,0,5,0"
+                        <Button Grid.Column="0" Style="{StaticResource ModernButton}" Content="Yedek Al" Background="#6366F1" Foreground="White" Margin="0,0,5,0" Height="45"
                                 Command="{Binding BackupDatabaseCommand}" IsEnabled="{Binding IsTesting, Converter={StaticResource BoolInverter}}"/>
-                        <Button Grid.Column="1" Style="{StaticResource ModernButton}" Content="Geri Yükle" Background="#F59E0B" Foreground="White" Margin="5,0,0,0"
+                        <Button Grid.Column="1" Style="{StaticResource ModernButton}" Content="Geri Yükle" Background="#F59E0B" Foreground="White" Margin="5,0,0,0" Height="45"
                                 Command="{Binding RestoreDatabaseCommand}" IsEnabled="{Binding IsTesting, Converter={StaticResource BoolInverter}}"/>
                     </Grid>
 
-                    <ProgressBar IsIndeterminate="True" Height="4" Margin="0,10,0,0" Visibility="{Binding IsTesting, Converter={StaticResource BoolToVis}}"/>
+                    <ProgressBar IsIndeterminate="True" Height="4" Margin="0,15,0,0" Visibility="{Binding IsTesting, Converter={StaticResource BoolToVis}}" Background="#0F172A" Foreground="#3B82F6" BorderThickness="0"/>
                 </StackPanel>
             </ScrollViewer>
 
             <!-- Footer -->
-            <Border Grid.Row="2" Background="#F1F5F9" CornerRadius="0,0,12,12" Padding="20,15">
+            <Border Grid.Row="2" Background="#111827" CornerRadius="0,0,12,12" Padding="20,15">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Style="{StaticResource ModernButton}" Content="İptal" Background="#94A3B8" Foreground="White" Margin="0,0,10,0"
+                    <Button Style="{StaticResource ModernButton}" Content="İptal" Background="#334155" Foreground="White" Margin="0,0,10,0" Width="100"
                             Command="{Binding CancelCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"/>
-                    <Button Style="{StaticResource ModernButton}" Content="Kaydet ve Kapat" Background="#10B981" Foreground="White"
+                    <Button Style="{StaticResource ModernButton}" Content="Kaydet ve Kapat" Background="#10B981" Foreground="White" Width="160"
                             Command="{Binding SaveCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"/>
                 </StackPanel>
             </Border>

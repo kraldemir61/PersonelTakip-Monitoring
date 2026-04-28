@@ -4,28 +4,31 @@
         xmlns:controls="clr-namespace:PersonelTakip.Controls"
         Title="Şifremi Değiştir" Height="465" Width="400"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
-        Style="{StaticResource ModernDialogStyle}">
+        Style="{StaticResource ModernDialogStyle}"
+        Background="#0F172A">
     <Window.Resources>
         <Style x:Key="ModernPasswordBox" TargetType="PasswordBox">
             <Setter Property="Padding" Value="12,6"/>
             <Setter Property="Margin" Value="0,0,0,15"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#E5E7EB"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Background" Value="#1E293B"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#334155"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="MinHeight" Value="45"/>
+            <Setter Property="MinHeight" Value="48"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="CaretBrush" Value="White"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="PasswordBox">
                         <Border x:Name="border" Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6">
+                                CornerRadius="8">
                             <Grid>
                                 <ScrollViewer x:Name="PART_ContentHost" Margin="0" VerticalAlignment="Center"/>
                                 <TextBlock x:Name="Placeholder" Text="{TemplateBinding Tag}"
-                                           Foreground="#9CA3AF" Margin="12,0" 
+                                           Foreground="#64748B" Margin="12,0" 
                                            VerticalAlignment="Center" IsHitTestVisible="False"
                                            Visibility="Visible"/>
                             </Grid>
@@ -33,6 +36,8 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsFocused" Value="True">
                                 <Setter TargetName="border" Property="BorderBrush" Value="#3B82F6"/>
+                                <Setter TargetName="border" Property="Background" Value="#0F172A"/>
+                                <Setter TargetName="Placeholder" Property="Visibility" Value="Collapsed"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -41,13 +46,13 @@
         </Style>
 
         <Style x:Key="ModernButton" TargetType="Button">
-            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="Padding" Value="15,0"/>
             <Setter Property="Margin" Value="4"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Height" Value="40"/>
+            <Setter Property="Height" Value="42"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -57,7 +62,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Opacity" Value="0.85"/>
+                                <Setter TargetName="border" Property="Opacity" Value="0.9"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Opacity" Value="0.8"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -74,9 +82,9 @@
         
         <controls:CustomTitleBar Grid.Row="0" CanMaximize="False"/>
         
-        <Border Grid.Row="1" Background="White" CornerRadius="12" Margin="15" Padding="20">
+        <Border Grid.Row="1" Background="#1E293B" CornerRadius="16" Margin="20" Padding="25" BorderBrush="#334155" BorderThickness="1">
             <Border.Effect>
-                <DropShadowEffect BlurRadius="15" ShadowDepth="4" Opacity="0.1"/>
+                <DropShadowEffect BlurRadius="25" ShadowDepth="0" Opacity="0.4" Color="Black"/>
             </Border.Effect>
             
             <Grid>
@@ -87,8 +95,8 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Row="0">
-                    <TextBlock Text="Şifremi Değiştir" FontSize="20" FontWeight="Bold" Foreground="#111827" Margin="0,0,0,5"/>
-                    <TextBlock Text="Güvenliğiniz için şifrenizi güncelleyin." FontSize="13" Foreground="#6B7280" Margin="0,0,0,20"/>
+                    <TextBlock Text="Şifremi Değiştir" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,8"/>
+                    <TextBlock Text="Güvenliğiniz için şifrenizi güncelleyin." FontSize="13" Foreground="#94A3B8" Margin="0,0,0,25"/>
                 </StackPanel>
 
                 <StackPanel Grid.Row="1">
@@ -97,9 +105,9 @@
                     <PasswordBox x:Name="TxtYeniTekrar" Tag="Yeni Şifre (Tekrar)" PasswordChanged="TxtYeniTekrar_PasswordChanged" Style="{StaticResource ModernPasswordBox}"/>
                 </StackPanel>
 
-                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
-                    <Button Content="Güncelle" Command="{Binding KaydetCommand}" Background="#3B82F6" Foreground="White" Style="{StaticResource ModernButton}" Width="100" Height="36"/>
-                    <Button Content="İptal" Command="{Binding IptalCommand}" Background="#F3F4F6" Foreground="#374151" Style="{StaticResource ModernButton}" Width="100" Height="36"/>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                    <Button Content="Güncelle" Command="{Binding KaydetCommand}" Background="#3B82F6" Foreground="White" Style="{StaticResource ModernButton}" Width="120"/>
+                    <Button Content="İptal" Command="{Binding IptalCommand}" Background="#334155" Foreground="White" Style="{StaticResource ModernButton}" Width="100" Margin="10,0,0,0"/>
                 </StackPanel>
             </Grid>
         </Border>

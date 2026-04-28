@@ -2,9 +2,10 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:PersonelTakip.Controls"
-        Title="Personel Takip Sistemi - Giriş" Height="580" Width="440"
+        Title="Personel Takip Sistemi - Giriş" Height="640" Width="440"
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
         Style="{StaticResource ModernWindowStyle}"
+        Background="#0F172A"
         Loaded="Window_Loaded">
 
     <Window.InputBindings>
@@ -14,28 +15,34 @@
     <Window.Resources>
         <!-- Modern Input Styles -->
         <Style x:Key="ModernInput" TargetType="Control">
-            <Setter Property="Height" Value="38"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#D1D5DB"/>
+            <Setter Property="Height" Value="42"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Background" Value="#0F172A"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#334155"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Padding" Value="10,2"/>
+            <Setter Property="Padding" Value="12,2"/>
         </Style>
 
         <Style x:Key="ModernTextBox" TargetType="TextBox" BasedOn="{StaticResource ModernInput}">
+            <Setter Property="CaretBrush" Value="White"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
-                        <Border Background="{TemplateBinding Background}"
+                        <Border x:Name="Border" Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6">
-                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center"/>
+                                CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center" Margin="10,0"/>
                         </Border>
                         <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#475569"/>
+                            </Trigger>
                             <Trigger Property="IsFocused" Value="True">
-                                <Setter Property="BorderBrush" Value="#3B82F6"/>
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#3B82F6"/>
+                                <Setter TargetName="Border" Property="Background" Value="#111827"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -45,15 +52,37 @@
 
         <Style x:Key="ModernPasswordBox" TargetType="PasswordBox" BasedOn="{StaticResource ModernInput}">
              <Setter Property="VerticalContentAlignment" Value="Center"/>
+             <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="PasswordBox">
+                        <Border x:Name="Border" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" VerticalAlignment="Center" Margin="10,0"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#475569"/>
+                            </Trigger>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="Border" Property="BorderBrush" Value="#3B82F6"/>
+                                <Setter TargetName="Border" Property="Background" Value="#111827"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="ModernComboBox" TargetType="ComboBox">
             <Setter Property="Padding" Value="12,0"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#D1D5DB"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Background" Value="#0F172A"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#334155"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="MinHeight" Value="38"/>
+            <Setter Property="MinHeight" Value="42"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -62,7 +91,7 @@
                             <Border x:Name="Border" Background="{TemplateBinding Background}"
                                     BorderBrush="{TemplateBinding BorderBrush}"
                                     BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="6">
+                                    CornerRadius="8">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -72,7 +101,7 @@
                                                       Content="{TemplateBinding SelectionBoxItem}"
                                                       ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
                                                       ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"/>
-                                    <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="#6B7280" StrokeThickness="2"
+                                    <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="#94A3B8" StrokeThickness="2"
                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Grid>
                             </Border>
@@ -82,8 +111,8 @@
                             <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}"
                                    AllowsTransparency="True" Focusable="False" PopupAnimation="Slide"
                                    MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
-                                <Border Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="6" Margin="0,2,0,0">
-                                    <ScrollViewer MaxHeight="200">
+                                <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="8" Margin="0,4,0,0">
+                                    <ScrollViewer MaxHeight="200" Padding="4">
                                         <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained"/>
                                     </ScrollViewer>
                                 </Border>
@@ -99,19 +128,23 @@
         </Style>
 
         <Style TargetType="ComboBoxItem">
-            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="Padding" Value="12,10"/>
             <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="#CBD5E1"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBoxItem">
-                        <Border x:Name="Border" Background="Transparent" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="Border" Background="Transparent" CornerRadius="4" Padding="{TemplateBinding Padding}" Margin="0,1">
                             <ContentPresenter/>
                         </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Border" Property="Background" Value="#F3F4F6"/></Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="#334155"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="#DBEAFE"/>
-                                <Setter Property="Foreground" Value="#2563EB"/>
+                                <Setter TargetName="Border" Property="Background" Value="#3B82F6"/>
+                                <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -119,55 +152,73 @@
             </Setter>
         </Style>
 
-        <!-- Form Label Style -->
         <Style x:Key="FormLabel" TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Foreground" Value="#4B5563"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Foreground" Value="#94A3B8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
 
-        <!-- Segmented Toggle Style -->
         <Style x:Key="SegmentButton" TargetType="RadioButton">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
                         <Border x:Name="Border" Background="Transparent" 
-                                BorderThickness="0,0,0,2" BorderBrush="Transparent"
-                                Padding="20,10" Cursor="Hand">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center">
+                                BorderThickness="0,0,0,3" BorderBrush="Transparent"
+                                Padding="25,12" Cursor="Hand">
+                            <ContentPresenter x:Name="Content" HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <ContentPresenter.Resources>
                                     <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="#6B7280"/>
-                                        <Setter Property="FontWeight" Value="Medium"/>
+                                        <Setter Property="Foreground" Value="#64748B"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="FontSize" Value="14"/>
                                     </Style>
                                 </ContentPresenter.Resources>
                             </ContentPresenter>
                         </Border>
                         <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="#1E293B"/>
+                            </Trigger>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="Border" Property="BorderBrush" Value="#3B82F6"/>
-                                <Setter Property="Foreground" Value="#3B82F6"/>
+                                <Setter TargetName="Border" Property="Background" Value="#1E293B"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Foreground" Value="#3B82F6"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="PrimaryButton" TargetType="Button">
             <Setter Property="Background" Value="#3B82F6"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="Padding" Value="20,10"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="20,12"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="6">
+                        <Border x:Name="Border" Background="{TemplateBinding Background}" CornerRadius="8">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="#2563EB"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Border" Property="Background" Value="#1D4ED8"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Border" Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -184,9 +235,9 @@
         
         <controls:CustomTitleBar Grid.Row="0"/>
 
-        <Border Grid.Row="1" Background="White" CornerRadius="12" Margin="25" Padding="25">
+        <Border Grid.Row="1" Background="#1E293B" CornerRadius="16" Margin="15" Padding="10" BorderBrush="#334155" BorderThickness="1">
             <Border.Effect>
-                <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.1"/>
+                <DropShadowEffect BlurRadius="30" ShadowDepth="0" Opacity="0.3" Color="Black"/>
             </Border.Effect>
             
             <Grid>
@@ -198,42 +249,44 @@
                 </Grid.RowDefinitions>
 
                 <!-- 1. Logo Section -->
-                <StackPanel Grid.Row="0" Margin="0,0,0,20">
-                    <TextBlock Text="PERSONEL VE ZİMMET TAKİBİ" FontSize="17" FontWeight="Bold" Foreground="#1F2937" HorizontalAlignment="Center"/>
-                    <TextBlock Text="Akıllı Yönetim Sistemi" FontSize="11" Foreground="#9CA3AF" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                <StackPanel Grid.Row="0" Margin="0,0,0,15">
+                    <TextBlock Text="PERSONEL VE ZİMMET TAKİBİ" FontSize="20" FontWeight="ExtraBold" Foreground="White" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Akıllı Yönetim Sistemi" FontSize="12" Foreground="#64748B" HorizontalAlignment="Center" Margin="0,5,0,0" FontWeight="Medium"/>
                 </StackPanel>
 
                 <!-- 2. Toggle Section -->
-                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
-                    <RadioButton x:Name="RbKayit" Content="Kayıt Ol" GroupName="ST" Style="{StaticResource SegmentButton}" Checked="RbKayit_Checked"/>
-                    <RadioButton x:Name="RbGiris" Content="Giriş Yap" IsChecked="True" GroupName="ST" Style="{StaticResource SegmentButton}" Checked="RbGiris_Checked"/>
-                </StackPanel>
+                <Border Grid.Row="1" Background="#0F172A" CornerRadius="10" HorizontalAlignment="Center" Margin="0,0,0,0" Padding="4">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="RbKayit" Content="Kayıt Ol" GroupName="ST" Style="{StaticResource SegmentButton}" Checked="RbKayit_Checked"/>
+                        <RadioButton x:Name="RbGiris" Content="Giriş Yap" IsChecked="True" GroupName="ST" Style="{StaticResource SegmentButton}" Checked="RbGiris_Checked"/>
+                    </StackPanel>
+                </Border>
 
                 <!-- 3. Content Section -->
                 <Grid Grid.Row="2">
                     <!-- LOGIN PANEL -->
                     <StackPanel x:Name="PanelGiris" Visibility="Visible" VerticalAlignment="Top">
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="80"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <TextBlock Text="Kullanıcı Adı" Style="{StaticResource FormLabel}"/>
-                            <TextBox x:Name="TxtEmail" Grid.Column="1" Text="{Binding LoginKullaniciAdi, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
-                        </Grid>
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="80"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <TextBlock Text="Parola" Style="{StaticResource FormLabel}"/>
-                            <PasswordBox x:Name="TxtPassword" Grid.Column="1" Style="{StaticResource ModernPasswordBox}"/>
-                        </Grid>
-                        <CheckBox Content="Beni Hatırla" IsChecked="{Binding RememberMe}" Margin="80,0,0,15" FontSize="12" Foreground="#6B7280"/>
-                        <Button Content="Giriş Yap" IsDefault="True" Click="BtnGiris_Click" Style="{StaticResource PrimaryButton}" Height="42"/>
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Kullanıcı Adı" Style="{StaticResource FormLabel}" Margin="0,0,0,8"/>
+                            <TextBox x:Name="TxtEmail" Text="{Binding LoginKullaniciAdi, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                        </StackPanel>
+                        
+                        <StackPanel Margin="0,0,0,20">
+                            <TextBlock Text="Parola" Style="{StaticResource FormLabel}" Margin="0,0,0,8"/>
+                            <PasswordBox x:Name="TxtPassword" Style="{StaticResource ModernPasswordBox}"/>
+                        </StackPanel>
+
+                        <CheckBox Content="Beni Hatırla" IsChecked="{Binding RememberMe}" Margin="0,0,0,25" FontSize="13" Foreground="#94A3B8"/>
+                        
+                        <Button Content="Giriş Yap" IsDefault="True" Click="BtnGiris_Click" Style="{StaticResource PrimaryButton}" Height="48"/>
                     </StackPanel>
 
                     <!-- REGISTER PANEL -->
                     <StackPanel x:Name="PanelKayit" Visibility="Collapsed" VerticalAlignment="Top">
                         <!-- 1. Şantiye -->
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="90"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <TextBlock Text="Şantiye" Style="{StaticResource FormLabel}"/>
-                            <ComboBox Grid.Column="1" ItemsSource="{Binding SantiyeList}" 
+                        <StackPanel Margin="0,0,0,15">
+                            <TextBlock Text="Şantiye" Style="{StaticResource FormLabel}" Margin="0,0,0,6"/>
+                            <ComboBox ItemsSource="{Binding SantiyeList}" 
                                       SelectedValue="{Binding RegisterSantiyeId}" SelectedValuePath="Id" 
                                       Style="{StaticResource ModernComboBox}">
                                 <ComboBox.ItemTemplate>
@@ -242,48 +295,54 @@
                                     </DataTemplate>
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
-                        </Grid>
+                        </StackPanel>
+                        
                         <!-- 2. Kullanıcı Adı -->
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="90"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <TextBlock Text="Kullanıcı Adı" Style="{StaticResource FormLabel}"/>
-                            <TextBox x:Name="TxtKullaniciAdi" Grid.Column="1" Text="{Binding RegisterKullaniciAdi, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
-                        </Grid>
+                        <StackPanel Margin="0,0,0,15">
+                            <TextBlock Text="Kullanıcı Adı" Style="{StaticResource FormLabel}" Margin="0,0,0,6"/>
+                            <TextBox x:Name="TxtKullaniciAdi" Text="{Binding RegisterKullaniciAdi, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                        </StackPanel>
+                        
                         <!-- 3. Parola -->
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="90"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <TextBlock Text="Parola" Style="{StaticResource FormLabel}"/>
-                            <PasswordBox x:Name="TxtRegisterSifre" Grid.Column="1" Style="{StaticResource ModernPasswordBox}"/>
-                        </Grid>
+                        <StackPanel Margin="0,0,0,15">
+                            <TextBlock Text="Parola" Style="{StaticResource FormLabel}" Margin="0,0,0,6"/>
+                            <PasswordBox x:Name="TxtRegisterSifre" Style="{StaticResource ModernPasswordBox}"/>
+                        </StackPanel>
+                        
                         <!-- 4. Parola Tekrar -->
-                        <Grid Margin="0,0,0,15">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="90"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <TextBlock Text="Parola Tekrar" Style="{StaticResource FormLabel}"/>
-                            <PasswordBox x:Name="TxtRegisterSifreTekrar" Grid.Column="1" Style="{StaticResource ModernPasswordBox}"/>
-                        </Grid>
-                        <Button Content="Kayıt Ol" Click="BtnKayit_Click" Style="{StaticResource PrimaryButton}" Height="40"/>
+                        <StackPanel Margin="0,0,0,25">
+                            <TextBlock Text="Parola Tekrar" Style="{StaticResource FormLabel}" Margin="0,0,0,6"/>
+                            <PasswordBox x:Name="TxtRegisterSifreTekrar" Style="{StaticResource ModernPasswordBox}"/>
+                        </StackPanel>
+                        
+                        <Button Content="Kayıt Ol" Click="BtnKayit_Click" Style="{StaticResource PrimaryButton}" Height="48"/>
                     </StackPanel>
                 </Grid>
 
-                <!-- 4. Status Section (ESKİ HALİ) -->
-                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20,0,0">
-                    <Ellipse Width="10" Height="10" Margin="0,0,8,0" VerticalAlignment="Center">
-                        <Ellipse.Style>
-                            <Style TargetType="Ellipse">
-                                <Setter Property="Fill" Value="#EF4444"/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsConnected}" Value="True">
-                                        <Setter Property="Fill" Value="#10B981"/>
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding IsSlowConnection}" Value="True">
-                                        <Setter Property="Fill" Value="#F59E0B"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Ellipse.Style>
-                    </Ellipse>
-                    <TextBlock Text="{Binding ConnectionStatus}" FontSize="12" Foreground="#9CA3AF" VerticalAlignment="Center"/>
-                </StackPanel>
+                <!-- 4. Status Section -->
+                <Border Grid.Row="3" Background="#0F172A" CornerRadius="20" HorizontalAlignment="Center" Margin="0,0,0,0" Padding="15,8">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="8" Height="8" Margin="0,0,10,0" VerticalAlignment="Center">
+                            <Ellipse.Style>
+                                <Style TargetType="Ellipse">
+                                    <Setter Property="Fill" Value="#EF4444"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                            <Setter Property="Fill" Value="#10B981"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsSlowConnection}" Value="True">
+                                            <Setter Property="Fill" Value="#F59E0B"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Ellipse.Style>
+                            <Ellipse.Effect>
+                                <DropShadowEffect BlurRadius="8" ShadowDepth="0" Opacity="0.5" Color="White"/>
+                            </Ellipse.Effect>
+                        </Ellipse>
+                        <TextBlock Text="{Binding ConnectionStatus}" FontSize="12" Foreground="#94A3B8" VerticalAlignment="Center" FontWeight="Medium"/>
+                    </StackPanel>
+                </Border>
             </Grid>
         </Border>
     </Grid>

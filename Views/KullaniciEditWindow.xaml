@@ -5,7 +5,8 @@
         xmlns:controls="clr-namespace:PersonelTakip.Controls"
         Title="{Binding WindowTitle}" Height="635" Width="450"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
-        Style="{StaticResource ModernDialogStyle}">
+        Style="{StaticResource ModernDialogStyle}"
+        Background="#0F172A">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
@@ -13,23 +14,25 @@
         <Style x:Key="ModernTextBox" TargetType="TextBox">
             <Setter Property="Padding" Value="12,6"/>
             <Setter Property="Margin" Value="0,0,0,15"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#E5E7EB"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Background" Value="#1E293B"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#334155"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="MinHeight" Value="45"/>
+            <Setter Property="MinHeight" Value="48"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="CaretBrush" Value="White"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
                         <Border x:Name="border" Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6">
+                                CornerRadius="8">
                             <Grid>
                                 <ScrollViewer x:Name="PART_ContentHost" Margin="0" VerticalAlignment="Center"/>
                                 <TextBlock x:Name="Placeholder" Text="{TemplateBinding Tag}"
-                                           Foreground="#9CA3AF" Margin="12,0" 
+                                           Foreground="#64748B" Margin="12,0" 
                                            VerticalAlignment="Center" IsHitTestVisible="False"
                                            Visibility="Collapsed"/>
                             </Grid>
@@ -44,6 +47,8 @@
                             </MultiTrigger>
                             <Trigger Property="IsFocused" Value="True">
                                 <Setter TargetName="border" Property="BorderBrush" Value="#3B82F6"/>
+                                <Setter TargetName="border" Property="Background" Value="#0F172A"/>
+                                <Setter TargetName="Placeholder" Property="Visibility" Value="Collapsed"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -54,23 +59,25 @@
         <Style x:Key="ModernPasswordBox" TargetType="PasswordBox">
             <Setter Property="Padding" Value="12,6"/>
             <Setter Property="Margin" Value="0,0,0,15"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#E5E7EB"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Background" Value="#1E293B"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#334155"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="MinHeight" Value="45"/>
+            <Setter Property="MinHeight" Value="48"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="CaretBrush" Value="White"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="PasswordBox">
                         <Border x:Name="border" Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6">
+                                CornerRadius="8">
                             <Grid>
                                 <ScrollViewer x:Name="PART_ContentHost" Margin="0" VerticalAlignment="Center"/>
                                 <TextBlock x:Name="Placeholder" Text="{TemplateBinding Tag}"
-                                           Foreground="#9CA3AF" Margin="12,0" 
+                                           Foreground="#64748B" Margin="12,0" 
                                            VerticalAlignment="Center" IsHitTestVisible="False"
                                            Visibility="Visible"/>
                             </Grid>
@@ -78,6 +85,8 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsFocused" Value="True">
                                 <Setter TargetName="border" Property="BorderBrush" Value="#3B82F6"/>
+                                <Setter TargetName="border" Property="Background" Value="#0F172A"/>
+                                <Setter TargetName="Placeholder" Property="Visibility" Value="Collapsed"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -88,27 +97,28 @@
         <Style x:Key="ModernComboBox" TargetType="ComboBox">
             <Setter Property="Padding" Value="12,6"/>
             <Setter Property="Margin" Value="0,0,0,15"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#E5E7EB"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Background" Value="#1E293B"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#334155"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="MinHeight" Value="45"/>
+            <Setter Property="MinHeight" Value="48"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
                         <Grid>
-                            <ToggleButton x:Name="ToggleButton" Grid.ColumnSpan="2"
+                            <ToggleButton x:Name="ToggleButton" Grid.ColumnSpan="2" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
                                           ClickMode="Press" Focusable="False" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="ToggleButton">
                                         <Border x:Name="Border" Background="{TemplateBinding Background}"
                                                 BorderBrush="{TemplateBinding BorderBrush}"
                                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                                CornerRadius="6"/>
+                                                CornerRadius="8"/>
                                         <ControlTemplate.Triggers>
                                             <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="Border" Property="Background" Value="#F9FAFB"/>
+                                                <Setter TargetName="Border" Property="Background" Value="#334155"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -125,17 +135,17 @@
                                                   ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
                                                   ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"/>
                                 <TextBlock x:Name="Placeholder" Text="{TemplateBinding Tag}"
-                                           Foreground="#9CA3AF" Margin="12,0" 
+                                           Foreground="#64748B" Margin="12,0" 
                                            VerticalAlignment="Center" IsHitTestVisible="False"
                                            Visibility="Collapsed"/>
-                                <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="#6B7280" StrokeThickness="2"
+                                <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="#94A3B8" StrokeThickness="2"
                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Grid>
                             <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
-                                <Border x:Name="DropDownBorder" Background="White" BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="6" 
+                                <Border x:Name="DropDownBorder" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="8" 
                                         MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}" Margin="0,4,0,0">
                                     <ScrollViewer MaxHeight="300" SnapsToDevicePixels="True">
-                                        <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" SnapsToDevicePixels="True"/>
+                                        <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" SnapsToDevicePixels="True" Margin="4"/>
                                     </ScrollViewer>
                                 </Border>
                             </Popup>
@@ -150,6 +160,7 @@
                             </MultiTrigger>
                             <Trigger Property="IsDropDownOpen" Value="True">
                                 <Setter TargetName="ToggleButton" Property="BorderBrush" Value="#3B82F6"/>
+                                <Setter TargetName="ToggleButton" Property="Background" Value="#0F172A"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -158,23 +169,22 @@
         </Style>
 
         <Style TargetType="ComboBoxItem">
-            <Setter Property="Padding" Value="12,8"/>
-            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="Foreground" Value="#CBD5E1"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBoxItem">
-                        <Border x:Name="border" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" Margin="2">
+                        <Border x:Name="border" Background="Transparent" CornerRadius="4" Padding="{TemplateBinding Padding}" Margin="0,1">
                             <ContentPresenter/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#F3F4F6"/>
-                                <Setter TargetName="border" Property="CornerRadius" Value="4"/>
+                                <Setter TargetName="border" Property="Background" Value="#334155"/>
+                                <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#EFF6FF"/>
-                                <Setter Property="Foreground" Value="#3B82F6"/>
-                                <Setter TargetName="border" Property="CornerRadius" Value="4"/>
+                                <Setter TargetName="border" Property="Background" Value="#3B82F6"/>
+                                <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -183,12 +193,13 @@
         </Style>
 
         <Style x:Key="ModernButton" TargetType="Button">
-            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="Padding" Value="15,0"/>
             <Setter Property="Margin" Value="5"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Height" Value="42"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -198,7 +209,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Opacity" Value="0.85"/>
+                                <Setter TargetName="border" Property="Opacity" Value="0.9"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Opacity" Value="0.8"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -215,9 +229,9 @@
         
         <controls:CustomTitleBar Grid.Row="0" CanMaximize="False"/>
         
-        <Border Grid.Row="1" Background="White" CornerRadius="12" Margin="15" Padding="20">
+        <Border Grid.Row="1" Background="#1E293B" CornerRadius="16" Margin="20" Padding="25" BorderBrush="#334155" BorderThickness="1">
             <Border.Effect>
-                <DropShadowEffect BlurRadius="15" ShadowDepth="4" Opacity="0.1"/>
+                <DropShadowEffect BlurRadius="25" ShadowDepth="0" Opacity="0.4" Color="Black"/>
             </Border.Effect>
             
             <Grid>
@@ -228,8 +242,8 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Row="0">
-                    <TextBlock Text="{Binding WindowTitle}" FontSize="20" FontWeight="Bold" Foreground="#111827" Margin="0,0,0,5"/>
-                    <TextBlock Text="Kullanıcı bilgilerini düzenleyin." FontSize="13" Foreground="#6B7280" Margin="0,0,0,20"/>
+                    <TextBlock Text="{Binding WindowTitle}" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,8"/>
+                    <TextBlock Text="Kullanıcı bilgilerini düzenleyin." FontSize="13" Foreground="#94A3B8" Margin="0,0,0,25"/>
                 </StackPanel>
 
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
@@ -245,7 +259,7 @@
                              PasswordChanged="TxtSifre_PasswordChanged" 
                              Style="{StaticResource ModernPasswordBox}"
                              Visibility="{Binding IsEditMode, Converter={StaticResource InverseBoolToVisibilityConverter}}"/>
-
+                
                 <PasswordBox x:Name="TxtSifreTekrar" Tag="Şifre Tekrar" 
                              PasswordChanged="TxtSifreTekrar_PasswordChanged" 
                              Style="{StaticResource ModernPasswordBox}"/>
@@ -264,9 +278,9 @@
             </StackPanel>
                 </ScrollViewer>
  
-                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
-                    <Button Content="Kaydet" Command="{Binding SaveCommand}" Background="#10B981" Foreground="White" Style="{StaticResource ModernButton}" Width="100" Height="36"/>
-                    <Button Content="İptal" Command="{Binding CancelCommand}" Background="#F3F4F6" Foreground="#374151" Style="{StaticResource ModernButton}" Width="100" Height="36"/>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                    <Button Content="Kaydet" Command="{Binding SaveCommand}" Background="#10B981" Foreground="White" Style="{StaticResource ModernButton}" Width="120"/>
+                    <Button Content="İptal" Command="{Binding CancelCommand}" Background="#334155" Foreground="White" Style="{StaticResource ModernButton}" Width="100" Margin="10,0,0,0"/>
                 </StackPanel>
             </Grid>
         </Border>

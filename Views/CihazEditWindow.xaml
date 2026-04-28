@@ -4,104 +4,285 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:conv="clr-namespace:PersonelTakip.Converters"
+        xmlns:controls="clr-namespace:PersonelTakip.Controls"
         mc:Ignorable="d"
-        Title="{Binding Title}" Height="540" Width="500"
+        Title="{Binding Title}" Height="600" Width="550"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
-        Background="#F8FAFC">
+        Style="{StaticResource ModernDialogStyle}"
+        Background="#0F172A">
     <Window.Resources>
         <ResourceDictionary>
             <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
             <conv:FotoPathToImageConverter x:Key="FotoPathToImageConverter"/>
+
+            <!-- Dark Theme Design System -->
+            <SolidColorBrush x:Key="FieldBackground" Color="#1E293B"/>
+            <SolidColorBrush x:Key="FieldBorder" Color="#334155"/>
+            <SolidColorBrush x:Key="FieldFocusBorder" Color="#3B82F6"/>
+            <SolidColorBrush x:Key="FieldForeground" Color="White"/>
+
+            <!-- TextBox Stili -->
+            <Style x:Key="ModernTextBox" TargetType="TextBox">
+                <Setter Property="Padding" Value="12,6"/>
+                <Setter Property="Margin" Value="0,0,0,15"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="Background" Value="{StaticResource FieldBackground}"/>
+                <Setter Property="Foreground" Value="{StaticResource FieldForeground}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource FieldBorder}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="MinHeight" Value="45"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="CaretBrush" Value="White"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="TextBox">
+                            <Border x:Name="border" Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="8">
+                                <Grid>
+                                    <ScrollViewer x:Name="PART_ContentHost" Margin="0" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="Placeholder" Text="{TemplateBinding Tag}"
+                                               Foreground="#64748B" Margin="12,0" 
+                                               VerticalAlignment="Center" IsHitTestVisible="False"
+                                               Visibility="Collapsed"/>
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsFocused" Value="True">
+                                    <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource FieldFocusBorder}"/>
+                                    <Setter TargetName="border" Property="Background" Value="#0F172A"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- ComboBox Stili -->
+            <Style x:Key="ModernComboBox" TargetType="ComboBox">
+                <Setter Property="Padding" Value="12,6"/>
+                <Setter Property="Margin" Value="0,0,0,15"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="Background" Value="{StaticResource FieldBackground}"/>
+                <Setter Property="Foreground" Value="{StaticResource FieldForeground}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource FieldBorder}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="MinHeight" Value="45"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ComboBox">
+                            <Grid>
+                                <ToggleButton x:Name="ToggleButton" Grid.ColumnSpan="2" ClickMode="Press" Focusable="False" 
+                                              Background="{TemplateBinding Background}"
+                                              BorderBrush="{TemplateBinding BorderBrush}"
+                                              IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                    <ToggleButton.Template>
+                                        <ControlTemplate TargetType="ToggleButton">
+                                            <Border x:Name="Border" Background="{TemplateBinding Background}"
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                    CornerRadius="8"/>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="Border" Property="Background" Value="#334155"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </ToggleButton.Template>
+                                </ToggleButton>
+                                <Grid Margin="0" VerticalAlignment="Center">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="30"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ContentPresenter Grid.Column="0" Margin="12,0,0,0" VerticalAlignment="Center" 
+                                                      IsHitTestVisible="False"
+                                                      Content="{TemplateBinding SelectionBoxItem}"
+                                                      ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                      ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"/>
+                                    <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="#94A3B8" StrokeThickness="2"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Grid>
+                                <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
+                                    <Border x:Name="DropDownBorder" Background="#1E293B" BorderBrush="{StaticResource FieldBorder}" BorderThickness="1" CornerRadius="8" 
+                                            MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}" Margin="0,4,0,0">
+                                        <ScrollViewer MaxHeight="300" SnapsToDevicePixels="True">
+                                            <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" SnapsToDevicePixels="True" Margin="4"/>
+                                        </ScrollViewer>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsDropDownOpen" Value="True">
+                                    <Setter TargetName="ToggleButton" Property="BorderBrush" Value="{StaticResource FieldFocusBorder}"/>
+                                    <Setter TargetName="ToggleButton" Property="Background" Value="#0F172A"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style TargetType="ComboBoxItem">
+                <Setter Property="Padding" Value="12,10"/>
+                <Setter Property="Foreground" Value="#CBD5E1"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ComboBoxItem">
+                            <Border x:Name="border" Background="Transparent" CornerRadius="4" Padding="{TemplateBinding Padding}" Margin="0,1">
+                                <ContentPresenter/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="border" Property="Background" Value="#334155"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="border" Property="Background" Value="#3B82F6"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="ModernButton" TargetType="Button">
+                <Setter Property="Padding" Value="15,0"/>
+                <Setter Property="Margin" Value="5"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Height" Value="42"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="border" Background="{TemplateBinding Background}"
+                                    CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="border" Property="Opacity" Value="0.9"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="border" Property="Opacity" Value="0.8"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
         </ResourceDictionary>
     </Window.Resources>
-    <Grid Margin="20">
+
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="Bold" Foreground="#1E2937" Margin="0,0,0,20"/>
+        <controls:CustomTitleBar Grid.Row="0" CanMaximize="False"/>
 
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel>
-                <!-- Satır 1: Cihaz Adı -->
-                <TextBlock Text="Cihaz Adı" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
-                <ComboBox Text="{Binding CihazAdi, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding CihazAdlari}" 
-                          DisplayMemberPath="Adi" SelectedValuePath="Adi" IsEditable="True"
-                          Height="35" VerticalContentAlignment="Center" Margin="0,0,0,15"/>
+        <Border Grid.Row="1" Background="#1E293B" CornerRadius="16" Margin="20" Padding="25" BorderBrush="#334155" BorderThickness="1">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="25" ShadowDepth="0" Opacity="0.4" Color="Black"/>
+            </Border.Effect>
 
-                <!-- Satır 2: Markası | Modeli -->
-                <Grid Margin="0,0,0,15">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="20"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="Markası" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
-                        <ComboBox Text="{Binding Marka, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Markalar}" 
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="{Binding Title}" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,20"/>
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- Satır 1: Cihaz Adı -->
+                        <TextBlock Text="Cihaz Adı" Foreground="#3B82F6" FontSize="11" FontWeight="Bold" Margin="5,0,0,5"/>
+                        <ComboBox Text="{Binding CihazAdi, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding CihazAdlari}" 
                                   DisplayMemberPath="Adi" SelectedValuePath="Adi" IsEditable="True"
-                                  Height="35" VerticalContentAlignment="Center"/>
-                    </StackPanel>
-                    <StackPanel Grid.Column="2">
-                        <TextBlock Text="Modeli" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
-                        <ComboBox Text="{Binding Model, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Modeller}" 
-                                  DisplayMemberPath="Adi" SelectedValuePath="Adi" IsEditable="True"
-                                  Height="35" VerticalContentAlignment="Center"/>
-                    </StackPanel>
-                </Grid>
+                                  Style="{StaticResource ModernComboBox}"/>
 
-                <!-- Satır 3: Sahip Firma | Şantiye -->
-                <Grid Margin="0,0,0,15">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="20"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="Sahip Firma" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
-                        <ComboBox Text="{Binding SahipFirma, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Firmalar}" 
-                                  DisplayMemberPath="Adi" SelectedValuePath="Adi" IsEditable="True" IsEnabled="{Binding IsSuperAdmin}"
-                                  Height="35" VerticalContentAlignment="Center"/>
-                    </StackPanel>
-                    <StackPanel Grid.Column="2">
-                        <TextBlock Text="Bulunduğu Yer (Şantiye)" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
-                        <ComboBox ItemsSource="{Binding SantiyeList}" SelectedValue="{Binding SantiyeId}" 
-                                  SelectedValuePath="Id" DisplayMemberPath="Kod"
-                                  Height="35" VerticalContentAlignment="Center"/>
-                    </StackPanel>
-                </Grid>
+                        <!-- Satır 2: Markası | Modeli -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Markası" Foreground="#3B82F6" FontSize="11" FontWeight="Bold" Margin="5,0,0,5"/>
+                                <ComboBox Text="{Binding Marka, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Markalar}" 
+                                          DisplayMemberPath="Adi" SelectedValuePath="Adi" IsEditable="True"
+                                          Style="{StaticResource ModernComboBox}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Modeli" Foreground="#3B82F6" FontSize="11" FontWeight="Bold" Margin="5,0,0,5"/>
+                                <ComboBox Text="{Binding Model, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Modeller}" 
+                                          DisplayMemberPath="Adi" SelectedValuePath="Adi" IsEditable="True"
+                                          Style="{StaticResource ModernComboBox}"/>
+                            </StackPanel>
+                        </Grid>
 
-                <!-- Satır 4: Özellikleri | Seri No -->
-                <Grid Margin="0,0,0,15">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="20"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="Özellikler / Spesifikasyonlar" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
-                        <TextBox Text="{Binding Ozellik, UpdateSourceTrigger=PropertyChanged}" Height="35" VerticalContentAlignment="Center" Padding="10,0"/>
+                        <!-- Satır 3: Sahip Firma | Şantiye -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Sahip Firma" Foreground="#3B82F6" FontSize="11" FontWeight="Bold" Margin="5,0,0,5"/>
+                                <ComboBox Text="{Binding SahipFirma, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Firmalar}" 
+                                          DisplayMemberPath="Adi" SelectedValuePath="Adi" IsEditable="True" IsEnabled="{Binding IsSuperAdmin}"
+                                          Style="{StaticResource ModernComboBox}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Bulunduğu Yer (Şantiye)" Foreground="#3B82F6" FontSize="11" FontWeight="Bold" Margin="5,0,0,5"/>
+                                <ComboBox ItemsSource="{Binding SantiyeList}" SelectedValue="{Binding SantiyeId}" 
+                                          SelectedValuePath="Id" DisplayMemberPath="Kod"
+                                          Style="{StaticResource ModernComboBox}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Satır 4: Özellikleri | Seri No -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Özellikler" Foreground="#3B82F6" FontSize="11" FontWeight="Bold" Margin="5,0,0,5"/>
+                                <TextBox Text="{Binding Ozellik, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Seri Numarası" Foreground="#3B82F6" FontSize="11" FontWeight="Bold" Margin="5,0,0,5"/>
+                                <TextBox Text="{Binding SeriNo, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Satır 5: Açıklama -->
+                        <TextBlock Text="Not / Zimmet Bilgisi" Foreground="#3B82F6" FontSize="11" FontWeight="Bold" Margin="5,0,0,5"/>
+                        <TextBox Text="{Binding Not, UpdateSourceTrigger=PropertyChanged}" Height="80" TextWrapping="Wrap" AcceptsReturn="True" 
+                                 VerticalContentAlignment="Top" Padding="12,10" Style="{StaticResource ModernTextBox}"/>
+
                     </StackPanel>
-                    <StackPanel Grid.Column="2">
-                        <TextBlock Text="Seri Numarası" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
-                        <TextBox Text="{Binding SeriNo, UpdateSourceTrigger=PropertyChanged}" Height="35" VerticalContentAlignment="Center" Padding="10,0"/>
-                    </StackPanel>
-                </Grid>
+                </ScrollViewer>
 
-                <!-- Satır 5: Açıklama -->
-                <TextBlock Text="Not / Zimmet Bilgisi" Foreground="#64748B" FontSize="12" Margin="0,0,0,5"/>
-                <TextBox Text="{Binding Not, UpdateSourceTrigger=PropertyChanged}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" VerticalContentAlignment="Top" Padding="10,5" Margin="0,0,0,15"/>
-
-            </StackPanel>
-        </ScrollViewer>
-
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-            <Button Content="İptal" Command="{Binding IptalCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" 
-                    Width="100" Height="40" Background="#E2E8F0" Foreground="#475569" BorderThickness="0" Margin="0,0,10,0"/>
-            <Button Content="Kaydet" Command="{Binding KaydetCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" 
-                    Width="100" Height="40" Background="#3B82F6" Foreground="White" BorderThickness="0"/>
-        </StackPanel>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                    <Button Content="İptal" Command="{Binding IptalCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" 
+                            Style="{StaticResource ModernButton}" Width="100" Background="#334155" Foreground="White" Margin="0,0,10,0"/>
+                    <Button Content="Kaydet" Command="{Binding KaydetCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" 
+                            Style="{StaticResource ModernButton}" Width="120" Background="#3B82F6" Foreground="White"/>
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 </Window>
