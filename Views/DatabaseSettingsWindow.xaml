@@ -7,7 +7,7 @@
         xmlns:vm="clr-namespace:PersonelTakip.ViewModels"
         xmlns:h="clr-namespace:PersonelTakip.Helpers"
         mc:Ignorable="d"
-        Title="Veritabanı Bağlantı Ayarları" Height="640" Width="400"
+        Title="Veritabanı Bağlantı Ayarları" Height="650" Width="400"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         WindowStartupLocation="CenterScreen" MouseLeftButtonDown="Window_MouseLeftButtonDown">
 
@@ -150,7 +150,7 @@
             </Border>
 
             <!-- Content -->
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="30,25">
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20,15">
                 <StackPanel>
                     <TextBlock Text="SUNUCU ADRESİ (HOST)" FontSize="11" FontWeight="Bold" Foreground="#3B82F6" Margin="0,0,0,8"/>
                     <TextBox Style="{StaticResource ModernTextBox}" Text="{Binding Host}" Margin="0,0,0,20"/>
@@ -170,17 +170,6 @@
 
                     <Button Style="{StaticResource ModernButton}" Content="Bağlantıyı Test Et" Background="#3B82F6" Foreground="White" 
                             Command="{Binding TestConnectionCommand}" Visibility="{Binding IsTesting, Converter={StaticResource InverseBoolToVis}}" Height="45"/>
-                    
-                    <Grid Margin="0,15,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Style="{StaticResource ModernButton}" Content="Yedek Al" Background="#6366F1" Foreground="White" Margin="0,0,5,0" Height="45"
-                                Command="{Binding BackupDatabaseCommand}" IsEnabled="{Binding IsTesting, Converter={StaticResource BoolInverter}}"/>
-                        <Button Grid.Column="1" Style="{StaticResource ModernButton}" Content="Geri Yükle" Background="#F59E0B" Foreground="White" Margin="5,0,0,0" Height="45"
-                                Command="{Binding RestoreDatabaseCommand}" IsEnabled="{Binding IsTesting, Converter={StaticResource BoolInverter}}"/>
-                    </Grid>
 
                     <ProgressBar IsIndeterminate="True" Height="4" Margin="0,15,0,0" Visibility="{Binding IsTesting, Converter={StaticResource BoolToVis}}" Background="#0F172A" Foreground="#3B82F6" BorderThickness="0"/>
                 </StackPanel>

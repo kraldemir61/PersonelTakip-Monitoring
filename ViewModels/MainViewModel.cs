@@ -145,6 +145,7 @@ public partial class MainViewModel : BaseViewModel
                 ParaBirimleriView?.Refresh();
                 OlcumCihazlariView?.Refresh();
                 OfisCihazlariView?.Refresh();
+                CalculateDeviceStats();
             }
         }
     }
@@ -199,6 +200,9 @@ public partial class MainViewModel : BaseViewModel
     private int _toplamOfisCihazi;
 
     [ObservableProperty]
+    private ObservableCollection<StatItem> _ofisCihaziStats = new();
+
+    [ObservableProperty]
     private bool _ofisCihaziFilterAvailable = false;
 
     [ObservableProperty]
@@ -214,6 +218,7 @@ public partial class MainViewModel : BaseViewModel
     {
         SelectedOfisFilterSantiye = SelectedOfisFilterSantiye == santiyeKod ? null : santiyeKod;
         OfisCihazlariView.Refresh();
+        CalculateDeviceStats();
     }
 
     [RelayCommand]
@@ -221,6 +226,7 @@ public partial class MainViewModel : BaseViewModel
     {
         SelectedOlcumFilterSantiye = SelectedOlcumFilterSantiye == santiyeKod ? null : santiyeKod;
         OlcumCihazlariView.Refresh();
+        CalculateDeviceStats();
     }
 
     private void UpdateSidebarOfisCihaziSantiyeler()
@@ -604,15 +610,50 @@ public partial class MainViewModel : BaseViewModel
         });
 
         // YEDEK MEKANİZMA (Polling): LISTEN/NOTIFY bazen ağ/firewall nedeniyle takılabilir.
-        // Her 30 saniyede bir listeyi manuel olarak da yenileyelim.
+        // Her 30 saniyede bir listeyi manuel olarak da yenileyelim + bağlantı durumunu kontrol edelim.
         _ = Task.Run(async () =>
         {
             while (!_notificationCts.Token.IsCancellationRequested)
             {
                 try
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(30), _notificationCts.Token);
+                    await Task.Delay(TimeSpan.FromSeconds(10), _notificationCts.Token);
                     
+                    // Bağlantı durumu kontrolü
+                    try
+                    {
+                        var sw = System.Diagnostics.Stopwatch.StartNew();
+                        var ok = await _databaseService.CheckConnectionAsync();
+                        sw.Stop();
+
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            if (!ok)
+                            {
+                                IsConnected = false;
+                                IsSlowConnection = false;
+                                ConnectionStatus = "Bağlantı kesildi";
+                            }
+                            else
+                            {
+                                IsConnected = true;
+                                IsSlowConnection = sw.ElapsedMilliseconds > 2000;
+                                ConnectionStatus = IsSlowConnection
+                                    ? $"Bağlantı yavaş ({sw.ElapsedMilliseconds / 1000}s)"
+                                    : "Bağlantı hazır";
+                            }
+                        });
+                    }
+                    catch
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            IsConnected = false;
+                            IsSlowConnection = false;
+                            ConnectionStatus = "Bağlantı kesildi";
+                        });
+                    }
+
                     var oldUnread = UnreadBildirimCount;
                     await LoadBildirimlerAsync();
                     
@@ -743,6 +784,17 @@ public partial class MainViewModel : BaseViewModel
 
         if (OfisCihazlariView == null) return;
         ToplamOfisCihazi = OfisCihazlariView.Cast<OfisCihazi>().Count();
+
+        var ofisGrup = OfisCihazlariView.Cast<OfisCihazi>()
+            .GroupBy(c => string.IsNullOrWhiteSpace(c.CihazAdi) ? "Bilinmiyor" : c.CihazAdi)
+            .Select(g => new StatItem 
+            { 
+                Name = g.Key, 
+                Count = g.Count() 
+            })
+            .OrderByDescending(x => x.Count);
+
+        OfisCihaziStats = new ObservableCollection<StatItem>(ofisGrup);
     }
 
     [RelayCommand]
@@ -1014,7 +1066,7 @@ public partial class MainViewModel : BaseViewModel
         if (OfisCihaziFilterAssigned && !c.ZimmetliMi) return false;
 
         // Arama Kutusu Filtresi
-        var combined = $"{c.Marka} {c.Model} {c.SeriNo} {c.ZimmetliPersonelAd} {c.BulunduguSantiyeKod} {c.Ozellik}";
+        var combined = $"{c.CihazAdi} {c.Marka} {c.Model} {c.SeriNo} {c.ZimmetliPersonelAd} {c.BulunduguSantiyeKod} {c.Ozellik}";
         return StringHelper.SmartSearch(combined, SearchText);
     }
 
@@ -1023,6 +1075,7 @@ public partial class MainViewModel : BaseViewModel
         if (value) _ofisCihaziFilterAssigned = false;
         OnPropertyChanged(nameof(OfisCihaziFilterAssigned));
         OfisCihazlariView?.Refresh();
+        CalculateDeviceStats();
     }
 
     partial void OnOfisCihaziFilterAssignedChanged(bool value)
@@ -1030,6 +1083,7 @@ public partial class MainViewModel : BaseViewModel
         if (value) _ofisCihaziFilterAvailable = false;
         OnPropertyChanged(nameof(OfisCihaziFilterAvailable));
         OfisCihazlariView?.Refresh();
+        CalculateDeviceStats();
     }
 
     [RelayCommand]

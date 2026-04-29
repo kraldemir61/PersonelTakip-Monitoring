@@ -1522,10 +1522,43 @@ Background="Transparent" BorderThickness="0" RowHeight="45">
 <!-- Sağ: Detay Kartı -->
 <Border Grid.Column="2" Background="#1E293B" CornerRadius="12" BorderBrush="#334155" BorderThickness="1" Padding="20">
 <Grid>
-<StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{Binding SelectedOfisCihazi, Converter={StaticResource NullToVisibilityConverter}}">
-<TextBlock Text="💻" FontSize="60" HorizontalAlignment="Center" Opacity="0.2"/>
-<TextBlock Text="Cihaz seçiniz" Foreground="#64748B" FontSize="16" FontStyle="Italic" Margin="0,10,0,0"/>
+<Grid Visibility="{Binding SelectedOfisCihazi, Converter={StaticResource NullToVisibilityConverter}}">
+<Grid.RowDefinitions>
+<RowDefinition Height="Auto"/>
+<RowDefinition Height="*"/>
+</Grid.RowDefinitions>
+<TextBlock Text="Ofis Cihazları Özeti" FontSize="18" FontWeight="Bold" Foreground="White" Margin="0,0,0,20"/>
+<ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+<StackPanel>
+<Border CornerRadius="10" Padding="20" Margin="0,0,0,20">
+<Border.Background>
+<LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+<GradientStop Color="#1E3A5F" Offset="0.0"/>
+<GradientStop Color="#1E40AF" Offset="1.0"/>
+</LinearGradientBrush>
+</Border.Background>
+<StackPanel>
+<TextBlock Text="Toplam Ofis Cihazı" FontSize="13" FontWeight="SemiBold" Foreground="#93C5FD"/>
+<TextBlock Text="{Binding ToplamOfisCihazi}" FontSize="32" FontWeight="Bold" Foreground="White" Margin="0,5,0,0"/>
 </StackPanel>
+</Border>
+<TextBlock Text="Cihaz Dağılımı" FontSize="14" FontWeight="SemiBold" Foreground="#94A3B8" Margin="0,0,0,12"/>
+<ItemsControl ItemsSource="{Binding OfisCihaziStats}">
+<ItemsControl.ItemTemplate>
+<DataTemplate>
+<Border Background="#2D3748" BorderBrush="#334155" BorderThickness="1" CornerRadius="8" Margin="0,0,0,10" Padding="12">
+<Grid>
+<Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+<TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="#E2E8F0"/>
+<TextBlock Grid.Column="1" Text="{Binding Count}" FontWeight="Bold" Foreground="#3B82F6"/>
+</Grid>
+</Border>
+</DataTemplate>
+</ItemsControl.ItemTemplate>
+</ItemsControl>
+</StackPanel>
+</ScrollViewer>
+</Grid>
 <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding SelectedOfisCihazi, Converter={StaticResource NullToVisibilityConverter}, ConverterParameter=Invert}">
 <StackPanel DataContext="{Binding SelectedOfisCihazi}">
 <Grid Margin="0,0,0,25">
@@ -1634,11 +1667,40 @@ CommandParameter="{Binding}" Style="{StaticResource ActionButton}" Background="#
 <RowDefinition Height="Auto"/>
 <RowDefinition Height="*"/>
 </Grid.RowDefinitions>
-<StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
+<Grid Grid.Row="0" Margin="0,0,0,15">
+<Grid.ColumnDefinitions>
+<ColumnDefinition Width="Auto"/>
+<ColumnDefinition Width="*"/>
+</Grid.ColumnDefinitions>
+<StackPanel Grid.Column="0" Orientation="Horizontal">
 <Button Content="Ekle" Command="{Binding YeniCihazAdCommand}" Width="100" Height="35" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
 <Button Content="Düzenle" Command="{Binding DuzenleCihazAdCommand}" Width="100" Height="35" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
 <Button Content="Sil" Command="{Binding SilCihazAdCommand}" Width="60" Height="35" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
 </StackPanel>
+<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="35">
+<Grid>
+<Grid.ColumnDefinitions>
+<ColumnDefinition Width="35"/>
+<ColumnDefinition Width="*"/>
+</Grid.ColumnDefinitions>
+<TextBlock Text="🔍" VerticalAlignment="Center" HorizontalAlignment="Center" Opacity="0.5" Foreground="White"/>
+<TextBox x:Name="SearchBoxCihazTanim" Grid.Column="1" BorderThickness="0" Background="Transparent" Foreground="White" VerticalContentAlignment="Center" Padding="5,0,15,0"
+Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" CaretBrush="White"/>
+<TextBlock Grid.Column="1" Text="Hızlı arama..." Foreground="#64748B" VerticalAlignment="Center" IsHitTestVisible="False" Margin="10,0,0,0">
+<TextBlock.Style>
+<Style TargetType="TextBlock">
+<Setter Property="Visibility" Value="Collapsed"/>
+<Style.Triggers>
+<DataTrigger Binding="{Binding Text, ElementName=SearchBoxCihazTanim}" Value="">
+<Setter Property="Visibility" Value="Visible"/>
+</DataTrigger>
+</Style.Triggers>
+</Style>
+</TextBlock.Style>
+</TextBlock>
+</Grid>
+</Border>
+</Grid>
 <Border Grid.Row="1" CornerRadius="12" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Padding="1">
 <DataGrid ItemsSource="{Binding CihazAdlariView}" SelectedItem="{Binding SelectedCihazAd}"
 AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
@@ -1684,11 +1746,40 @@ Background="Transparent" BorderThickness="0" RowHeight="45">
 <RowDefinition Height="Auto"/>
 <RowDefinition Height="*"/>
 </Grid.RowDefinitions>
-<StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
+<Grid Grid.Row="0" Margin="0,0,0,15">
+<Grid.ColumnDefinitions>
+<ColumnDefinition Width="Auto"/>
+<ColumnDefinition Width="*"/>
+</Grid.ColumnDefinitions>
+<StackPanel Grid.Column="0" Orientation="Horizontal">
 <Button Content="Ekle" Command="{Binding YeniMarkaCommand}" Width="100" Height="35" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
 <Button Content="Düzenle" Command="{Binding DuzenleMarkaCommand}" Width="100" Height="35" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
 <Button Content="Sil" Command="{Binding SilMarkaCommand}" Width="60" Height="35" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
 </StackPanel>
+<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="35">
+<Grid>
+<Grid.ColumnDefinitions>
+<ColumnDefinition Width="35"/>
+<ColumnDefinition Width="*"/>
+</Grid.ColumnDefinitions>
+<TextBlock Text="🔍" VerticalAlignment="Center" HorizontalAlignment="Center" Opacity="0.5" Foreground="White"/>
+<TextBox x:Name="SearchBoxMarkaTanim" Grid.Column="1" BorderThickness="0" Background="Transparent" Foreground="White" VerticalContentAlignment="Center" Padding="5,0,15,0"
+Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" CaretBrush="White"/>
+<TextBlock Grid.Column="1" Text="Hızlı arama..." Foreground="#64748B" VerticalAlignment="Center" IsHitTestVisible="False" Margin="10,0,0,0">
+<TextBlock.Style>
+<Style TargetType="TextBlock">
+<Setter Property="Visibility" Value="Collapsed"/>
+<Style.Triggers>
+<DataTrigger Binding="{Binding Text, ElementName=SearchBoxMarkaTanim}" Value="">
+<Setter Property="Visibility" Value="Visible"/>
+</DataTrigger>
+</Style.Triggers>
+</Style>
+</TextBlock.Style>
+</TextBlock>
+</Grid>
+</Border>
+</Grid>
 <Border Grid.Row="1" CornerRadius="12" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Padding="1">
 <DataGrid ItemsSource="{Binding MarkalarView}" SelectedItem="{Binding SelectedMarka}"
 AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
@@ -1734,11 +1825,40 @@ Background="Transparent" BorderThickness="0" RowHeight="45">
 <RowDefinition Height="Auto"/>
 <RowDefinition Height="*"/>
 </Grid.RowDefinitions>
-<StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
+<Grid Grid.Row="0" Margin="0,0,0,15">
+<Grid.ColumnDefinitions>
+<ColumnDefinition Width="Auto"/>
+<ColumnDefinition Width="*"/>
+</Grid.ColumnDefinitions>
+<StackPanel Grid.Column="0" Orientation="Horizontal">
 <Button Content="Ekle" Command="{Binding YeniModelCommand}" Width="100" Height="35" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
 <Button Content="Düzenle" Command="{Binding DuzenleModelCommand}" Width="100" Height="35" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
 <Button Content="Sil" Command="{Binding SilModelCommand}" Width="60" Height="35" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
 </StackPanel>
+<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="35">
+<Grid>
+<Grid.ColumnDefinitions>
+<ColumnDefinition Width="35"/>
+<ColumnDefinition Width="*"/>
+</Grid.ColumnDefinitions>
+<TextBlock Text="🔍" VerticalAlignment="Center" HorizontalAlignment="Center" Opacity="0.5" Foreground="White"/>
+<TextBox x:Name="SearchBoxModelTanim" Grid.Column="1" BorderThickness="0" Background="Transparent" Foreground="White" VerticalContentAlignment="Center" Padding="5,0,15,0"
+Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" CaretBrush="White"/>
+<TextBlock Grid.Column="1" Text="Hızlı arama..." Foreground="#64748B" VerticalAlignment="Center" IsHitTestVisible="False" Margin="10,0,0,0">
+<TextBlock.Style>
+<Style TargetType="TextBlock">
+<Setter Property="Visibility" Value="Collapsed"/>
+<Style.Triggers>
+<DataTrigger Binding="{Binding Text, ElementName=SearchBoxModelTanim}" Value="">
+<Setter Property="Visibility" Value="Visible"/>
+</DataTrigger>
+</Style.Triggers>
+</Style>
+</TextBlock.Style>
+</TextBlock>
+</Grid>
+</Border>
+</Grid>
 <Border Grid.Row="1" CornerRadius="12" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Padding="1">
 <DataGrid ItemsSource="{Binding ModellerView}" SelectedItem="{Binding SelectedModel}"
 AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
@@ -1784,11 +1904,40 @@ Background="Transparent" BorderThickness="0" RowHeight="45">
 <RowDefinition Height="Auto"/>
 <RowDefinition Height="*"/>
 </Grid.RowDefinitions>
-<StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
+<Grid Grid.Row="0" Margin="0,0,0,15">
+<Grid.ColumnDefinitions>
+<ColumnDefinition Width="Auto"/>
+<ColumnDefinition Width="*"/>
+</Grid.ColumnDefinitions>
+<StackPanel Grid.Column="0" Orientation="Horizontal">
 <Button Content="Ekle" Command="{Binding YeniFirmaCommand}" Width="100" Height="35" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
 <Button Content="Düzenle" Command="{Binding DuzenleFirmaCommand}" Width="100" Height="35" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
 <Button Content="Sil" Command="{Binding SilFirmaCommand}" Width="60" Height="35" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
 </StackPanel>
+<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="35">
+<Grid>
+<Grid.ColumnDefinitions>
+<ColumnDefinition Width="35"/>
+<ColumnDefinition Width="*"/>
+</Grid.ColumnDefinitions>
+<TextBlock Text="🔍" VerticalAlignment="Center" HorizontalAlignment="Center" Opacity="0.5" Foreground="White"/>
+<TextBox x:Name="SearchBoxFirmaTanim" Grid.Column="1" BorderThickness="0" Background="Transparent" Foreground="White" VerticalContentAlignment="Center" Padding="5,0,15,0"
+Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" CaretBrush="White"/>
+<TextBlock Grid.Column="1" Text="Hızlı arama..." Foreground="#64748B" VerticalAlignment="Center" IsHitTestVisible="False" Margin="10,0,0,0">
+<TextBlock.Style>
+<Style TargetType="TextBlock">
+<Setter Property="Visibility" Value="Collapsed"/>
+<Style.Triggers>
+<DataTrigger Binding="{Binding Text, ElementName=SearchBoxFirmaTanim}" Value="">
+<Setter Property="Visibility" Value="Visible"/>
+</DataTrigger>
+</Style.Triggers>
+</Style>
+</TextBlock.Style>
+</TextBlock>
+</Grid>
+</Border>
+</Grid>
 <Border Grid.Row="1" CornerRadius="12" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Padding="1">
 <DataGrid ItemsSource="{Binding FirmalarView}" SelectedItem="{Binding SelectedFirma}"
 AutoGenerateColumns="False" IsReadOnly="True" HeadersVisibility="Column"
