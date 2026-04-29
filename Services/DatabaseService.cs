@@ -1453,16 +1453,15 @@ public class DatabaseService
         sb.AppendLine($"-- Tablo Sayısı: {tables.Length}");
         sb.AppendLine();
 
-        // Geri yükleme sırasında FK kısıtlamalarını devre dışı bırak
-        sb.AppendLine("-- FK kısıtlamalarını geçici olarak devre dışı bırak");
-        foreach (var table in tables)
-            sb.AppendLine($"ALTER TABLE IF EXISTS {table} DISABLE TRIGGER ALL;");
+        // Geri yükleme sırasında FK kısıtlamalarını ve tetikleyicileri devre dışı bırakmanın en güvenli yolu (Supabase uyumlu)
+        sb.AppendLine("-- Veri bütünlüğü kontrollerini ve tetikleyicileri geçici olarak devre dışı bırak");
+        sb.AppendLine("SET session_replication_role = 'replica';");
         sb.AppendLine();
 
         // Tüm tabloları temizle (CASCADE ile)
         sb.AppendLine("-- Tabloları temizle");
         foreach (var table in tables.Reverse())
-            sb.AppendLine($"TRUNCATE TABLE IF EXISTS {table} CASCADE;");
+            sb.AppendLine($"TRUNCATE TABLE {table} CASCADE;");
         sb.AppendLine();
 
         foreach (var table in tables)
@@ -1489,10 +1488,9 @@ public class DatabaseService
             }
         }
 
-        // FK kısıtlamalarını yeniden etkinleştir
-        sb.AppendLine("-- FK kısıtlamalarını yeniden etkinleştir");
-        foreach (var table in tables)
-            sb.AppendLine($"ALTER TABLE IF EXISTS {table} ENABLE TRIGGER ALL;");
+        // Veri bütünlüğü kontrollerini ve tetikleyicileri yeniden etkinleştir
+        sb.AppendLine("-- Veri bütünlüğü kontrollerini ve tetikleyicileri yeniden etkinleştir");
+        sb.AppendLine("SET session_replication_role = 'origin';");
         sb.AppendLine();
 
         // Sequence'ları güncelle (SERIAL sütunlar için)

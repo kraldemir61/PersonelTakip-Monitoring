@@ -173,7 +173,8 @@ public partial class DatabaseSettingsViewModel : ObservableObject
                     // TÜM SİSTEME HABER VER: Veriler değişti, listeleri yenileyin!
                     AppConfiguration.Instance.TriggerConfigurationChanged();
                     
-                    MessageBox.Show("Veriler başarıyla geri yüklendi ve sistem güncellendi.", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
+                    await Task.Delay(500); // UI'ın kendine gelmesi için yarım saniye bekle
+                    MessageBox.Show("VERİLER BAŞARIYLA GERİ YÜKLENDİ.\n\nSistem güncellendi, tüm listeleri kontrol edebilirsiniz.", "İşlem Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
                 {

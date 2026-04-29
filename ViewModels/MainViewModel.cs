@@ -532,8 +532,6 @@ public partial class MainViewModel : BaseViewModel
                     
                     // TÜM SİSTEME HABER VER: Veriler değişti, listeleri yenileyin!
                     AppConfiguration.Instance.TriggerConfigurationChanged();
-                    
-                    ShowSnackbarNotification("Veriler başarıyla geri yüklendi ve sistem güncellendi.");
                 }
                 catch (Exception ex)
                 {
@@ -1916,7 +1914,14 @@ public partial class MainViewModel : BaseViewModel
     {
         if (!IsSuperAdmin) return;
         
-        if (!Confirm("DİKKAT: Veritabanındaki tüm Personeller, Cihazlar, Hareket Geçmişi ve Bildirimler silinecektir. \n\nSadece Tanımlamalar (Şantiyeler, Bölümler vb.) ve Süper Admin hesabı kalacaktır. \n\nBu işlem geri alınamaz! Onaylıyor musunuz?")) return;
+        // 1. AŞAMA
+        if (!Confirm("1. ONAY: Veritabanındaki tüm Personeller, Cihazlar, Hareket Geçmişi ve Bildirimler silinecektir. Devam etmek istiyor musunuz?")) return;
+
+        // 2. AŞAMA
+        if (!Confirm("2. ONAY: Sadece Tanımlamalar (Şantiyeler, Bölümler vb.) kalacak, diğer TÜM VERİLER KALICI OLARAK SİLİNECEKTİR. Emin misiniz?")) return;
+
+        // 3. AŞAMA (SON)
+        if (MessageBox.Show("SON ONAY: Bu işlem geri alınamaz! Veritabanını temizlemek istediğinizden kesin olarak emin misiniz?", "KRİTİK ONAY", MessageBoxButton.YesNo, MessageBoxImage.Stop) != MessageBoxResult.Yes) return;
 
         IsBusy = true;
         try
@@ -1928,7 +1933,7 @@ public partial class MainViewModel : BaseViewModel
             await _databaseService.ExecuteSqlAsync("DELETE FROM personeller;");
             await _databaseService.ExecuteSqlAsync("DELETE FROM kullanicilar WHERE LOWER(kullanici_adi) != 'admin';");
             
-            ShowSuccess("Veritabanı başarıyla temizlendi.");
+            MessageBox.Show("Veritabanı başarıyla temizlendi.", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
             
             // Verileri yenile
             await LoadAllDataAsync();
@@ -1957,16 +1962,20 @@ public partial class MainViewModel : BaseViewModel
     {
         if (!IsSuperAdmin) return;
 
-        var mesaj = "DİKKAT! Bu işlem admin hesabınız hariç TÜM verileri (Personeller, Şantiyeler, Diğer Kullanıcılar, Tanımlamalar, Loglar) kalıcı olarak silecektir.\n\nSistemi sıfırlamak istediğinizden emin misiniz?";
-        
-        if (!Confirm(mesaj)) return;
-        if (!Confirm("SON UYARI: Bu işlem geri alınamaz. Onaylıyor musunuz?")) return;
+        // 1. AŞAMA
+        if (!Confirm("1. ONAY: Bu işlem admin hesabınız hariç TÜM verileri (Personeller, Şantiyeler, Tanımlamalar, Loglar) kalıcı olarak silecektir. Emin misiniz?")) return;
+
+        // 2. AŞAMA
+        if (!Confirm("2. ONAY: Sistemi fabrika ayarlarına döndürmek üzeresiniz. Her şey silinecek. Devam edilsin mi?")) return;
+
+        // 3. AŞAMA (SON)
+        if (MessageBox.Show("SON ONAY: Bu işlem GERİ ALINAMAZ. Sistemi sıfırlamak ve tüm verileri YOK ETMEK istediğinizden emin misiniz?", "SİSTEMİ SIFIRLA", MessageBoxButton.YesNo, MessageBoxImage.Stop) != MessageBoxResult.Yes) return;
 
         IsBusy = true;
         try
         {
             await _databaseService.SistemiSifirlaAsync(CurrentUser!.Id);
-            ShowSuccess("Sistem başarıyla sıfırlandı. Uygulama kapatılacak.");
+            MessageBox.Show("Sistem başarıyla sıfırlandı. Uygulama kapatılacak.", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
             Application.Current.Shutdown();
         }
         catch (Exception ex)
