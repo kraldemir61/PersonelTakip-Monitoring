@@ -1055,6 +1055,18 @@ public partial class MainViewModel : BaseViewModel
     {
         if (obj is not OfisCihazi c) return false;
 
+        // Yetki Kontrolü: Süper admin ve admin her şeyi görür, 
+        // normal kullanıcılar sadece kendi şantiyesini ve boştakileri görür
+        if (!IsAdmin)
+        {
+            // Ofis cihazlarında 'Boşta' durumu ZimmetliMi = false olmasıdır.
+            // 'Kendi Şantiyesi' ise zimmetli olduğu personelin şantiyesidir.
+            bool isIdle = !c.ZimmetliMi;
+            bool isMySantiye = c.ZimmetliMi && c.SantiyeId == CurrentUser?.SantiyeId;
+            
+            if (!isIdle && !isMySantiye) return false;
+        }
+
         // Şantiye Filtresi (Sol Menü)
         if (!string.IsNullOrEmpty(SelectedOfisFilterSantiye))
         {

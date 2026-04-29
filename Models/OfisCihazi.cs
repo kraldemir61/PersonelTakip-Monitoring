@@ -141,6 +141,13 @@ namespace PersonelTakip.Models
             set { _bulunduguSantiyeKod = value; OnPropertyChanged(); }
         }
 
+        private Guid? _santiyeId;
+        public Guid? SantiyeId
+        {
+            get => _santiyeId;
+            set { _santiyeId = value; OnPropertyChanged(); }
+        }
+
         // Ofis cihazları için Tur her zaman Ofis (1)
         public int Tur => 1;
 

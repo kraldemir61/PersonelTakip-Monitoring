@@ -452,7 +452,7 @@ public class DatabaseService
             SELECT c.id, c.seri_no, c.cihaz_adi, c.marka, c.model, c.ozellik, c.not_text as Not, 
                    c.durum, c.son_islem_tarihi, c.foto_path,
                    c.zimmetli_personel_id, p.adi_soyadi as ZimmetliPersonelAd, c.zimmet_tarihi,
-                   s.kod as BulunduguSantiyeKod
+                   s.kod as BulunduguSantiyeKod, s.id as SantiyeId
             FROM cihazlar c
             LEFT JOIN personeller p ON c.zimmetli_personel_id = p.id
             LEFT JOIN santiyeler s ON p.santiye_id = s.id
