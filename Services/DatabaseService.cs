@@ -1436,18 +1436,33 @@ public class DatabaseService
 
         var tables = new[]
         {
-            "santiyeler", "bolumler", "gorevler", "uyruklar", "para_birimleri",
-            "kullanicilar", "personeller", "cihazlar", "cihaz_adlari",
-            "cihaz_markalari", "cihaz_modelleri", "cihaz_firmalari",
-            "cihaz_hareketleri", "hareketler", "bildirimler", "bildirim_durumlari",
-            "audit_log"
+            // 1. Lookup tabloları (bağımlılık yok)
+            "bolumler", "gorevler", "uyruklar", "para_birimleri",
+            "cihaz_adlari", "cihaz_markalari", "cihaz_modelleri", "cihaz_firmalari",
+            // 2. Ana tablolar (sıralı bağımlılık)
+            "santiyeler", "kullanicilar", "personeller", "cihazlar",
+            // 3. İlişkili tablolar
+            "cihaz_hareketleri", "cihaz_zimmet_gecmisi",
+            "hareketler", "bildirimler", "bildirim_durumlari",
+            "audit_log", "cihaz_lisanslari"
         };
 
         var sb = new StringBuilder();
         sb.AppendLine("-- Personel Takip Sistemi - Otomatik Veritabanı Yedeği");
         sb.AppendLine($"-- Tarih: {DateTime.Now}");
+        sb.AppendLine($"-- Tablo Sayısı: {tables.Length}");
         sb.AppendLine();
-        sb.AppendLine("SET CONSTRAINTS ALL DEFERRED;");
+
+        // Geri yükleme sırasında FK kısıtlamalarını devre dışı bırak
+        sb.AppendLine("-- FK kısıtlamalarını geçici olarak devre dışı bırak");
+        foreach (var table in tables)
+            sb.AppendLine($"ALTER TABLE IF EXISTS {table} DISABLE TRIGGER ALL;");
+        sb.AppendLine();
+
+        // Tüm tabloları temizle (CASCADE ile)
+        sb.AppendLine("-- Tabloları temizle");
+        foreach (var table in tables.Reverse())
+            sb.AppendLine($"TRUNCATE TABLE IF EXISTS {table} CASCADE;");
         sb.AppendLine();
 
         foreach (var table in tables)
@@ -1457,8 +1472,7 @@ public class DatabaseService
                 var rows = (await conn.QueryAsync($"SELECT * FROM {table}")).ToList();
                 if (rows.Count > 0)
                 {
-                    sb.AppendLine($"-- Table: {table}");
-                    sb.AppendLine($"TRUNCATE TABLE {table} CASCADE;");
+                    sb.AppendLine($"-- Table: {table} ({rows.Count} kayıt)");
                     foreach (var row in rows)
                     {
                         var fields = (IDictionary<string, object>)row;
@@ -1474,6 +1488,18 @@ public class DatabaseService
                 sb.AppendLine($"-- Error backing up {table}: {ex.Message}");
             }
         }
+
+        // FK kısıtlamalarını yeniden etkinleştir
+        sb.AppendLine("-- FK kısıtlamalarını yeniden etkinleştir");
+        foreach (var table in tables)
+            sb.AppendLine($"ALTER TABLE IF EXISTS {table} ENABLE TRIGGER ALL;");
+        sb.AppendLine();
+
+        // Sequence'ları güncelle (SERIAL sütunlar için)
+        sb.AppendLine("-- Sequence'ları güncelle");
+        var serialTables = new[] { "bolumler", "gorevler", "uyruklar", "para_birimleri", "cihaz_adlari", "cihaz_markalari", "cihaz_modelleri", "cihaz_firmalari", "bildirimler" };
+        foreach (var t in serialTables)
+            sb.AppendLine($"SELECT setval(pg_get_serial_sequence('{t}', 'id'), COALESCE((SELECT MAX(id) FROM {t}), 0) + 1, false);");
 
         return sb.ToString();
     }
@@ -1499,7 +1525,10 @@ public class DatabaseService
         using var trans = conn.BeginTransaction();
         try
         {
-            await conn.ExecuteAsync(sql, transaction: trans);
+            // Dapper büyük SQL'leri tek seferde çalıştıramayabilir, NpgsqlCommand kullan
+            using var cmd = new NpgsqlCommand(sql, conn, trans);
+            cmd.CommandTimeout = 300; // 5 dakika timeout
+            await cmd.ExecuteNonQueryAsync();
             await trans.CommitAsync();
         }
         catch
