@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:PersonelTakip.Controls"
         mc:Ignorable="d"
-        Title="Ofis Cihazı Zimmet" Height="580" Width="450"
+        Title="Ofis Cihazı Zimmet" Height="600" Width="450"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         Style="{StaticResource ModernDialogStyle}"
         Background="#0F172A">
@@ -348,7 +348,7 @@
                 <StackPanel x:Name="PnlPersonel" Grid.Row="2">
                     <TextBlock Text="Personel Ara" Foreground="#3B82F6" FontSize="11" FontWeight="Bold" Margin="5,0,0,5"/>
                     <TextBox x:Name="TxtPersonelAra" Style="{StaticResource ModernTextBox}" Tag="İsim ile ara..." TextChanged="TxtPersonelAra_TextChanged"/>
-                    <ListBox x:Name="LstPersonel" Height="150" DisplayMemberPath="AdiSoyadi" SelectedValuePath="Id"
+                    <ListBox x:Name="LstPersonel" Height="80" DisplayMemberPath="AdiSoyadi" SelectedValuePath="Id"
                              Margin="0,0,0,15" MouseDoubleClick="LstPersonel_MouseDoubleClick"/>
                 </StackPanel>
 
@@ -357,7 +357,7 @@
                     <DatePicker x:Name="DtTarih" Style="{StaticResource ModernDatePicker}" CalendarOpened="DatePicker_CalendarOpened"/>
 
                     <TextBlock Text="Açıklama" Foreground="#3B82F6" FontSize="11" FontWeight="Bold" Margin="5,0,0,5"/>
-                    <TextBox x:Name="TxtAciklama" Style="{StaticResource ModernTextBox}" Height="80" TextWrapping="Wrap" AcceptsReturn="True" VerticalContentAlignment="Top" Padding="12,10"/>
+                    <TextBox x:Name="TxtAciklama" Style="{StaticResource ModernTextBox}" Height="40" TextWrapping="Wrap" AcceptsReturn="True" VerticalContentAlignment="Top" Padding="12,10"/>
                 </StackPanel>
 
                 <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">

@@ -1458,9 +1458,10 @@ Visibility="{Binding Text.IsEmpty, ElementName=SearchBoxOfisNew, Converter={Stat
 <ToggleButton Content="Boşta" Height="38" Width="100" Margin="15,0,5,0"
 IsChecked="{Binding OfisCihaziFilterAvailable}"
 Style="{StaticResource SidebarFilterToggleButton}"/>
-<ToggleButton Content="Zimmetli" Height="38" Width="100" Margin="5,0,0,0"
+<ToggleButton Content="Zimmetli" Height="38" Width="100" Margin="5,0,5,0"
 IsChecked="{Binding OfisCihaziFilterAssigned}"
 Style="{StaticResource SidebarFilterToggleButton}"/>
+<Button Content="Geçmiş" Command="{Binding OfisCihaziGecmisCommand}" Width="80" Height="38" Background="#6B7280" Foreground="White" Style="{StaticResource HeaderButton}" Margin="5,0,0,0"/>
 </StackPanel>
 <StackPanel Grid.Column="1" Orientation="Horizontal">
 <Button Command="{Binding YeniOfisCihaziCommand}" Style="{StaticResource ActionButton}" Background="#10B981"
@@ -1613,8 +1614,21 @@ ToolTip="{Binding ZimmetliPersonelAd, TargetNullValue='Boşta'}">
 <Button Content="Düzenle" Command="{Binding DataContext.DuzenleOfisCihaziCommand, RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource ActionButton}" Background="#F59E0B" Margin="0,0,5,0"/>
 <Button Content="Sil" Command="{Binding DataContext.SilOfisCihaziCommand, RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource ActionButton}" Background="#EF4444" Margin="5,0,0,0"/>
 </UniformGrid>
-<Button Content="ZİMMETLE / İADE" Command="{Binding DataContext.ZimmetleOfisCihaziCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-CommandParameter="{Binding}" Style="{StaticResource ActionButton}" Background="#2563EB" Margin="0,10,0,0"/>
+                            <Button Command="{Binding DataContext.ZimmetleIadeOfisCihaziCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}" Margin="0,10,0,0">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
+                                        <Setter Property="Content" Value="ZİMMETLE"/>
+                                        <Setter Property="Background" Value="#10B981"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ZimmetliMi}" Value="True">
+                                                <Setter Property="Content" Value="İADE AL"/>
+                                                <Setter Property="Background" Value="#EF4444"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
 </StackPanel>
 </ScrollViewer>
 </Grid>

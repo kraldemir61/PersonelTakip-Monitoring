@@ -11,13 +11,18 @@ namespace PersonelTakip.Models
         public DateTime Tarih { get; set; }
         public Guid KullaniciId { get; set; }
         public string Aciklama { get; set; }
-        public string IslemTuru { get; set; } // Transfer, Arıza, Bakım, Kalibrasyon, Giriş
+        public string IslemTuru { get; set; } // Transfer, Arıza, Bakım, Kalibrasyon, Giriş, Zimmet, İade
+        public CihazTuru CihazTuru { get; set; }
+        public Guid? PersonelId { get; set; }
+        public string? PersonelAd { get; set; }
 
         // Display Properties
         public string? CihazSeriNo { get; set; }
         public string? CihazAdi { get; set; }
         public string? CihazMarka { get; set; }
         public string? CihazModel { get; set; }
+        public string? CihazOzellik { get; set; }
+        public string? CihazNot { get; set; }
         public string? CihazBilgi { get; set; }
         public string? NeredenSantiyeAdi { get; set; }
         public string? NereyeSantiyeAdi { get; set; }

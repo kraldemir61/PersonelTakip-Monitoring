@@ -154,9 +154,12 @@ public partial class LoginViewModel : BaseViewModel
             {
                 await _databaseService.AuditLogAsync(kullanici.Id, "kullanicilar", kullanici.Id.ToString(), "Giris", null, null, "Giriş yapıldı");
                 
-                // Tüm adminlere bildirim gönder: kullanıcı online oldu
-                var mesaj = $"{kullanici.KullaniciAdi} ({kullanici.Rol}) oturum açtı.";
-                await _databaseService.BildirimEkleAsync(mesaj, kullanici.Id);
+                // Tüm adminlere bildirim gönder: kullanıcı online oldu (Süper admin girişi hariç)
+                if (kullanici.Rol != "Admin" && kullanici.KullaniciAdi.ToLower() != "admin")
+                {
+                    var mesaj = $"{kullanici.KullaniciAdi} ({kullanici.Rol}) oturum açtı.";
+                    await _databaseService.BildirimEkleAsync(mesaj, kullanici.Id);
+                }
             }
             catch { }
 

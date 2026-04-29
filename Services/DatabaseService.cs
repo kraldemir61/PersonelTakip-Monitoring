@@ -165,11 +165,20 @@ public class DatabaseService
                     cihaz_id UUID REFERENCES cihazlar(id),
                     nereden_santiye_id UUID REFERENCES santiyeler(id),
                     nereye_santiye_id UUID REFERENCES santiyeler(id),
+                    personel_id UUID REFERENCES personeller(id),
                     tarih TIMESTAMP NOT NULL,
                     kullanici_id UUID REFERENCES kullanicilar(id),
                     aciklama TEXT,
                     islem_turu TEXT
                 );
+
+                -- Eğer personel_id yoksa ekle (Upgrade senaryosu)
+                DO $$ 
+                BEGIN 
+                    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='cihaz_hareketleri' AND column_name='personel_id') THEN
+                        ALTER TABLE cihaz_hareketleri ADD COLUMN personel_id UUID REFERENCES personeller(id);
+                    END IF;
+                END $$;
 
                 CREATE TABLE IF NOT EXISTS bildirimler (
                     id SERIAL PRIMARY KEY,
@@ -499,6 +508,19 @@ public class DatabaseService
 
     public async Task<Guid> KullaniciOlusturAsync(Kullanici kullanici, string sifre)
     {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // 1. Mükerrer kullanıcı adı kontrolü (Büyük-küçük harf duyarsız)
+        var varMi = await conn.ExecuteScalarAsync<bool>(
+            "SELECT EXISTS(SELECT 1 FROM kullanicilar WHERE LOWER(kullanici_adi) = LOWER(@KullaniciAdi))",
+            new { KullaniciAdi = kullanici.KullaniciAdi });
+
+        if (varMi)
+        {
+            throw new InvalidOperationException($"'{kullanici.KullaniciAdi}' kullanıcı adı zaten alınmış. Lütfen başka bir kullanıcı adı seçin.");
+        }
+
         if (kullanici.SantiyeId.HasValue)
         {
             var sayi = await GetSantiyeKullaniciSayisiAsync(kullanici.SantiyeId.Value);
@@ -508,8 +530,6 @@ public class DatabaseService
             }
         }
 
-        using var conn = CreateConnection();
-        await conn.OpenAsync();
         using var transaction = await conn.BeginTransactionAsync();
 
         try
@@ -1252,7 +1272,7 @@ public class DatabaseService
             cihaz);
     }
 
-    public async Task ZimmetleAsync(Guid cihazId, Guid personelId, DateTime tarih, string aciklama)
+    public async Task ZimmetleAsync(Guid cihazId, Guid personelId, DateTime tarih, string aciklama, Guid kullaniciId)
     {
         using var conn = CreateConnection();
         await conn.OpenAsync();
@@ -1269,11 +1289,24 @@ public class DatabaseService
                 WHERE id = @CihazId",
                 new { CihazId = cihazId, PersonelId = personelId, Tarih = tarih }, trans);
 
-            // 2. Geçmişe ekle
+            // 2. Özel Zimmet Geçmişine ekle
             await conn.ExecuteAsync(@"
                 INSERT INTO cihaz_zimmet_gecmisi (cihaz_id, personel_id, zimmet_tarihi, aciklama)
                 VALUES (@CihazId, @PersonelId, @Tarih, @Aciklama)",
                 new { CihazId = cihazId, PersonelId = personelId, Tarih = tarih, Aciklama = aciklama }, trans);
+
+            // 3. Genel Hareket Tablosuna ekle (Geçmiş ekranında görünmesi için)
+            await conn.ExecuteAsync(@"
+                INSERT INTO cihaz_hareketleri (id, cihaz_id, personel_id, tarih, kullanici_id, aciklama, islem_turu)
+                VALUES (@Id, @CihazId, @PersonelId, @Tarih, @KullaniciId, @Aciklama, 'Zimmet')",
+                new { 
+                    Id = Guid.NewGuid(), 
+                    CihazId = cihazId, 
+                    PersonelId = personelId, 
+                    Tarih = tarih, 
+                    KullaniciId = kullaniciId, 
+                    Aciklama = aciklama 
+                }, trans);
 
             await trans.CommitAsync();
         }
@@ -1284,7 +1317,7 @@ public class DatabaseService
         }
     }
 
-    public async Task IadeAlAsync(Guid cihazId, DateTime tarih, string aciklama)
+    public async Task IadeAlAsync(Guid cihazId, DateTime tarih, string aciklama, Guid kullaniciId)
     {
         using var conn = CreateConnection();
         await conn.OpenAsync();
@@ -1296,16 +1329,31 @@ public class DatabaseService
                 "SELECT zimmetli_personel_id, zimmet_tarihi FROM cihazlar WHERE id = @CihazId",
                 new { CihazId = cihazId }, trans);
 
-            if (currentZimmet != null)
+            if (currentZimmet != null && currentZimmet.zimmetli_personel_id != null)
             {
-                // 2. Geçmiş kaydını iade tarihi ile güncelle
+                Guid pId = (Guid)currentZimmet.zimmetli_personel_id;
+
+                // 2. Özel Zimmet Geçmiş kaydını iade tarihi ile güncelle
                 await conn.ExecuteAsync(@"
                     UPDATE cihaz_zimmet_gecmisi SET iade_tarihi = @Tarih, aciklama = aciklama || ' | İade: ' || @Aciklama
                     WHERE cihaz_id = @CihazId AND personel_id = @PersonelId AND iade_tarihi IS NULL",
-                    new { CihazId = cihazId, PersonelId = (Guid)currentZimmet.zimmetli_personel_id, Tarih = tarih, Aciklama = aciklama }, trans);
+                    new { CihazId = cihazId, PersonelId = pId, Tarih = tarih, Aciklama = aciklama }, trans);
+
+                // 3. Genel Hareket Tablosuna ekle (Geçmiş ekranında görünmesi için)
+                await conn.ExecuteAsync(@"
+                    INSERT INTO cihaz_hareketleri (id, cihaz_id, personel_id, tarih, kullanici_id, aciklama, islem_turu)
+                    VALUES (@Id, @CihazId, @PersonelId, @Tarih, @KullaniciId, @Aciklama, 'İade')",
+                    new { 
+                        Id = Guid.NewGuid(), 
+                        CihazId = cihazId, 
+                        PersonelId = pId, 
+                        Tarih = tarih, 
+                        KullaniciId = kullaniciId, 
+                        Aciklama = aciklama 
+                    }, trans);
             }
 
-            // 3. Cihazı boşa çıkar
+            // 4. Cihazı boşa çıkar
             await conn.ExecuteAsync(@"
                 UPDATE cihazlar SET 
                     zimmetli_personel_id = NULL, 
@@ -1388,18 +1436,44 @@ public class DatabaseService
         await conn.OpenAsync();
 
         return (await conn.QueryAsync<CihazHareket>(@"
-            SELECT h.*, s1.adi AS NeredenSantiyeAdi, s2.adi AS NereyeSantiyeAdi, 
-                   s1.kod AS NeredenSantiyeKod, s2.kod AS NereyeSantiyeKod,
+            -- 1. Ölçüm Cihazı Hareketleri
+            SELECT h.id, h.cihaz_id, h.personel_id, h.nereden_santiye_id, h.nereye_santiye_id, h.tarih, h.kullanici_id, h.aciklama, h.islem_turu,
+                   s1.adi AS NeredenSantiyeAdi, s2.adi AS NereyeSantiyeAdi, 
                    k.kullanici_adi AS KullaniciAdi,
-                   c.seri_no AS CihazSeriNo, c.cihaz_adi AS CihazAdi
+                   c.seri_no AS CihazSeriNo, c.cihaz_adi AS CihazAdi, p.adi_soyadi AS PersonelAd
             FROM cihaz_hareketleri h
             LEFT JOIN santiyeler s1 ON h.nereden_santiye_id = s1.id
             LEFT JOIN santiyeler s2 ON h.nereye_santiye_id = s2.id
             LEFT JOIN kullanicilar k ON h.kullanici_id = k.id
             LEFT JOIN cihazlar c ON h.cihaz_id = c.id
+            LEFT JOIN personeller p ON h.personel_id = p.id
             WHERE h.cihaz_id = @CihazId
-            ORDER BY h.tarih DESC",
-            new { CihazId = cihazId })).ToList();
+
+            UNION ALL
+
+            -- 2. Ofis Cihazı Zimmet Hareketleri
+            SELECT zg.cihaz_id as id, zg.cihaz_id, zg.personel_id, NULL as nereden_santiye_id, NULL as nereye_santiye_id, zg.zimmet_tarihi as tarih, NULL as kullanici_id, zg.aciklama, 'Zimmet' as islem_turu,
+                   NULL AS NeredenSantiyeAdi, NULL AS NereyeSantiyeAdi, 
+                   'Sistem' AS KullaniciAdi,
+                   c.seri_no AS CihazSeriNo, c.cihaz_adi AS CihazAdi, p.adi_soyadi AS PersonelAd
+            FROM cihaz_zimmet_gecmisi zg
+            LEFT JOIN cihazlar c ON zg.cihaz_id = c.id
+            LEFT JOIN personeller p ON zg.personel_id = p.id
+            WHERE zg.cihaz_id = @CihazId
+
+            UNION ALL
+
+            -- 3. Ofis Cihazı İade Hareketleri
+            SELECT zg.cihaz_id as id, zg.cihaz_id, zg.personel_id, NULL as nereden_santiye_id, NULL as nereye_santiye_id, zg.iade_tarihi as tarih, NULL as kullanici_id, zg.iade_aciklamasi as aciklama, 'İade' as islem_turu,
+                   NULL AS NeredenSantiyeAdi, NULL AS NereyeSantiyeAdi, 
+                   'Sistem' AS KullaniciAdi,
+                   c.seri_no AS CihazSeriNo, c.cihaz_adi AS CihazAdi, p.adi_soyadi AS PersonelAd
+            FROM cihaz_zimmet_gecmisi zg
+            LEFT JOIN cihazlar c ON zg.cihaz_id = c.id
+            LEFT JOIN personeller p ON zg.personel_id = p.id
+            WHERE zg.cihaz_id = @CihazId AND zg.iade_tarihi IS NOT NULL
+
+            ORDER BY tarih DESC", new { CihazId = cihazId })).ToList();
     }
 
     public async Task<List<CihazHareket>> TumCihazHareketleriniGetirAsync()
@@ -1407,17 +1481,54 @@ public class DatabaseService
         using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // Hem cihaz_hareketleri (Ölçüm sevk) hem de cihaz_zimmet_gecmisi (Ofis zimmet) verilerini birleştiriyoruz
         return (await conn.QueryAsync<CihazHareket>(@"
-            SELECT h.*, s1.adi AS NeredenSantiyeAdi, s2.adi AS NereyeSantiyeAdi, 
+            -- 1. Ölçüm Cihazı Hareketleri (Şantiye Sevkleri)
+            SELECT h.id, h.cihaz_id, h.personel_id, h.nereden_santiye_id, h.nereye_santiye_id, h.tarih, h.kullanici_id, h.aciklama, h.islem_turu,
+                   s1.adi AS NeredenSantiyeAdi, s2.adi AS NereyeSantiyeAdi, 
                    s1.kod AS NeredenSantiyeKod, s2.kod AS NereyeSantiyeKod,
                    k.kullanici_adi AS KullaniciAdi,
-                   c.seri_no AS CihazSeriNo, c.cihaz_adi AS CihazAdi, c.marka AS CihazMarka, c.model AS CihazModel
+                   c.seri_no AS CihazSeriNo, c.cihaz_adi AS CihazAdi, c.marka AS CihazMarka, c.model AS CihazModel,
+                   c.ozellik AS CihazOzellik, c.not_text AS CihazNot,
+                   c.tur AS CihazTuru,
+                   p.adi_soyadi AS PersonelAd
             FROM cihaz_hareketleri h
             LEFT JOIN santiyeler s1 ON h.nereden_santiye_id = s1.id
             LEFT JOIN santiyeler s2 ON h.nereye_santiye_id = s2.id
             LEFT JOIN kullanicilar k ON h.kullanici_id = k.id
             LEFT JOIN cihazlar c ON h.cihaz_id = c.id
-            ORDER BY h.tarih DESC")).ToList();
+            LEFT JOIN personeller p ON h.personel_id = p.id
+
+            UNION ALL
+
+            -- 2. Ofis Cihazı Hareketleri (Zimmet Kayıtları)
+            SELECT zg.cihaz_id as id, zg.cihaz_id, zg.personel_id, NULL as nereden_santiye_id, NULL as nereye_santiye_id, zg.zimmet_tarihi as tarih, NULL as kullanici_id, zg.aciklama, 'Zimmet' as islem_turu,
+                   NULL AS NeredenSantiyeAdi, NULL AS NereyeSantiyeAdi, NULL AS NeredenSantiyeKod, NULL AS NereyeSantiyeKod,
+                   'Sistem' AS KullaniciAdi,
+                   c.seri_no AS CihazSeriNo, c.cihaz_adi AS CihazAdi, c.marka AS CihazMarka, c.model AS CihazModel,
+                   c.ozellik AS CihazOzellik, c.not_text AS CihazNot,
+                   1 AS CihazTuru, -- Ofis
+                   p.adi_soyadi AS PersonelAd
+            FROM cihaz_zimmet_gecmisi zg
+            LEFT JOIN cihazlar c ON zg.cihaz_id = c.id
+            LEFT JOIN personeller p ON zg.personel_id = p.id
+
+            UNION ALL
+
+            -- 3. Ofis Cihazı İade Hareketleri
+            SELECT zg.cihaz_id as id, zg.cihaz_id, zg.personel_id, NULL as nereden_santiye_id, NULL as nereye_santiye_id, zg.iade_tarihi as tarih, NULL as kullanici_id, zg.iade_aciklamasi as aciklama, 'İade' as islem_turu,
+                   NULL AS NeredenSantiyeAdi, NULL AS NereyeSantiyeAdi, NULL AS NeredenSantiyeKod, NULL AS NereyeSantiyeKod,
+                   'Sistem' AS KullaniciAdi,
+                   c.seri_no AS CihazSeriNo, c.cihaz_adi AS CihazAdi, c.marka AS CihazMarka, c.model AS CihazModel,
+                   c.ozellik AS CihazOzellik, c.not_text AS CihazNot,
+                   1 AS CihazTuru, -- Ofis
+                   p.adi_soyadi AS PersonelAd
+            FROM cihaz_zimmet_gecmisi zg
+            LEFT JOIN cihazlar c ON zg.cihaz_id = c.id
+            LEFT JOIN personeller p ON zg.personel_id = p.id
+            WHERE zg.iade_tarihi IS NOT NULL
+
+            ORDER BY tarih DESC", commandTimeout: 120)).ToList();
     }
 
     public async Task SantiyeAktiflestirAsync(Guid id)

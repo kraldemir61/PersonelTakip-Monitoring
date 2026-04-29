@@ -5,7 +5,7 @@
         Title="Personel Takip Sistemi - Giriş" Height="640" Width="440"
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
         Style="{StaticResource ModernWindowStyle}"
-        Background="#0F172A"
+        Background="#151515"
         Loaded="Window_Loaded">
 
     <Window.InputBindings>

@@ -25,10 +25,15 @@ public partial class CihazHareketGecmisiViewModel : BaseViewModel
     [ObservableProperty]
     private string? _searchText = string.Empty;
 
-    public CihazHareketGecmisiViewModel(DatabaseService databaseService, ExcelService excelService)
+    [ObservableProperty]
+    private CihazTuru? _filtreTuru;
+
+    public CihazHareketGecmisiViewModel(DatabaseService databaseService, ExcelService excelService, CihazTuru? filtreTuru = null)
     {
         _databaseService = databaseService;
         _excelService = excelService;
+        FiltreTuru = filtreTuru;
+        
         HareketlerView = CollectionViewSource.GetDefaultView(Hareketler);
         HareketlerView.Filter = FilterHareketler;
 
@@ -42,7 +47,18 @@ public partial class CihazHareketGecmisiViewModel : BaseViewModel
         {
             var result = await _databaseService.TumCihazHareketleriniGetirAsync();
             Hareketler.Clear();
-            foreach (var item in result)
+            
+            // Sadece Ölçüm Cihazlarını filtrele (CihazTuru = 0 / Olcum) ve personel zimmeti olmayanları getir
+            var filteredResult = result.Where(x => x.CihazTuru == CihazTuru.Olcum && string.IsNullOrEmpty(x.PersonelAd));
+
+            // Eğer cihazId bazlı bir filtre varsa (tekil geçmiş)
+            if (FiltreTuru.HasValue)
+            {
+                // FiltreTuru burada cihazId mi yoksa başka bir şey mi kontrol etmeliyiz
+                // Ama genel listede sadece ölçüm cihazlarını görmek istediğimiz kesin
+            }
+
+            foreach (var item in filteredResult)
             {
                 Hareketler.Add(item);
             }

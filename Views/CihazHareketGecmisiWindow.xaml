@@ -113,26 +113,35 @@
                             <Setter Property="Foreground" Value="#CBD5E1"/>
                             <Setter Property="BorderThickness" Value="0,0,0,1"/>
                             <Setter Property="BorderBrush" Value="#334155"/>
+                            <Setter Property="Height" Value="50"/>
                             <Style.Triggers>
                                 <Trigger Property="AlternationIndex" Value="1">
                                     <Setter Property="Background" Value="#162133"/>
                                 </Trigger>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#334155"/>
+                                    <Setter Property="Background" Value="#1E293B"/>
                                     <Setter Property="Foreground" Value="White"/>
                                 </Trigger>
                                 <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="#3B82F6"/>
+                                    <Setter Property="Background" Value="#FF151515"/> <!-- Görsel 3 stili -->
                                     <Setter Property="Foreground" Value="White"/>
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
                         <Style TargetType="DataGridCell">
-                            <Setter Property="BorderThickness" Value="0"/>
-                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="DataGridCell">
+                                        <Border Background="{TemplateBinding Background}" BorderThickness="0">
+                                            <ContentPresenter VerticalAlignment="Center" Margin="20,0"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
                             <Style.Triggers>
                                 <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Background" Value="#FF151515"/>
+                                    <Setter Property="Foreground" Value="#3B82F6"/>
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -173,8 +182,42 @@
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
-                        <DataGridTextColumn Header="Nereden" Binding="{Binding NeredenSantiyeKod}" Width="120" ElementStyle="{StaticResource CenterLeftStyle}"/>
-                        <DataGridTextColumn Header="Nereye" Binding="{Binding NereyeSantiyeKod}" Width="120" ElementStyle="{StaticResource CenterLeftStyle}"/>
+                        <DataGridTextColumn Header="Personel" Binding="{Binding PersonelAd}" Width="150" ElementStyle="{StaticResource CenterLeftStyle}">
+                            <DataGridTextColumn.HeaderStyle>
+                                <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.FiltreTuru, RelativeSource={RelativeSource AncestorType=Window}}" Value="Ofis">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding DataContext.FiltreTuru, RelativeSource={RelativeSource AncestorType=Window}}" Value="Olcum">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGridTextColumn.HeaderStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Nereden" Binding="{Binding NeredenSantiyeKod}" Width="120" ElementStyle="{StaticResource CenterLeftStyle}">
+                            <DataGridTextColumn.HeaderStyle>
+                                <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.FiltreTuru, RelativeSource={RelativeSource AncestorType=Window}}" Value="Ofis">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGridTextColumn.HeaderStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Nereye" Binding="{Binding NereyeSantiyeKod}" Width="120" ElementStyle="{StaticResource CenterLeftStyle}">
+                            <DataGridTextColumn.HeaderStyle>
+                                <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.FiltreTuru, RelativeSource={RelativeSource AncestorType=Window}}" Value="Ofis">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGridTextColumn.HeaderStyle>
+                        </DataGridTextColumn>
                         <DataGridTextColumn Header="Açıklama" Binding="{Binding Aciklama}" Width="*" ElementStyle="{StaticResource CenterLeftStyle}"/>
                         <DataGridTextColumn Header="Yapan" Binding="{Binding KullaniciAdi}" Width="120" ElementStyle="{StaticResource CenterLeftStyle}"/>
                     </DataGrid.Columns>

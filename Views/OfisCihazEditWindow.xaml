@@ -6,7 +6,7 @@
         xmlns:conv="clr-namespace:PersonelTakip.Converters"
         xmlns:controls="clr-namespace:PersonelTakip.Controls"
         mc:Ignorable="d"
-        Title="{Binding Title}" Height="540" Width="550"
+        Title="{Binding Title}" Height="620" Width="550"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         Style="{StaticResource ModernDialogStyle}"
         Background="#0F172A">

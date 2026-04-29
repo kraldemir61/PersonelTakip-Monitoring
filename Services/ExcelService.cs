@@ -539,5 +539,59 @@ public class ExcelService
         headerRange.Style.Fill.BackgroundColor = XLColor.Khaki;
     }
 
+    public void OfisHareketListesiAktar(List<CihazHareket> hareketler)
+    {
+        var saveFileDialog = new SaveFileDialog
+        {
+            Filter = "Excel Files (*.xlsx)|*.xlsx",
+            FileName = $"Ofis_Cihaz_Gecmisi_{DateTime.Now:dd.MM.yyyy HH.mm.ss}.xlsx"
+        };
+
+        if (saveFileDialog.ShowDialog() == true)
+        {
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Hareketler");
+                
+                // Headers
+                worksheet.Cell(1, 1).Value = "İşlem Tarihi";
+                worksheet.Cell(1, 2).Value = "İşlem Türü";
+                worksheet.Cell(1, 3).Value = "Personel";
+                worksheet.Cell(1, 4).Value = "Cihaz Adı";
+                worksheet.Cell(1, 5).Value = "Marka";
+                worksheet.Cell(1, 6).Value = "Model";
+                worksheet.Cell(1, 7).Value = "Seri No";
+                worksheet.Cell(1, 8).Value = "Özellikler";
+                worksheet.Cell(1, 9).Value = "Cihaz Kayıt Notu";
+                worksheet.Cell(1, 10).Value = "Zimmet/İade Notu";
+                worksheet.Cell(1, 11).Value = "İşlemi Yapan";
+
+                var headerRange = worksheet.Range(1, 1, 1, 11);
+                headerRange.Style.Font.Bold = true;
+                headerRange.Style.Fill.BackgroundColor = XLColor.LightBlue;
+
+                int row = 2;
+                foreach (var h in hareketler)
+                {
+                    worksheet.Cell(row, 1).Value = h.Tarih.ToString("dd.MM.yyyy HH:mm");
+                    worksheet.Cell(row, 2).Value = h.IslemTuru;
+                    worksheet.Cell(row, 3).Value = h.PersonelAd;
+                    worksheet.Cell(row, 4).Value = h.CihazAdi;
+                    worksheet.Cell(row, 5).Value = h.CihazMarka;
+                    worksheet.Cell(row, 6).Value = h.CihazModel;
+                    worksheet.Cell(row, 7).Value = h.CihazSeriNo;
+                    worksheet.Cell(row, 8).Value = h.CihazOzellik;
+                    worksheet.Cell(row, 9).Value = h.CihazNot;
+                    worksheet.Cell(row, 10).Value = h.Aciklama;
+                    worksheet.Cell(row, 11).Value = h.KullaniciAdi;
+                    row++;
+                }
+
+                worksheet.Columns().AdjustToContents();
+                workbook.SaveAs(saveFileDialog.FileName);
+            }
+        }
+    }
+
     #endregion
 }

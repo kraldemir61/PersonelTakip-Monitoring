@@ -579,6 +579,9 @@ public partial class MainViewModel : BaseViewModel
 
                 if (Guid.TryParse(tetikleyenIdStr, out var tetikleyenId))
                 {
+                    // Eğer işlemi yapan kişi BEN isem, bildirim gösterme ve verileri zaten ben güncelledim
+                    if (tetikleyenId == CurrentUser?.Id) return;
+
                     // Tüm güncellemeleri doğrudan UI thread'i üzerinde sırayla yapıyoruz
                     Application.Current.Dispatcher.InvokeAsync(async () => 
                     {
@@ -1119,33 +1122,27 @@ public partial class MainViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private async Task ZimmetleOfisCihaziAsync(OfisCihazi? cihaz)
+    private async Task ZimmetleIadeOfisCihaziAsync(OfisCihazi? cihaz)
     {
         if (cihaz == null) return;
 
-        var window = new Views.OfisCihazZimmetWindow(cihaz, false) { Owner = Application.Current.MainWindow };
+        // Cihaz zimmetliyse iade al modunda, değilse zimmetle modunda aç
+        bool isIade = cihaz.ZimmetliMi;
+        
+        var window = new Views.OfisCihazZimmetWindow(cihaz, isIade) { Owner = Application.Current.MainWindow };
         if (window.ShowDialog() == true)
         {
             await LoadCihazlarAsync();
             OfisCihazlariView?.Refresh();
-            ShowSuccess("Cihaz zimmetlendi.");
+            ShowSuccess(isIade ? "Cihaz iade alındı." : "Cihaz zimmetlendi.");
         }
     }
 
     [RelayCommand]
-    private async Task IadeAlOfisCihaziAsync(OfisCihazi? cihaz)
-    {
-        if (cihaz == null) return;
-        if (!cihaz.ZimmetliMi) return;
+    private async Task ZimmetleOfisCihaziAsync(OfisCihazi? cihaz) => await ZimmetleIadeOfisCihaziAsync(cihaz);
 
-        var window = new Views.OfisCihazZimmetWindow(cihaz, true) { Owner = Application.Current.MainWindow };
-        if (window.ShowDialog() == true)
-        {
-            await LoadCihazlarAsync();
-            OfisCihazlariView?.Refresh();
-            ShowSuccess("Cihaz iade alındı.");
-        }
-    }
+    [RelayCommand]
+    private async Task IadeAlOfisCihaziAsync(OfisCihazi? cihaz) => await ZimmetleIadeOfisCihaziAsync(cihaz);
 
     [RelayCommand]
     public async Task YeniPersonelAsync()
@@ -1369,6 +1366,14 @@ public partial class MainViewModel : BaseViewModel
             await _databaseService.CihazSilAsync(SelectedOfisCihazi.Id);
             await LoadCihazlarAsync();
         }
+    }
+
+    [RelayCommand]
+    public void OfisCihaziGecmis()
+    {
+        var vm = new OfisCihazGecmisViewModel(_databaseService, _excelService, SelectedOfisCihazi);
+        var window = new Views.OfisCihazGecmisWindow(vm) { Owner = Application.Current.MainWindow };
+        window.ShowDialog();
     }
 
     [RelayCommand]
