@@ -260,55 +260,61 @@ Visibility="{Binding HasUnreadBildirimler, Converter={StaticResource BoolToVisib
 IsHitTestVisible="False">
 <TextBlock Text="{Binding UnreadBildirimCount}" Foreground="White" FontSize="8" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="2,0"/>
 </Border>
-<Popup IsOpen="{Binding IsBildirimPopupOpen}" StaysOpen="False" Placement="Bottom" HorizontalOffset="0" VerticalOffset="8" AllowsTransparency="True" PopupAnimation="Fade">
-<Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="8" Width="320" MaxHeight="450" Padding="15" Margin="5,5,5,15">
-<Grid>
-<Grid.RowDefinitions>
-<RowDefinition Height="Auto"/>
-<RowDefinition Height="Auto"/>
-<RowDefinition Height="*"/>
-</Grid.RowDefinitions>
-<Grid Margin="0,0,0,10">
-<Grid.ColumnDefinitions>
-<ColumnDefinition Width="*"/>
-<ColumnDefinition Width="Auto"/>
-</Grid.ColumnDefinitions>
-<TextBlock Text="Bildirim Merkezi" FontWeight="Bold" FontSize="15" Foreground="White" VerticalAlignment="Center"/>
-<Button Grid.Column="1" Content="Tümünü Sil" Command="{Binding TumBildirimleriSilCommand}" Background="Transparent" Foreground="#EF4444" FontSize="11" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" VerticalAlignment="Center">
-<Button.Style>
-<Style TargetType="Button">
-<Setter Property="Template">
-<Setter.Value>
-<ControlTemplate TargetType="Button">
-<TextBlock Text="{TemplateBinding Content}" TextDecorations="Underline"/>
-</ControlTemplate>
-</Setter.Value>
-</Setter>
-</Style>
-</Button.Style>
-</Button>
-</Grid>
-<Rectangle Grid.Row="1" Height="1" Fill="#334155" Margin="-15,0,-15,10"/>
-<ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-<ItemsControl ItemsSource="{Binding BildirimlerListesi}">
-<ItemsControl.ItemTemplate>
-<DataTemplate>
-<Border BorderBrush="#334155" BorderThickness="0,0,0,1" Padding="5,10" Background="Transparent">
-<Grid>
-<Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-<Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-<TextBlock Text="{Binding Mesaj}" TextWrapping="Wrap" FontSize="12" Foreground="#E2E8F0" LineHeight="18"/>
-<Button Grid.Column="1" Content="âœ•" Command="{Binding DataContext.BildirimSilCommand, RelativeSource={RelativeSource AncestorType=Popup}}" CommandParameter="{Binding}" Foreground="#64748B" Background="Transparent" BorderThickness="0" Cursor="Hand" VerticalAlignment="Top" Margin="5,0,0,0"/>
-<TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Tarih, StringFormat=dd.MM.yyyy HH:mm}" Foreground="#64748B" FontSize="10" Margin="0,6,0,0" HorizontalAlignment="Right"/>
-</Grid>
-</Border>
-</DataTemplate>
-</ItemsControl.ItemTemplate>
-</ItemsControl>
-</ScrollViewer>
-</Grid>
-</Border>
-</Popup>
+            <Popup IsOpen="{Binding IsBildirimPopupOpen}" StaysOpen="False" Placement="Bottom" HorizontalOffset="0" VerticalOffset="8" AllowsTransparency="True" PopupAnimation="Fade">
+                <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="8" Width="330" MaxHeight="350" Padding="15" Margin="5,5,5,15">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Bildirim Merkezi" FontWeight="Bold" FontSize="15" Foreground="White" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Content="Tümünü Sil" Command="{Binding TumBildirimleriSilCommand}" Background="Transparent" Foreground="#EF4444" FontSize="11" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" VerticalAlignment="Center">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <TextBlock Text="{TemplateBinding Content}" TextDecorations="Underline"/>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </Grid>
+                        <Rectangle Grid.Row="1" Height="1" Fill="#334155" Margin="-15,0,-15,10"/>
+                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <ItemsControl ItemsSource="{Binding BildirimlerListesi}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#334155" BorderThickness="0,0,0,1" Padding="5,10" Background="Transparent">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Mesaj}" TextWrapping="Wrap" FontSize="12" Foreground="#E2E8F0" LineHeight="18"/>
+                                                <Button Grid.Column="1" Content="✕" Command="{Binding DataContext.BildirimSilCommand, RelativeSource={RelativeSource AncestorType=Popup}}" CommandParameter="{Binding}" Foreground="#64748B" Background="Transparent" BorderThickness="0" Cursor="Hand" VerticalAlignment="Top" Margin="5,0,0,0"/>
+                                                <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Tarih, StringFormat=dd.MM.yyyy HH:mm}" Foreground="#64748B" FontSize="10" Margin="0,6,0,0" HorizontalAlignment="Right"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+            </Popup>
 </Grid>
 <Button Content="Şifre Değiştir" Width="90" Height="24" FontSize="11" Padding="0" Command="{Binding ParolaDegistirCommand}" Margin="0,0,8,0" Background="#FF5D0BF5" Foreground="White" Style="{StaticResource HeaderButton}" WindowChrome.IsHitTestVisibleInChrome="True"/>
 </StackPanel>
