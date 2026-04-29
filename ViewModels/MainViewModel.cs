@@ -1092,16 +1092,14 @@ public partial class MainViewModel : BaseViewModel
 
     partial void OnOfisCihaziFilterAvailableChanged(bool value)
     {
-        if (value) _ofisCihaziFilterAssigned = false;
-        OnPropertyChanged(nameof(OfisCihaziFilterAssigned));
+        if (value) OfisCihaziFilterAssigned = false;
         OfisCihazlariView?.Refresh();
         CalculateDeviceStats();
     }
 
     partial void OnOfisCihaziFilterAssignedChanged(bool value)
     {
-        if (value) _ofisCihaziFilterAvailable = false;
-        OnPropertyChanged(nameof(OfisCihaziFilterAvailable));
+        if (value) OfisCihaziFilterAvailable = false;
         OfisCihazlariView?.Refresh();
         CalculateDeviceStats();
     }

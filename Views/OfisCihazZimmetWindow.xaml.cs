@@ -107,5 +107,36 @@ namespace PersonelTakip.Views
             DialogResult = false;
             Close();
         }
+        private void DatePicker_CalendarOpened(object sender, RoutedEventArgs e)
+        {
+            Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Render, new Action(() =>
+            {
+                if (sender is DatePicker dp)
+                    FixCalendarColors(dp);
+            }));
+        }
+
+        private void FixCalendarColors(DependencyObject parent)
+        {
+            for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i);
+
+                if (child is TextBlock tb)
+                {
+                    tb.Foreground = System.Windows.Media.Brushes.White;
+                }
+                else if (child is System.Windows.Controls.Primitives.CalendarDayButton dayBtn)
+                {
+                    dayBtn.Foreground = System.Windows.Media.Brushes.White;
+                }
+                else if (child is System.Windows.Controls.Primitives.CalendarButton calBtn)
+                {
+                    calBtn.Foreground = System.Windows.Media.Brushes.White;
+                }
+
+                FixCalendarColors(child);
+            }
+        }
     }
 }

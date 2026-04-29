@@ -25,10 +25,10 @@ namespace PersonelTakip.ViewModels
         private ObservableCollection<Santiye> _santiyeList;
 
         [ObservableProperty]
-        private string _islemTuru; // Transfer, Arıza, Bakım, Kalibrasyon
+        private string _islemTuru; // Şantiyeye Sevk, Arıza, Bakım, Kalibrasyon
 
         [ObservableProperty]
-        private ObservableCollection<string> _islemTurleri = new() { "Transfer", "Arıza", "Bakım", "Kalibrasyon", "Şantiyeye Sevk", "Diğer" };
+        private ObservableCollection<string> _islemTurleri = new() { "Şantiyeye Sevk", "Arıza", "Bakım", "Kalibrasyon", "Diğer" };
 
         [ObservableProperty]
         private string _aciklama;
@@ -43,7 +43,7 @@ namespace PersonelTakip.ViewModels
             _cihaz = cihaz;
 
             CihazBilgi = $"{cihaz.SeriNo} - {cihaz.CihazAdi} ({cihaz.Marka} {cihaz.Model})";
-            IslemTuru = "Transfer";
+            IslemTuru = "Şantiyeye Sevk";
             NereyeSantiyeId = cihaz.SantiyeId;
         }
 

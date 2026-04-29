@@ -10,6 +10,134 @@
         Style="{StaticResource ModernDialogStyle}"
         Background="#0F172A">
     <Window.Resources>
+        <!-- TAKVİM GÜNLERİNİ KESİN BEYAZ YAPACAK İSİMSİZ (IMPLICIT) STİLLER -->
+        <Style TargetType="CalendarDayButton">
+            <Setter Property="MinWidth" Value="35"/>
+            <Setter Property="MinHeight" Value="30"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CalendarDayButton">
+                        <Grid>
+                            <Border x:Name="Bg" Background="Transparent" CornerRadius="4"/>
+                            <TextBlock Text="{TemplateBinding Content}" 
+                                     Foreground="White" 
+                                     HorizontalAlignment="Center" 
+                                     VerticalAlignment="Center"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#3B82F6"/>
+                            </Trigger>
+                            <Trigger Property="IsInactive" Value="True">
+                                <Setter Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#334155"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="CalendarButton">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CalendarButton">
+                        <Grid>
+                            <Border x:Name="Bg" Background="Transparent" CornerRadius="4"/>
+                            <TextBlock Text="{TemplateBinding Content}" 
+                                     Foreground="White" 
+                                     HorizontalAlignment="Center" 
+                                     VerticalAlignment="Center"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#334155"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Calendar Stilleri -->
+        <Style x:Key="ModernCalendarItemStyle" TargetType="CalendarItem">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CalendarItem">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="12" Padding="10"> <!-- Miras bırak -->
+                            <Grid x:Name="PART_Root">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Header -->
+                                <Grid Grid.Row="0" Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button x:Name="PART_PreviousButton" Grid.Column="0" Content="◀" Foreground="#3B82F6" Background="Transparent" BorderThickness="0" Cursor="Hand" Width="30" Height="30" Focusable="False"/>
+                                    <Button x:Name="PART_HeaderButton" Grid.Column="1" Foreground="White" FontWeight="Bold" FontSize="14" Background="Transparent" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Center" VerticalAlignment="Center" Focusable="False"/>
+                                    <Button x:Name="PART_NextButton" Grid.Column="2" Content="▶" Foreground="#3B82F6" Background="Transparent" BorderThickness="0" Cursor="Hand" Width="30" Height="30" Focusable="False"/>
+                                </Grid>
+
+                                <!-- Views -->
+                                <Grid Grid.Row="1" MinWidth="250" MinHeight="200">
+                                    <!-- Ay Görünümü -->
+                                    <Grid x:Name="PART_MonthView" Visibility="Visible" TextElement.Foreground="White">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*"/><RowDefinition Height="*"/><RowDefinition Height="*"/><RowDefinition Height="*"/><RowDefinition Height="*"/><RowDefinition Height="*"/><RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+                                    </Grid>
+                                    <!-- Yıl Görünümü -->
+                                    <Grid x:Name="PART_YearView" Visibility="Collapsed" TextElement.Foreground="White">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*"/><RowDefinition Height="*"/><RowDefinition Height="*"/><RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+                                    </Grid>
+                                </Grid>
+                                <Rectangle x:Name="PART_DisabledVisual" Stretch="Fill" Fill="Transparent" Visibility="Collapsed"/>
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ModernCalendar" TargetType="Calendar">
+            <Setter Property="Background" Value="#1E293B"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#334155"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Calendar">
+                        <Border Background="Transparent">
+                            <CalendarItem x:Name="PART_CalendarItem"
+                                          Background="{TemplateBinding Background}"
+                                          BorderBrush="{TemplateBinding BorderBrush}"
+                                          BorderThickness="{TemplateBinding BorderThickness}"
+                                          Style="{StaticResource ModernCalendarItemStyle}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Dark Theme Design System -->
         <SolidColorBrush x:Key="FieldBackground" Color="#1E293B"/>
         <SolidColorBrush x:Key="FieldBorder" Color="#334155"/>
@@ -116,44 +244,117 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <Style x:Key="ModernDatePicker" TargetType="DatePicker">
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="Margin" Value="0,0,0,15"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Background" Value="{StaticResource FieldBackground}"/>
+            <Setter Property="Foreground" Value="{StaticResource FieldForeground}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource FieldBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Height" Value="45"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="CalendarStyle" Value="{StaticResource ModernCalendar}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DatePicker">
+                        <Border x:Name="border" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <Grid x:Name="PART_Root" Margin="{TemplateBinding Padding}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <DatePickerTextBox x:Name="PART_TextBox" Grid.Column="0" 
+                                                 Focusable="{TemplateBinding Focusable}"
+                                                 HorizontalContentAlignment="Stretch"
+                                                 VerticalContentAlignment="Center"
+                                                 Background="Transparent" 
+                                                 Foreground="White"
+                                                 BorderThickness="0">
+                                    <DatePickerTextBox.Style>
+                                        <Style TargetType="DatePickerTextBox">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="DatePickerTextBox">
+                                                        <Grid Background="Transparent">
+                                                            <VisualStateManager.VisualStateGroups>
+                                                                <VisualStateGroup x:Name="WatermarkStates">
+                                                                    <VisualState x:Name="Unwatermarked"/>
+                                                                    <VisualState x:Name="Watermarked">
+                                                                        <Storyboard>
+                                                                            <DoubleAnimation Storyboard.TargetName="PART_Watermark" Storyboard.TargetProperty="Opacity" To="0.5" Duration="0"/>
+                                                                        </Storyboard>
+                                                                    </VisualState>
+                                                                </VisualStateGroup>
+                                                            </VisualStateManager.VisualStateGroups>
+                                                            <TextBlock x:Name="PART_Watermark" Text="Tarih seçiniz..." Foreground="#94A3B8" IsHitTestVisible="False" VerticalAlignment="Center" Margin="5,0,0,0" Visibility="Collapsed"/>
+                                                            <ScrollViewer x:Name="PART_ContentHost" Margin="0" VerticalAlignment="Center"/>
+                                                        </Grid>
+                                                        <ControlTemplate.Triggers>
+                                                            <DataTrigger Binding="{Binding Text, RelativeSource={RelativeSource Self}}" Value="">
+                                                                <Setter TargetName="PART_Watermark" Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </DatePickerTextBox.Style>
+                                </DatePickerTextBox>
+                                <Button x:Name="PART_Button" Grid.Column="1" Margin="5,0,0,0"
+                                        Focusable="False" VerticalAlignment="Center">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Grid Background="Transparent">
+                                                <TextBlock Text="📅" FontSize="18" Foreground="#3B82F6"/>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                                <Popup x:Name="PART_Popup" AllowsTransparency="True" Placement="Bottom" StaysOpen="False"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource FieldFocusBorder}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-
-        <controls:CustomTitleBar Grid.Row="0" CanMaximize="False"/>
-
-        <Border Grid.Row="1" Background="#1E293B" CornerRadius="16" Margin="20" Padding="25" BorderBrush="#334155" BorderThickness="1">
-            <Border.Effect>
-                <DropShadowEffect BlurRadius="25" ShadowDepth="0" Opacity="0.4" Color="Black"/>
-            </Border.Effect>
-
+        <!-- Title Bar Area -->
+        <controls:CustomTitleBar VerticalAlignment="Top"/>
+        
+        <Border Margin="20,50,20,20" Background="#1E293B" CornerRadius="15" Padding="25">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock x:Name="TxtTitle" Grid.Row="0" Text="Cihaz Zimmetle" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,8"/>
-                <TextBlock x:Name="TxtCihaz" Grid.Row="1" Text="Cihaz Bilgisi" Foreground="#94A3B8" FontSize="14" Margin="0,0,0,25"/>
+                <TextBlock x:Name="TxtTitle" Grid.Row="0" Text="Cihaz Zimmetle" FontSize="22" FontWeight="Bold" Foreground="White" Margin="0,0,0,5"/>
+                <TextBlock x:Name="TxtCihaz" Grid.Row="1" Text="Cihaz Bilgisi" FontSize="13" Foreground="#94A3B8" Margin="0,0,0,25"/>
 
                 <StackPanel x:Name="PnlPersonel" Grid.Row="2">
                     <TextBlock Text="Personel Ara" Foreground="#3B82F6" FontSize="11" FontWeight="Bold" Margin="5,0,0,5"/>
-                    <TextBox x:Name="TxtPersonelAra" Style="{StaticResource ModernTextBox}" Margin="0,0,0,10" 
-                             Tag="Personel ara..." TextChanged="TxtPersonelAra_TextChanged"/>
+                    <TextBox x:Name="TxtPersonelAra" Style="{StaticResource ModernTextBox}" Tag="İsim ile ara..." TextChanged="TxtPersonelAra_TextChanged"/>
                     <ListBox x:Name="LstPersonel" Height="150" DisplayMemberPath="AdiSoyadi" SelectedValuePath="Id"
                              Margin="0,0,0,15" MouseDoubleClick="LstPersonel_MouseDoubleClick"/>
                 </StackPanel>
 
                 <StackPanel Grid.Row="3">
                     <TextBlock Text="İşlem Tarihi" Foreground="#3B82F6" FontSize="11" FontWeight="Bold" Margin="5,0,0,5"/>
-                    <DatePicker x:Name="DtTarih" Height="45" Margin="0,0,0,15"/>
+                    <DatePicker x:Name="DtTarih" Style="{StaticResource ModernDatePicker}" CalendarOpened="DatePicker_CalendarOpened"/>
 
                     <TextBlock Text="Açıklama" Foreground="#3B82F6" FontSize="11" FontWeight="Bold" Margin="5,0,0,5"/>
                     <TextBox x:Name="TxtAciklama" Style="{StaticResource ModernTextBox}" Height="80" TextWrapping="Wrap" AcceptsReturn="True" VerticalContentAlignment="Top" Padding="12,10"/>
