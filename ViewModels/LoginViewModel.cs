@@ -153,6 +153,10 @@ public partial class LoginViewModel : BaseViewModel
             try
             {
                 await _databaseService.AuditLogAsync(kullanici.Id, "kullanicilar", kullanici.Id.ToString(), "Giris", null, null, "Giriş yapıldı");
+                
+                // Tüm adminlere bildirim gönder: kullanıcı online oldu
+                var mesaj = $"{kullanici.KullaniciAdi} ({kullanici.Rol}) oturum açtı.";
+                await _databaseService.BildirimEkleAsync(mesaj, kullanici.Id);
             }
             catch { }
 
@@ -216,7 +220,15 @@ public partial class LoginViewModel : BaseViewModel
             };
 
             var id = await _databaseService.KullaniciOlusturAsync(kullanici, Password);
-            // Email bildirimi kaldırıldı
+
+            // Tüm adminlere bildirim gönder: yeni kullanıcı kayıt oldu
+            try
+            {
+                var santiyeAdi = SantiyeList?.FirstOrDefault(s => s.Id == RegisterSantiyeId)?.Adi ?? "Bilinmiyor";
+                var mesaj = $"Yeni kullanıcı kayıt oldu: {RegisterKullaniciAdi.Trim()} ({santiyeAdi})";
+                await _databaseService.BildirimEkleAsync(mesaj, id);
+            }
+            catch { }
 
             ShowSuccess("Kayıt başarılı! Şimdi giriş yapabilirsiniz.");
 

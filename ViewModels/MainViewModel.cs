@@ -599,6 +599,10 @@ public partial class MainViewModel : BaseViewModel
                             CalculateDeviceStats();
 
                             await LoadPersonellerAsync();
+
+                            // 4. Kullanıcı listesini tazele (Süper Admin için)
+                            if (IsAdmin)
+                                await LoadKullanicilarAsync();
                         }
                         catch (Exception ex)
                         {
@@ -657,6 +661,10 @@ public partial class MainViewModel : BaseViewModel
                     var oldUnread = UnreadBildirimCount;
                     await LoadBildirimlerAsync();
                     
+                    // Kullanıcı listesini periyodik tazele (Süper Admin için)
+                    if (IsAdmin)
+                        await LoadKullanicilarAsync();
+
                     // Eğer yeni okunmamış bildirim varsa ve liste açılmadıysa bilgilendir
                     if (UnreadBildirimCount > oldUnread && !IsBildirimPopupOpen)
                     {
