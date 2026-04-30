@@ -1,43 +1,50 @@
-using System;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PersonelTakip.Models;
 using PersonelTakip.Services;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Globalization;
 
 namespace PersonelTakip.ViewModels
 {
+    public partial class ModuleItem : ObservableObject
+    {
+        public string Key { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
+    }
+
     public partial class ReportsViewModel : BaseViewModel
     {
+        private readonly RaporService _raporService;
         private readonly DatabaseService _databaseService;
         private readonly ExcelService _excelService;
         private readonly Kullanici _currentUser;
         private readonly bool _isAdmin;
+        private DataTable? _currentTable;
 
         [ObservableProperty]
-        private string _selectedReportType;
+        private List<ModuleItem> _modules = [];
 
         [ObservableProperty]
-        private ObservableCollection<string> _reportTypes = new() 
-        { 
-            "Personel Listesi", 
-            "Ölçüm Cihazları", 
-            "Ofis Cihazları", 
-            "Cihaz Hareket Geçmişi",
-            "Şantiye Listesi"
-        };
+        private ModuleItem? _selectedModule;
 
         [ObservableProperty]
-        private ObservableCollection<object> _reportData = new();
-
-        public ICollectionView ReportDataView { get; private set; }
+        private DataView? _reportDataView;
 
         [ObservableProperty]
         private string _searchText = string.Empty;
+
+        [ObservableProperty]
+        private string _recordCount = string.Empty;
+
+        [ObservableProperty]
+        private string _statusMessage = string.Empty;
 
         public ReportsViewModel(DatabaseService databaseService, ExcelService excelService, Kullanici currentUser, bool isAdmin)
         {
@@ -46,65 +53,69 @@ namespace PersonelTakip.ViewModels
             _currentUser = currentUser;
             _isAdmin = isAdmin;
 
-            ReportDataView = CollectionViewSource.GetDefaultView(ReportData);
-            ReportDataView.Filter = FilterReportData;
-
-            SelectedReportType = ReportTypes[0]; // Varsayılan: Personel
+            _raporService = new RaporService(AppConfiguration.Instance.Database.ConnectionString);
+            LoadModules();
         }
 
-        partial void OnSelectedReportTypeChanged(string value)
+        private void LoadModules()
         {
-            _ = LoadReportDataAsync();
+            var displayNames = _raporService.GetModuleDisplayNames();
+            Modules = displayNames.Select(kvp => new ModuleItem { Key = kvp.Key, DisplayName = kvp.Value }).ToList();
+        }
+
+        partial void OnSelectedModuleChanged(ModuleItem? value)
+        {
+            if (value != null)
+            {
+                _ = LoadReportAsync();
+            }
+            else
+            {
+                ReportDataView = null;
+                RecordCount = string.Empty;
+            }
+            SearchText = string.Empty;
         }
 
         partial void OnSearchTextChanged(string value)
         {
-            ReportDataView.Refresh();
+            ApplyFilter();
         }
 
-        private async Task LoadReportDataAsync()
+        private async Task LoadReportAsync()
         {
+            if (SelectedModule == null) return;
+
             IsBusy = true;
+            StatusMessage = "Veriler yükleniyor...";
             try
             {
-                ReportData.Clear();
-                var santiyeId = _isAdmin ? null : _currentUser.SantiyeId;
+                _currentTable = await _raporService.GetReportAsync(SelectedModule.Key);
 
-                switch (SelectedReportType)
+                // Arama için birleşik içerik sütunu ekle
+                if (!_currentTable.Columns.Contains("_SearchContent"))
                 {
-                    case "Personel Listesi":
-                        var personeller = await _databaseService.PersonelleriGetirAsync(santiyeId);
-                        foreach (var p in personeller) ReportData.Add(p);
-                        break;
-
-                    case "Ölçüm Cihazları":
-                        var olcumCihazlari = await _databaseService.CihazlariGetirAsync(CihazTuru.Olcum);
-                        var filteredOlcum = _isAdmin ? olcumCihazlari : olcumCihazlari.Where(c => c.SantiyeId == santiyeId || c.SantiyeId == null);
-                        foreach (var c in filteredOlcum) ReportData.Add(c);
-                        break;
-
-                    case "Ofis Cihazları":
-                        var ofisCihazlari = await _databaseService.OfisCihazlariniGetirAsync();
-                        var filteredOfis = _isAdmin ? ofisCihazlari : ofisCihazlari.Where(c => c.SantiyeId == santiyeId || !c.ZimmetliMi);
-                        foreach (var c in filteredOfis) ReportData.Add(c);
-                        break;
-
-                    case "Cihaz Hareket Geçmişi":
-                        var hareketler = await _databaseService.TumCihazHareketleriniGetirAsync();
-                        var filteredHareket = _isAdmin ? hareketler : hareketler.Where(h => h.NeredenSantiyeId == santiyeId || h.NereyeSantiyeId == santiyeId);
-                        foreach (var h in filteredHareket) ReportData.Add(h);
-                        break;
-
-                    case "Şantiye Listesi":
-                        var santiyeler = await _databaseService.SantiyeleriGetirAsync(true);
-                        foreach (var s in santiyeler) ReportData.Add(s);
-                        break;
+                    _currentTable.Columns.Add("_SearchContent", typeof(string));
+                    foreach (DataRow row in _currentTable.Rows)
+                    {
+                        var sb = new StringBuilder();
+                        foreach (var item in row.ItemArray)
+                        {
+                            if (item != null && item != DBNull.Value && !string.IsNullOrEmpty(item.ToString()))
+                                sb.Append(item.ToString()).Append(" ");
+                        }
+                        row["_SearchContent"] = NormalizeText(sb.ToString());
+                    }
                 }
-                ReportDataView.Refresh();
+
+                ReportDataView = _currentTable.DefaultView;
+                ApplyFilter();
+                StatusMessage = $"{SelectedModule.DisplayName} yüklendi.";
             }
             catch (Exception ex)
             {
-                ShowError($"Rapor yüklenirken hata: {ex.Message}");
+                StatusMessage = $"Hata: {ex.Message}";
+                MessageBox.Show($"Rapor yüklenirken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -112,67 +123,76 @@ namespace PersonelTakip.ViewModels
             }
         }
 
-        private bool FilterReportData(object obj)
+        private void ApplyFilter()
         {
-            if (string.IsNullOrWhiteSpace(SearchText)) return true;
+            if (ReportDataView == null) return;
 
-            // Dinamik arama (objenin özelliklerine göre)
-            var props = obj.GetType().GetProperties();
-            foreach (var prop in props)
+            if (string.IsNullOrWhiteSpace(SearchText))
             {
-                var val = prop.GetValue(obj)?.ToString();
-                if (val != null && val.IndexOf(SearchText, StringComparison.OrdinalIgnoreCase) >= 0)
-                    return true;
+                ReportDataView.RowFilter = string.Empty;
             }
-            return false;
+            else
+            {
+                var normalizedSearch = NormalizeText(SearchText);
+                var terms = normalizedSearch.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                var filterSb = new StringBuilder();
+
+                foreach (var term in terms)
+                {
+                    if (filterSb.Length > 0) filterSb.Append(" AND ");
+                    string escapedTerm = term.Replace("'", "''");
+                    filterSb.Append($"[_SearchContent] LIKE '%{escapedTerm}%'");
+                }
+                ReportDataView.RowFilter = filterSb.ToString();
+            }
+
+            RecordCount = $"{ReportDataView.Count} kayıt bulundu";
+        }
+
+        private string NormalizeText(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return string.Empty;
+            return text.ToLower(new CultureInfo("tr-TR"))
+                .Replace('ç', 'c').Replace('ğ', 'g').Replace('ı', 'i')
+                .Replace('ö', 'o').Replace('ş', 's').Replace('ü', 'u');
         }
 
         [RelayCommand]
-        private async Task ExportToExcelAsync()
+        private async Task ExportExcelAsync()
         {
-            if (ReportData.Count == 0)
-            {
-                ShowError("Aktarılacak veri bulunamadı.");
-                return;
-            }
+            if (ReportDataView == null || SelectedModule == null || _currentTable == null) return;
 
-            IsBusy = true;
-            try
+            var dialog = new Microsoft.Win32.SaveFileDialog
             {
-                var list = ReportDataView.Cast<object>().ToList();
-                string path = string.Empty;
+                Filter = "Excel Dosyası (*.xlsx)|*.xlsx",
+                FileName = $"{SelectedModule.DisplayName}_{DateTime.Now:yyyyMMdd_HHmm}.xlsx",
+                Title = "Excel'e Aktar"
+            };
 
-                // Mevcut ExcelService metodlarını kullanarak veya yeni bir jenerik metod ekleyerek aktaralım
-                switch (SelectedReportType)
+            if (dialog.ShowDialog() == true)
+            {
+                IsBusy = true;
+                StatusMessage = "Excel oluşturuluyor...";
+                try
                 {
-                    case "Personel Listesi":
-                        path = await _excelService.PersonelleriDisariAktarAsync(list.Cast<Personel>().ToList());
-                        break;
-                    case "Ölçüm Cihazları":
-                        path = await _excelService.CihazlariDisariAktarAsync(list.Cast<Cihaz>().ToList());
-                        break;
-                    case "Ofis Cihazları":
-                        path = await _excelService.OfisCihazlariDisariAktarAsync(list.Cast<OfisCihazi>().ToList());
-                        break;
-                    case "Cihaz Hareket Geçmişi":
-                        path = await _excelService.CihazHareketleriDisariAktarAsync(list.Cast<CihazHareket>().ToList());
-                        break;
-                    default:
-                        // Ofis ve Şantiye için henüz ExcelService metodu yoksa uyaralım (Veya ekleyelim)
-                        ShowError("Bu rapor türü için Excel aktarımı henüz hazır değil.");
-                        return;
-                }
+                    DataTable exportTable = ReportDataView.ToTable();
+                    if (exportTable.Columns.Contains("_SearchContent"))
+                        exportTable.Columns.Remove("_SearchContent");
 
-                if (!string.IsNullOrEmpty(path))
-                    ShowSuccess("Rapor başarıyla Excel'e aktarıldı.");
-            }
-            catch (Exception ex)
-            {
-                ShowError($"Excel hatası: {ex.Message}");
-            }
-            finally
-            {
-                IsBusy = false;
+                    await Task.Run(() => _raporService.ExportToExcel(exportTable, dialog.FileName, SelectedModule.DisplayName));
+                    
+                    StatusMessage = "Excel başarıyla kaydedildi.";
+                    MessageBox.Show("Rapor başarıyla Excel'e aktarıldı.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    StatusMessage = $"Excel hatası: {ex.Message}";
+                    MessageBox.Show($"Excel oluşturulurken hata: {ex.Message}", "Hata", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
             }
         }
     }

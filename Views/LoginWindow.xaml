@@ -6,6 +6,7 @@
         WindowStartupLocation="CenterScreen" ResizeMode="NoResize"
         Style="{StaticResource ModernWindowStyle}"
         Background="#151515"
+        Icon="/Resources/PersonelZimmet.ikon.ico"
         Loaded="Window_Loaded">
 
     <Window.InputBindings>

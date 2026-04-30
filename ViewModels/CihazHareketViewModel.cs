@@ -16,22 +16,22 @@ namespace PersonelTakip.ViewModels
         private readonly Kullanici _currentUser;
 
         [ObservableProperty]
-        private string _cihazBilgi;
+        private string _cihazBilgi = string.Empty;
 
         [ObservableProperty]
         private Guid? _nereyeSantiyeId;
 
         [ObservableProperty]
-        private ObservableCollection<Santiye> _santiyeList;
+        private ObservableCollection<Santiye> _santiyeList = [];
 
         [ObservableProperty]
-        private string _islemTuru; // Şantiyeye Sevk, Arıza, Bakım, Kalibrasyon
+        private string _islemTuru = string.Empty; // Şantiyeye Sevk, Arıza, Bakım, Kalibrasyon
 
         [ObservableProperty]
         private ObservableCollection<string> _islemTurleri = new() { "Şantiyeye Sevk", "Arıza", "Bakım", "Kalibrasyon", "Diğer" };
 
         [ObservableProperty]
-        private string _aciklama;
+        private string _aciklama = string.Empty;
 
         [ObservableProperty]
         private bool _isSuperAdmin;

@@ -10,7 +10,6 @@ namespace PersonelTakip.ViewModels;
 public partial class KullaniciEditViewModel : BaseViewModel
 {
     private readonly DatabaseService _databaseService;
-    private readonly EmailService _emailService;
     private readonly Kullanici _currentUser;
     private readonly Guid? _kullaniciId;
     private readonly string? _orijinalKullaniciAdi;
@@ -19,8 +18,6 @@ public partial class KullaniciEditViewModel : BaseViewModel
     [ObservableProperty]
     private string _kullaniciAdi = string.Empty;
 
-    [ObservableProperty]
-    private string _email = string.Empty;
 
     [ObservableProperty]
     private string _sifre = string.Empty;
@@ -35,19 +32,18 @@ public partial class KullaniciEditViewModel : BaseViewModel
     private Guid? _santiyeId;
 
     [ObservableProperty]
-    private ObservableCollection<Santiye> _santiyeList = new();
+    private ObservableCollection<Santiye> _santiyeList = [];
 
     [ObservableProperty]
     private string _windowTitle = "Yeni Kullanıcı";
 
     public bool IsEditMode => _kullaniciId.HasValue;
 
-    public string[] Roller => new[] { "Admin", "User" };
+    public string[] Roller => ["Admin", "User"];
 
-    public KullaniciEditViewModel(DatabaseService databaseService, EmailService emailService, Kullanici currentUser, Kullanici? kullanici = null)
+    public KullaniciEditViewModel(DatabaseService databaseService, Kullanici currentUser, Kullanici? kullanici = null)
     {
         _databaseService = databaseService;
-        _emailService = emailService;
         _currentUser = currentUser;
         _kullaniciId = kullanici?.Id;
         _orijinalKullaniciAdi = kullanici?.KullaniciAdi;
@@ -151,7 +147,7 @@ public partial class KullaniciEditViewModel : BaseViewModel
             }
             else
             {
-                var yeniId = await _databaseService.KullaniciOlusturAsync(kullanici, sifre);
+                await _databaseService.KullaniciOlusturAsync(kullanici, sifre);
             }
 
             var editWindow = Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w is Views.KullaniciEditWindow);
@@ -172,7 +168,7 @@ public partial class KullaniciEditViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private void Cancel()
+    private static void Cancel()
     {
         var window = Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w is Views.KullaniciEditWindow);
         window?.Close();

@@ -2,12 +2,13 @@ using Microsoft.Extensions.Configuration;
 using System.IO;
 using System.Text.Json;
 
+using System.Text.Json.Serialization;
+
 namespace PersonelTakip.Services;
 
 public class AppConfiguration
 {
     public DatabaseConfig Database { get; set; } = new();
-    public EmailConfig Email { get; set; } = new();
     public AppConfig App { get; set; } = new();
 
     private static AppConfiguration? _instance;
@@ -50,19 +51,11 @@ public class DatabaseConfig
     public string Username { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
 
+    [JsonIgnore]
     public string ConnectionString =>
         $"Host={Host};Port={Port};Database={Database};Username={Username};Password={Password};SSL Mode=Require;Trust Server Certificate=true;Timeout=15;Connection Idle Lifetime=60;";
 }
 
-public class EmailConfig
-{
-    public string SmtpServer { get; set; } = string.Empty;
-    public int Port { get; set; } = 587;
-    public string Username { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-    public string FromEmail { get; set; } = string.Empty;
-    public string FromName { get; set; } = string.Empty;
-}
 
 public class AppConfig
 {

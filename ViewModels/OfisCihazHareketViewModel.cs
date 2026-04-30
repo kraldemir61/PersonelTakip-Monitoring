@@ -17,19 +17,19 @@ namespace PersonelTakip.ViewModels
         private readonly OfisCihazi _cihaz;
 
         [ObservableProperty]
-        private string _cihazBilgi;
+        private string _cihazBilgi = string.Empty;
 
         [ObservableProperty]
-        private string _islemTuru;
+        private string _islemTuru = string.Empty;
 
         [ObservableProperty]
         private Guid? _nereyeSantiyeId;
 
         [ObservableProperty]
-        private string _aciklama;
+        private string _aciklama = string.Empty;
 
         [ObservableProperty]
-        private ObservableCollection<Santiye> _santiyeList;
+        private ObservableCollection<Santiye> _santiyeList = [];
 
         public List<string> IslemTurleri { get; } = new List<string>
         {

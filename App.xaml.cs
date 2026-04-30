@@ -57,6 +57,13 @@ public partial class App : Application
                 }
             }
 
+            // Eğer veritabanı ayarları henüz yapılmamışsa (ilk kurulum), önce ayarlar penceresini aç
+            if (string.IsNullOrWhiteSpace(Services.AppConfiguration.Instance.Database.Host))
+            {
+                var settingsWindow = new Views.DatabaseSettingsWindow();
+                settingsWindow.ShowDialog();
+            }
+
             // Giriş ekranına geçiyoruz
             var loginWindow = new Views.LoginWindow();
             this.MainWindow = loginWindow;

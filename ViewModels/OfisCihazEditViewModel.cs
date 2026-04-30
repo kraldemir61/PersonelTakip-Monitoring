@@ -14,41 +14,41 @@ namespace PersonelTakip.ViewModels
     {
         private readonly DatabaseService _databaseService;
         private readonly bool _isEdit;
-        private readonly OfisCihazi _cihaz;
+        private readonly OfisCihazi? _cihaz;
 
         [ObservableProperty]
-        private string _title;
+        private string _title = string.Empty;
 
         [ObservableProperty]
-        private string _seriNo;
+        private string _seriNo = string.Empty;
 
         [ObservableProperty]
-        private string _cihazAdi;
+        private string _cihazAdi = string.Empty;
 
         [ObservableProperty]
-        private string _marka;
+        private string _marka = string.Empty;
 
         [ObservableProperty]
-        private string _model;
+        private string _model = string.Empty;
 
         [ObservableProperty]
-        private string _ozellik;
+        private string _ozellik = string.Empty;
 
         [ObservableProperty]
-        private string _not;
+        private string _not = string.Empty;
 
         [ObservableProperty]
-        private ObservableCollection<LookupItem> _cihazAdlari = new();
+        private ObservableCollection<LookupItem> _cihazAdlari = [];
         [ObservableProperty]
-        private ObservableCollection<LookupItem> _markalar = new();
+        private ObservableCollection<LookupItem> _markalar = [];
         [ObservableProperty]
-        private ObservableCollection<LookupItem> _modeller = new();
+        private ObservableCollection<LookupItem> _modeller = [];
 
         [ObservableProperty]
         private Guid? _santiyeId;
 
         [ObservableProperty]
-        private ObservableCollection<Santiye> _santiyeList;
+        private ObservableCollection<Santiye> _santiyeList = [];
 
 
 
@@ -62,12 +62,12 @@ namespace PersonelTakip.ViewModels
             
             if (_isEdit)
             {
-                SeriNo = _cihaz.SeriNo;
-                CihazAdi = _cihaz.CihazAdi;
-                Marka = _cihaz.Marka;
-                Model = _cihaz.Model;
-                Ozellik = _cihaz.Ozellik;
-                Not = _cihaz.Not;
+                SeriNo = _cihaz.SeriNo ?? string.Empty;
+                CihazAdi = _cihaz.CihazAdi ?? string.Empty;
+                Marka = _cihaz.Marka ?? string.Empty;
+                Model = _cihaz.Model ?? string.Empty;
+                Ozellik = _cihaz.Ozellik ?? string.Empty;
+                Not = _cihaz.Not ?? string.Empty;
                 SantiyeId = _cihaz.SantiyeId;
 
             }
@@ -79,12 +79,12 @@ namespace PersonelTakip.ViewModels
         {
             try
             {
-                CihazAdlari = new ObservableCollection<LookupItem>(await _databaseService.LookupGetirAsync("cihaz_adlari"));
-                Markalar = new ObservableCollection<LookupItem>(await _databaseService.LookupGetirAsync("cihaz_markalari"));
-                Modeller = new ObservableCollection<LookupItem>(await _databaseService.LookupGetirAsync("cihaz_modelleri"));
+                CihazAdlari = [.. await _databaseService.LookupGetirAsync("cihaz_adlari")];
+                Markalar = [.. await _databaseService.LookupGetirAsync("cihaz_markalari")];
+                Modeller = [.. await _databaseService.LookupGetirAsync("cihaz_modelleri")];
                 
                 var santiyeler = await _databaseService.SantiyeleriGetirAsync();
-                SantiyeList = new ObservableCollection<Santiye>(santiyeler);
+                SantiyeList = [.. santiyeler];
             }
             catch (Exception ex)
             {
@@ -100,6 +100,8 @@ namespace PersonelTakip.ViewModels
                 MessageBox.Show("Seri No ve Cihaz Adı boş bırakılamaz.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+
+            if (_cihaz == null) return;
 
             try
             {
@@ -128,7 +130,7 @@ namespace PersonelTakip.ViewModels
 
 
         [RelayCommand]
-        private void Iptal(Window window)
+        private static void Iptal(Window window)
         {
             window.DialogResult = false;
             window.Close();

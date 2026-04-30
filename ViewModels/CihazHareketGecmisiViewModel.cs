@@ -20,7 +20,7 @@ public partial class CihazHareketGecmisiViewModel : BaseViewModel
     private readonly bool _isAdmin;
 
     [ObservableProperty]
-    private ObservableCollection<CihazHareket> _hareketler = new();
+    private ObservableCollection<CihazHareket> _hareketler = [];
 
     public ICollectionView HareketlerView { get; private set; }
 

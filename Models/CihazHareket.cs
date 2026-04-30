@@ -10,8 +10,8 @@ namespace PersonelTakip.Models
         public Guid? NereyeSantiyeId { get; set; }
         public DateTime Tarih { get; set; }
         public Guid KullaniciId { get; set; }
-        public string Aciklama { get; set; }
-        public string IslemTuru { get; set; } // Transfer, Arıza, Bakım, Kalibrasyon, Giriş, Zimmet, İade
+        public string Aciklama { get; set; } = string.Empty;
+        public string IslemTuru { get; set; } = string.Empty; // Transfer, Arıza, Bakım, Kalibrasyon, Giriş, Zimmet, İade
         public CihazTuru CihazTuru { get; set; }
         public Guid? PersonelId { get; set; }
         public string? PersonelAd { get; set; }

@@ -87,7 +87,12 @@ public class ExcelService
             using (var workbook = new XLWorkbook(openFileDialog.FileName))
             {
                 var worksheet = workbook.Worksheet(1);
-                var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // Header'ı atla
+                if (worksheet == null) return (new(), "Excel sayfası bulunamadı.");
+                
+                var range = worksheet.RangeUsed();
+                if (range == null) return (new(), "Excel içeriği boş.");
+                
+                var rows = range.RowsUsed().Skip(1); // Header'ı atla
 
                 var santiyeler = await _databaseService.SantiyeleriGetirAsync();
                 var bolumler = await _databaseService.LookupGetirAsync("bolumler");
@@ -110,7 +115,7 @@ public class ExcelService
                         startCol = 2;
                     }
 
-                    p.AdiSoyadi = row.Cell(startCol).GetValue<string>()?.Trim();
+                    p.AdiSoyadi = row.Cell(startCol).GetValue<string>()?.Trim() ?? string.Empty;
                     if (string.IsNullOrWhiteSpace(p.AdiSoyadi)) continue;
 
                     var santiyeKod = row.Cell(startCol + 1).GetValue<string>()?.Trim();
@@ -260,7 +265,12 @@ public class ExcelService
             using (var workbook = new XLWorkbook(openFileDialog.FileName))
             {
                 var worksheet = workbook.Worksheet(1);
-                var rows = worksheet.RangeUsed().RowsUsed().Skip(1);
+                if (worksheet == null) return (new(), "Excel sayfası bulunamadı.");
+
+                var range = worksheet.RangeUsed();
+                if (range == null) return (new(), "Excel içeriği boş.");
+
+                var rows = range.RowsUsed().Skip(1);
 
                 var santiyeler = await _databaseService.SantiyeleriGetirAsync();
                 var list = new List<Cihaz>();
@@ -466,7 +476,12 @@ public class ExcelService
             using (var workbook = new XLWorkbook(openFileDialog.FileName))
             {
                 var worksheet = workbook.Worksheet(1);
-                var rows = worksheet.RangeUsed().RowsUsed().Skip(1);
+                if (worksheet == null) return (new(), "Excel sayfası bulunamadı.");
+
+                var range = worksheet.RangeUsed();
+                if (range == null) return (new(), "Excel içeriği boş.");
+
+                var rows = range.RowsUsed().Skip(1);
 
                 var santiyeler = await _databaseService.SantiyeleriGetirAsync(aktif: null);
                 var list = new List<OfisCihazi>();

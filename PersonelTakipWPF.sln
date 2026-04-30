@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonelTakipWPF", "PersonelTakipWPF.csproj", "{3190A119-296B-476C-AC9D-1D4F04AE8306}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "PersonelVeZimmetYonetimi Setup v.1.0.0.1", "..\PersonelVeZimmetYonetimi Setup v.1.0.0.1\PersonelVeZimmetYonetimi Setup v.1.0.0.1.vdproj", "{C370149C-CD8C-CC8D-0238-FBE4046FBD8E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,8 +29,17 @@ Global
 		{3190A119-296B-476C-AC9D-1D4F04AE8306}.Release|x64.Build.0 = Release|Any CPU
 		{3190A119-296B-476C-AC9D-1D4F04AE8306}.Release|x86.ActiveCfg = Release|Any CPU
 		{3190A119-296B-476C-AC9D-1D4F04AE8306}.Release|x86.Build.0 = Release|Any CPU
+		{C370149C-CD8C-CC8D-0238-FBE4046FBD8E}.Debug|Any CPU.ActiveCfg = Debug
+		{C370149C-CD8C-CC8D-0238-FBE4046FBD8E}.Debug|x64.ActiveCfg = Debug
+		{C370149C-CD8C-CC8D-0238-FBE4046FBD8E}.Debug|x86.ActiveCfg = Debug
+		{C370149C-CD8C-CC8D-0238-FBE4046FBD8E}.Release|Any CPU.ActiveCfg = Release
+		{C370149C-CD8C-CC8D-0238-FBE4046FBD8E}.Release|x64.ActiveCfg = Release
+		{C370149C-CD8C-CC8D-0238-FBE4046FBD8E}.Release|x86.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9C65BEB5-AD6B-4958-961A-A29AE6FC45FB}
 	EndGlobalSection
 EndGlobal

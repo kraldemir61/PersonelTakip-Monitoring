@@ -18,7 +18,7 @@ namespace PersonelTakip.ViewModels
         private readonly OfisCihazi? _selectedCihaz;
 
         [ObservableProperty]
-        private ObservableCollection<CihazHareket> _hareketler = new();
+        private ObservableCollection<CihazHareket> _hareketler = [];
 
         [ObservableProperty]
         private CihazHareket? _selectedHareket;

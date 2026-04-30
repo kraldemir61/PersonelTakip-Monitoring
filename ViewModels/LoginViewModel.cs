@@ -12,7 +12,6 @@ namespace PersonelTakip.ViewModels;
 public partial class LoginViewModel : BaseViewModel
 {
     private readonly DatabaseService _databaseService;
-    private readonly EmailService _emailService;
 
     [ObservableProperty]
     private string _loginKullaniciAdi = string.Empty;
@@ -35,7 +34,7 @@ public partial class LoginViewModel : BaseViewModel
     private Guid? _registerSantiyeId;
 
     [ObservableProperty]
-    private ObservableCollection<Santiye> _santiyeList = new();
+    private ObservableCollection<Santiye> _santiyeList = [];
 
     [ObservableProperty]
     private string _connectionStatus = "Bağlantı kuruluyor...";
@@ -54,7 +53,6 @@ public partial class LoginViewModel : BaseViewModel
     public LoginViewModel()
     {
         _databaseService = new DatabaseService();
-        _emailService = new EmailService();
 
         var (savedEmail, savedPassword) = CredentialHelper.LoadCredential();
         if (!string.IsNullOrEmpty(savedEmail) && !string.IsNullOrEmpty(savedPassword))
@@ -110,9 +108,17 @@ public partial class LoginViewModel : BaseViewModel
             {
                 IsConnected = false;
                 IsSlowConnection = false;
-                ConnectionStatus = "Sunucu Korumada (Lütfen Bekleyin)";
-                // Bağlantı yoksa kontrolü yavaşlat (60 saniye)
-                _connectionTimer.Interval = TimeSpan.FromSeconds(60);
+                
+                if (string.IsNullOrWhiteSpace(AppConfiguration.Instance.Database.Host))
+                {
+                    ConnectionStatus = "Bağlantı ayarları yapılmamış (Ctrl+Shift+C)";
+                }
+                else
+                {
+                    ConnectionStatus = "Sunucu Korumada (Lütfen Bekleyin)";
+                }
+                // Bağlantı yoksa daha sık kontrol et (5 saniye)
+                _connectionTimer.Interval = TimeSpan.FromSeconds(5);
             }
             else
             {
@@ -127,7 +133,7 @@ public partial class LoginViewModel : BaseViewModel
         {
             IsConnected = false;
             ConnectionStatus = "Bağlantı Hatası";
-            _connectionTimer.Interval = TimeSpan.FromSeconds(60);
+            _connectionTimer.Interval = TimeSpan.FromSeconds(5);
         }
     }
 
@@ -258,8 +264,7 @@ public partial class LoginViewModel : BaseViewModel
     private void OpenDatabaseSettings()
     {
         var win = new PersonelTakip.Views.DatabaseSettingsWindow();
-        // Aktif pencereyi owner olarak belirle
-        win.Owner = System.Linq.Enumerable.FirstOrDefault(System.Windows.Application.Current.Windows.Cast<System.Windows.Window>(), w => w.IsActive);
+        win.Owner = Application.Current.Windows.Cast<Window>().FirstOrDefault(w => w.IsActive);
         win.ShowDialog();
     }
 

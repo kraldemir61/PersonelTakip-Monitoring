@@ -16,21 +16,19 @@ namespace PersonelTakip.Helpers
 
         private static void OnBoundPasswordChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            PasswordBox box = d as PasswordBox;
-            if (box == null || (bool)d.GetValue(UpdatingPasswordProperty))
+            if (d is not PasswordBox box || (bool)d.GetValue(UpdatingPasswordProperty))
             {
                 return;
             }
 
-            box.Password = (string)e.NewValue;
+            box.Password = e.NewValue as string ?? string.Empty;
         }
 
         private static void OnBindPasswordChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            PasswordBox box = d as PasswordBox;
-            if (box == null) return;
+            if (d is not PasswordBox box) return;
 
-            if ((bool)e.NewValue)
+            if (e.NewValue is bool bind && bind)
             {
                 box.PasswordChanged += HandlePasswordChanged;
             }
@@ -42,18 +40,23 @@ namespace PersonelTakip.Helpers
 
         private static void HandlePasswordChanged(object sender, RoutedEventArgs e)
         {
-            PasswordBox box = sender as PasswordBox;
+            if (sender is not PasswordBox box) return;
+            
             SetUpdatingPassword(box, true);
             SetBoundPassword(box, box.Password);
             SetUpdatingPassword(box, false);
         }
 
-        public static void SetBindPassword(DependencyObject dp, bool value) => dp.SetValue(BindPasswordProperty, value);
-        public static bool GetBindPassword(DependencyObject dp) => (bool)dp.GetValue(BindPasswordProperty);
+        public static void SetBindPassword(DependencyObject dp, bool value) => dp?.SetValue(BindPasswordProperty, value);
+        public static bool GetBindPassword(DependencyObject dp) => dp != null && (bool)dp.GetValue(BindPasswordProperty);
 
-        public static string GetBoundPassword(DependencyObject dp) => (string)dp.GetValue(BoundPasswordProperty);
-        public static void SetBoundPassword(DependencyObject dp, string value) => dp.SetValue(BoundPasswordProperty, value);
+        public static string GetBoundPassword(DependencyObject dp) => dp?.GetValue(BoundPasswordProperty) as string ?? string.Empty;
+        public static void SetBoundPassword(DependencyObject dp, string value) => dp?.SetValue(BoundPasswordProperty, value);
 
-        private static void SetUpdatingPassword(DependencyObject dp, bool value) => dp.SetValue(UpdatingPasswordProperty, value);
+        private static void SetUpdatingPassword(DependencyObject dp, bool value)
+        {
+            if (dp == null) return;
+            dp.SetValue(UpdatingPasswordProperty, value);
+        }
     }
 }

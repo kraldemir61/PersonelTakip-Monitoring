@@ -26,8 +26,11 @@ public class DatabaseService
         try
         {
             using var conn = CreateConnection();
+            // Bağlantı kontrolü için kısa bir timeout (2 saniye)
+            var csb = new NpgsqlConnectionStringBuilder(conn.ConnectionString) { Timeout = 2 };
+            conn.ConnectionString = csb.ToString();
+            
             await conn.OpenAsync();
-            // Sadece bağlantının canlı olduğunu kontrol et (Sunucuyu yormaz, engellemeye takılmaz)
             await conn.ExecuteAsync("SELECT 1");
             return true;
         }
@@ -1358,9 +1361,10 @@ public class DatabaseService
                 "SELECT zimmetli_personel_id, zimmet_tarihi FROM cihazlar WHERE id = @CihazId",
                 new { CihazId = cihazId }, trans);
 
-            if (currentZimmet != null && currentZimmet.zimmetli_personel_id != null)
+            if (currentZimmet is IDictionary<string, object> dict && dict.TryGetValue("zimmetli_personel_id", out var zimmetliIdObj) && zimmetliIdObj != null)
             {
-                Guid pId = (Guid)currentZimmet.zimmetli_personel_id;
+                Guid pId = zimmetliIdObj is Guid guid ? guid : Guid.Empty;
+                if (pId == Guid.Empty) Guid.TryParse(zimmetliIdObj.ToString(), out pId);
 
                 // 2. Özel Zimmet Geçmiş kaydını iade tarihi ile güncelle
                 await conn.ExecuteAsync(@"
@@ -1651,9 +1655,9 @@ public class DatabaseService
         if (value is bool b) return b ? "TRUE" : "FALSE";
         if (value is byte[] bytes) return $"E'\\\\x{BitConverter.ToString(bytes).Replace("-", "")}'";
         if (value is double || value is float || value is decimal || value is int || value is long)
-            return value.ToString().Replace(",", ".");
+            return value?.ToString()?.Replace(",", ".") ?? "0";
         
-        return $"'{value.ToString().Replace("'", "''")}'";
+        return $"'{value?.ToString()?.Replace("'", "''") ?? ""}'";
     }
 
     public async Task RestoreBackupSqlAsync(string sql)

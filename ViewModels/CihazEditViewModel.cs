@@ -14,31 +14,31 @@ namespace PersonelTakip.ViewModels
     {
         private readonly DatabaseService _databaseService;
         private readonly bool _isEdit;
-        private readonly Cihaz _cihaz;
+        private readonly Cihaz? _cihaz;
 
         [ObservableProperty]
-        private string _title;
+        private string _title = string.Empty;
 
         [ObservableProperty]
-        private string _seriNo;
+        private string _seriNo = string.Empty;
 
         [ObservableProperty]
-        private string _cihazAdi;
+        private string _cihazAdi = string.Empty;
 
         [ObservableProperty]
-        private string _marka;
+        private string _marka = string.Empty;
 
         [ObservableProperty]
-        private string _model;
+        private string _model = string.Empty;
         
         [ObservableProperty]
-        private string _ozellik;
+        private string _ozellik = string.Empty;
 
         [ObservableProperty]
-        private string _sahipFirma;
+        private string _sahipFirma = string.Empty;
 
         [ObservableProperty]
-        private string _not;
+        private string _not = string.Empty;
 
         [ObservableProperty]
         private CihazTuru _tur;
@@ -47,16 +47,16 @@ namespace PersonelTakip.ViewModels
         private Guid? _santiyeId;
 
         [ObservableProperty]
-        private ObservableCollection<Santiye> _santiyeList = new();
+        private ObservableCollection<Santiye> _santiyeList = [];
 
         [ObservableProperty]
-        private ObservableCollection<LookupItem> _cihazAdlari = new();
+        private ObservableCollection<LookupItem> _cihazAdlari = [];
         [ObservableProperty]
-        private ObservableCollection<LookupItem> _markalar = new();
+        private ObservableCollection<LookupItem> _markalar = [];
         [ObservableProperty]
-        private ObservableCollection<LookupItem> _modeller = new();
+        private ObservableCollection<LookupItem> _modeller = [];
         [ObservableProperty]
-        private ObservableCollection<LookupItem> _firmalar = new();
+        private ObservableCollection<LookupItem> _firmalar = [];
  
         [ObservableProperty]
         private bool _isSuperAdmin;
@@ -72,15 +72,15 @@ namespace PersonelTakip.ViewModels
 
             Title = _isEdit ? "Cihaz Düzenle" : (tur == CihazTuru.Olcum ? "Yeni Ölçüm Cihazı Ekle" : "Yeni Ofis Cihazı Ekle");
             
-            if (_isEdit)
+            if (_isEdit && _cihaz != null)
             {
-                SeriNo = _cihaz.SeriNo;
-                CihazAdi = _cihaz.CihazAdi;
-                Marka = _cihaz.Marka;
-                Model = _cihaz.Model;
-                Ozellik = _cihaz.Ozellik;
-                SahipFirma = _cihaz.SahipFirma;
-                Not = _cihaz.Not;
+                SeriNo = _cihaz.SeriNo ?? string.Empty;
+                CihazAdi = _cihaz.CihazAdi ?? string.Empty;
+                Marka = _cihaz.Marka ?? string.Empty;
+                Model = _cihaz.Model ?? string.Empty;
+                Ozellik = _cihaz.Ozellik ?? string.Empty;
+                SahipFirma = _cihaz.SahipFirma ?? string.Empty;
+                Not = _cihaz.Not ?? string.Empty;
                 SantiyeId = _cihaz.SantiyeId;
 
             }
@@ -113,6 +113,8 @@ namespace PersonelTakip.ViewModels
                 MessageBox.Show("Seri No ve Cihaz Adı boş bırakılamaz.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+
+            if (_cihaz == null) return;
 
             try
             {

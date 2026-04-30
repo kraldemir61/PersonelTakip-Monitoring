@@ -12,19 +12,19 @@ public partial class DatabaseSettingsViewModel : ObservableObject
     private readonly DatabaseService _databaseService;
 
     [ObservableProperty]
-    private string _host;
+    private string _host = string.Empty;
 
     [ObservableProperty]
     private int _port;
 
     [ObservableProperty]
-    private string _database;
+    private string _database = string.Empty;
 
     [ObservableProperty]
-    private string _username;
+    private string _username = string.Empty;
 
     [ObservableProperty]
-    private string _password;
+    private string _password = string.Empty;
 
     [ObservableProperty]
     private bool _isTesting;

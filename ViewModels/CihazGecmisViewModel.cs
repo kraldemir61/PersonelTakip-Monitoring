@@ -19,10 +19,10 @@ namespace PersonelTakip.ViewModels
         private readonly Cihaz _cihaz;
 
         [ObservableProperty]
-        private string _cihazBilgi;
+        private string _cihazBilgi = string.Empty;
 
         [ObservableProperty]
-        private ObservableCollection<CihazHareket> _hareketler = new();
+        private ObservableCollection<CihazHareket> _hareketler = [];
 
         public ICollectionView HareketlerView { get; private set; }
 

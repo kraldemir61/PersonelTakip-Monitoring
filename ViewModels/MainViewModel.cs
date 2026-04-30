@@ -17,7 +17,6 @@ namespace PersonelTakip.ViewModels;
 public partial class MainViewModel : BaseViewModel
 {
     private readonly DatabaseService _databaseService;
-    private readonly EmailService _emailService;
     private readonly ExcelService _excelService;
 
     [ObservableProperty]
@@ -133,7 +132,7 @@ public partial class MainViewModel : BaseViewModel
                 SearchText = string.Empty;
                 SelectedFilterSantiye = null;
                 SelectedKullaniciFilterSantiye = null;
-                SelectedOfisFilterSantiye = null;
+                SelectedOfisFilterSantiye = string.Empty;
 
                 // Tüm görünümleri tazele
                 PersonellerView?.Refresh();
@@ -167,14 +166,14 @@ public partial class MainViewModel : BaseViewModel
     private string? _searchText = string.Empty;
 
     [ObservableProperty]
-    private ObservableCollection<Santiye> _sidebarSantiyeler = new();
+    private ObservableCollection<Santiye> _sidebarSantiyeler = [];
 
     [ObservableProperty]
     private string? _selectedFilterSantiye;
 
     // Zimmet Takibi - Ölçüm Cihazları
     [ObservableProperty]
-    private ObservableCollection<Cihaz> _olcumCihazlari = new();
+    private ObservableCollection<Cihaz> _olcumCihazlari = [];
 
     [ObservableProperty]
     private Cihaz? _selectedOlcumCihazi;
@@ -185,11 +184,11 @@ public partial class MainViewModel : BaseViewModel
     private int _toplamOlcumCihazi;
 
     [ObservableProperty]
-    private ObservableCollection<StatItem> _olcumCihaziStats = new();
+    private ObservableCollection<StatItem> _olcumCihaziStats = [];
 
     // Zimmet Takibi - Ofis Cihazları
     [ObservableProperty]
-    private ObservableCollection<OfisCihazi> _ofisCihazlari = new();
+    private ObservableCollection<OfisCihazi> _ofisCihazlari = [];
 
     [ObservableProperty]
     private OfisCihazi? _selectedOfisCihazi;
@@ -200,7 +199,7 @@ public partial class MainViewModel : BaseViewModel
     private int _toplamOfisCihazi;
 
     [ObservableProperty]
-    private ObservableCollection<StatItem> _ofisCihaziStats = new();
+    private ObservableCollection<StatItem> _ofisCihaziStats = [];
 
     [ObservableProperty]
     private bool _ofisCihaziFilterAvailable = false;
@@ -208,15 +207,15 @@ public partial class MainViewModel : BaseViewModel
     [ObservableProperty]
     private bool _ofisCihaziFilterAssigned = false;
 
-    [ObservableProperty] private ObservableCollection<string> _sidebarOfisCihaziSantiyeler = new();
-    [ObservableProperty] private string _selectedOfisFilterSantiye;
-    [ObservableProperty] private ObservableCollection<string> _sidebarOlcumCihaziSantiyeler = new();
-    [ObservableProperty] private string _selectedOlcumFilterSantiye;
+    [ObservableProperty] private ObservableCollection<string> _sidebarOfisCihaziSantiyeler = [];
+    [ObservableProperty] private string _selectedOfisFilterSantiye = string.Empty;
+    [ObservableProperty] private ObservableCollection<string> _sidebarOlcumCihaziSantiyeler = [];
+    [ObservableProperty] private string _selectedOlcumFilterSantiye = string.Empty;
 
     [RelayCommand]
     private void OfisSantiyeFiltrele(string santiyeKod)
     {
-        SelectedOfisFilterSantiye = SelectedOfisFilterSantiye == santiyeKod ? null : santiyeKod;
+        SelectedOfisFilterSantiye = SelectedOfisFilterSantiye == santiyeKod ? string.Empty : santiyeKod;
         OfisCihazlariView.Refresh();
         CalculateDeviceStats();
     }
@@ -224,7 +223,7 @@ public partial class MainViewModel : BaseViewModel
     [RelayCommand]
     private void OlcumSantiyeFiltrele(string santiyeKod)
     {
-        SelectedOlcumFilterSantiye = SelectedOlcumFilterSantiye == santiyeKod ? null : santiyeKod;
+        SelectedOlcumFilterSantiye = SelectedOlcumFilterSantiye == santiyeKod ? string.Empty : santiyeKod;
         OlcumCihazlariView.Refresh();
         CalculateDeviceStats();
     }
@@ -368,7 +367,6 @@ public partial class MainViewModel : BaseViewModel
     public MainViewModel()
     {
         _databaseService = new DatabaseService();
-        _emailService = new EmailService();
         _excelService = new ExcelService(_databaseService);
 
         CurrentUser = Application.Current.Properties["Kullanici"] as Kullanici;
@@ -381,6 +379,18 @@ public partial class MainViewModel : BaseViewModel
 
         OfisCihazlariView = new ListCollectionView(OfisCihazlari);
         OfisCihazlariView.Filter = FilterOfisCihazlari;
+
+        // View özelliklerini ilklendirerek CS8618 uyarılarını gider
+        CihazAdlariView = new ListCollectionView(CihazAdlari);
+        MarkalarView = new ListCollectionView(Markalar);
+        ModellerView = new ListCollectionView(Modeller);
+        FirmalarView = new ListCollectionView(Firmalar);
+        BolumlerView = new ListCollectionView(Bolumler);
+        GorevlerView = new ListCollectionView(Gorevler);
+        UyruklarView = new ListCollectionView(Uyruklar);
+        ParaBirimleriView = new ListCollectionView(ParaBirimleri);
+        SantiyeListView = new ListCollectionView(SantiyeList);
+        PersonellerView = new ListCollectionView(Personeller);
 
         LoadAllDataAsync().ConfigureAwait(false);
         
@@ -720,7 +730,7 @@ public partial class MainViewModel : BaseViewModel
         {
             var santiyeId = IsAdmin ? null : CurrentUser?.SantiyeId;
             var liste = await _databaseService.PersonelleriGetirAsync(santiyeId);
-            Personeller = new ObservableCollection<Personel>(liste);
+            Personeller = [.. liste];
             
             PersonellerView = new ListCollectionView(Personeller);
             PersonellerView.Filter = (obj) =>
@@ -733,11 +743,11 @@ public partial class MainViewModel : BaseViewModel
 
                 // Arama metni kontrolü
                 var combined = $"{p.AdiSoyadi} {p.SantiyeKod} {p.BolumuDisplay} {p.GoreviDisplay}";
-                return StringHelper.SmartSearch(combined, SearchText);
+                return StringHelper.SmartSearch(combined, SearchText ?? string.Empty);
             };
             SelectedOlcumCihazi = null;
-            SelectedOfisFilterSantiye = null;
-            SelectedOlcumFilterSantiye = null;
+            SelectedOfisFilterSantiye = string.Empty;
+            SelectedOlcumFilterSantiye = string.Empty;
             UpdateSidebarOfisCihaziSantiyeler();
             UpdateSidebarOlcumCihaziSantiyeler();
             UpdateSidebarSantiyeler();
@@ -786,7 +796,7 @@ public partial class MainViewModel : BaseViewModel
             })
             .OrderByDescending(x => x.Count);
             
-        SantiyeStats = new ObservableCollection<StatItem>(santiyeGrup);
+        SantiyeStats = [.. santiyeGrup];
         
         CalculateDeviceStats();
     }
@@ -807,7 +817,7 @@ public partial class MainViewModel : BaseViewModel
             })
             .OrderByDescending(x => x.Count);
 
-        OlcumCihaziStats = new ObservableCollection<StatItem>(olcumGrup);
+        OlcumCihaziStats = [.. olcumGrup];
 
         if (OfisCihazlariView == null) return;
         ToplamOfisCihazi = OfisCihazlariView.Cast<OfisCihazi>().Count();
@@ -821,7 +831,7 @@ public partial class MainViewModel : BaseViewModel
             })
             .OrderByDescending(x => x.Count);
 
-        OfisCihaziStats = new ObservableCollection<StatItem>(ofisGrup);
+        OfisCihaziStats = [.. ofisGrup];
     }
 
     [RelayCommand]
@@ -833,7 +843,7 @@ public partial class MainViewModel : BaseViewModel
         try
         {
             var liste = await _databaseService.KullanicilariGetirAsync();
-            Kullanicilar = new ObservableCollection<Kullanici>(liste);
+            Kullanicilar = [.. liste];
 
             KullanicilarView = new ListCollectionView(Kullanicilar);
             KullanicilarView.Filter = (obj) =>
@@ -845,7 +855,7 @@ public partial class MainViewModel : BaseViewModel
                     return false;
 
                 var combined = $"{k.KullaniciAdi} {k.Email} {k.Rol} {k.SantiyeAdi}";
-                return StringHelper.SmartSearch(combined, SearchText);
+                return StringHelper.SmartSearch(combined, SearchText ?? string.Empty);
             };
             OnPropertyChanged(nameof(KullanicilarView));
             UpdateSidebarKullaniciSantiyeler();
@@ -867,14 +877,14 @@ public partial class MainViewModel : BaseViewModel
         try
         {
             var liste = await _databaseService.SantiyeleriGetirAsync(true);
-            SantiyeList = new ObservableCollection<Santiye>(liste);
+            SantiyeList = [.. liste];
 
             SantiyeListView = new ListCollectionView(SantiyeList);
             SantiyeListView.Filter = (obj) =>
             {
                 if (obj is not Santiye s) return false;
                 var combined = $"{s.Adi} {s.Kod} {s.Adres}";
-                return StringHelper.SmartSearch(combined, SearchText);
+                return StringHelper.SmartSearch(combined, SearchText ?? string.Empty);
             };
             OnPropertyChanged(nameof(SantiyeListView));
             UpdateSidebarSantiyeler();
@@ -901,39 +911,39 @@ public partial class MainViewModel : BaseViewModel
             var uyruklar = await _databaseService.UyruklariGetirAsync();
             var paraBirimleri = await _databaseService.ParaBirimleriniGetirAsync();
 
-            Bolumler = new ObservableCollection<LookupItem>(bolumler);
-            Gorevler = new ObservableCollection<LookupItem>(gorevler);
-            Uyruklar = new ObservableCollection<LookupItem>(uyruklar);
-            ParaBirimleri = new ObservableCollection<LookupItem>(paraBirimleri);
+            Bolumler = [.. bolumler];
+            Gorevler = [.. gorevler];
+            Uyruklar = [.. uyruklar];
+            ParaBirimleri = [.. paraBirimleri];
 
-            CihazAdlari = new ObservableCollection<LookupItem>(await _databaseService.LookupGetirAsync("cihaz_adlari"));
-            Markalar = new ObservableCollection<LookupItem>(await _databaseService.LookupGetirAsync("cihaz_markalari"));
-            Modeller = new ObservableCollection<LookupItem>(await _databaseService.LookupGetirAsync("cihaz_modelleri"));
-            Firmalar = new ObservableCollection<LookupItem>(await _databaseService.LookupGetirAsync("cihaz_firmalari"));
+            CihazAdlari = [.. await _databaseService.LookupGetirAsync("cihaz_adlari")];
+            Markalar = [.. await _databaseService.LookupGetirAsync("cihaz_markalari")];
+            Modeller = [.. await _databaseService.LookupGetirAsync("cihaz_modelleri")];
+            Firmalar = [.. await _databaseService.LookupGetirAsync("cihaz_firmalari")];
 
             BolumlerView = new ListCollectionView(Bolumler);
-            BolumlerView.Filter = (obj) => StringHelper.SmartSearch(((LookupItem)obj).Adi, SearchText);
+            BolumlerView.Filter = (obj) => obj is LookupItem item && StringHelper.SmartSearch(item.Adi, SearchText ?? string.Empty);
             
             GorevlerView = new ListCollectionView(Gorevler);
-            GorevlerView.Filter = (obj) => StringHelper.SmartSearch(((LookupItem)obj).Adi, SearchText);
+            GorevlerView.Filter = (obj) => obj is LookupItem item && StringHelper.SmartSearch(item.Adi, SearchText ?? string.Empty);
             
             UyruklarView = new ListCollectionView(Uyruklar);
-            UyruklarView.Filter = (obj) => StringHelper.SmartSearch(((LookupItem)obj).Adi, SearchText);
+            UyruklarView.Filter = (obj) => obj is LookupItem item && StringHelper.SmartSearch(item.Adi, SearchText ?? string.Empty);
             
             ParaBirimleriView = new ListCollectionView(ParaBirimleri);
-            ParaBirimleriView.Filter = (obj) => StringHelper.SmartSearch(((LookupItem)obj).Adi, SearchText);
+            ParaBirimleriView.Filter = (obj) => obj is LookupItem item && StringHelper.SmartSearch(item.Adi, SearchText ?? string.Empty);
 
             CihazAdlariView = new ListCollectionView(CihazAdlari);
-            CihazAdlariView.Filter = (obj) => StringHelper.SmartSearch(((LookupItem)obj).Adi, SearchText);
+            CihazAdlariView.Filter = (obj) => obj is LookupItem item && StringHelper.SmartSearch(item.Adi, SearchText ?? string.Empty);
 
             MarkalarView = new ListCollectionView(Markalar);
-            MarkalarView.Filter = (obj) => StringHelper.SmartSearch(((LookupItem)obj).Adi, SearchText);
+            MarkalarView.Filter = (obj) => obj is LookupItem item && StringHelper.SmartSearch(item.Adi, SearchText ?? string.Empty);
 
             ModellerView = new ListCollectionView(Modeller);
-            ModellerView.Filter = (obj) => StringHelper.SmartSearch(((LookupItem)obj).Adi, SearchText);
+            ModellerView.Filter = (obj) => obj is LookupItem item && StringHelper.SmartSearch(item.Adi, SearchText ?? string.Empty);
 
             FirmalarView = new ListCollectionView(Firmalar);
-            FirmalarView.Filter = (obj) => StringHelper.SmartSearch(((LookupItem)obj).Adi, SearchText);
+            FirmalarView.Filter = (obj) => obj is LookupItem item && StringHelper.SmartSearch(item.Adi, SearchText ?? string.Empty);
 
             OnPropertyChanged(nameof(BolumlerView));
             OnPropertyChanged(nameof(GorevlerView));
@@ -1107,7 +1117,7 @@ public partial class MainViewModel : BaseViewModel
 
         // Arama Kutusu Filtresi
         var combined = $"{c.CihazAdi} {c.Marka} {c.Model} {c.SeriNo} {c.ZimmetliPersonelAd} {c.BulunduguSantiyeKod} {c.Ozellik}";
-        return StringHelper.SmartSearch(combined, SearchText);
+        return StringHelper.SmartSearch(combined, SearchText ?? string.Empty);
     }
 
     partial void OnOfisCihaziFilterAvailableChanged(bool value)
@@ -1457,7 +1467,7 @@ public partial class MainViewModel : BaseViewModel
     {
         if (!IsAdmin) return;
 
-        var vm = new KullaniciEditViewModel(_databaseService, _emailService, CurrentUser!)
+        var vm = new KullaniciEditViewModel(_databaseService, CurrentUser!)
         {
             SantiyeList = SantiyeList
         };
@@ -1476,7 +1486,7 @@ public partial class MainViewModel : BaseViewModel
     {
         if (!IsAdmin || SelectedKullanici == null) return;
 
-        var vm = new KullaniciEditViewModel(_databaseService, _emailService, CurrentUser!, SelectedKullanici)
+        var vm = new KullaniciEditViewModel(_databaseService, CurrentUser!, SelectedKullanici)
         {
             SantiyeList = SantiyeList
         };

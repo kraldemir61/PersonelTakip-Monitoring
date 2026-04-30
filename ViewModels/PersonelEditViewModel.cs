@@ -41,19 +41,19 @@ public partial class PersonelEditViewModel : BaseViewModel
     private int? _paraBirimi;
 
     [ObservableProperty]
-    private ObservableCollection<LookupItem> _bolumler = new();
+    private ObservableCollection<LookupItem> _bolumler = [];
 
     [ObservableProperty]
-    private ObservableCollection<LookupItem> _gorevler = new();
+    private ObservableCollection<LookupItem> _gorevler = [];
 
     [ObservableProperty]
-    private ObservableCollection<LookupItem> _uyruklar = new();
+    private ObservableCollection<LookupItem> _uyruklar = [];
 
     [ObservableProperty]
-    private ObservableCollection<Santiye> _santiyeIdList = new();
+    private ObservableCollection<Santiye> _santiyeIdList = [];
 
     [ObservableProperty]
-    private ObservableCollection<LookupItem> _paraBirimleri = new();
+    private ObservableCollection<LookupItem> _paraBirimleri = [];
 
     [ObservableProperty]
     private string _windowTitle = "Yeni Personel";
@@ -86,7 +86,7 @@ public partial class PersonelEditViewModel : BaseViewModel
         else
         {
             WindowTitle = "Yeni Personel";
-            SantiyeId = currentUser.SantiyeId;
+            SantiyeId = currentUser?.SantiyeId;
             IseGirisTarihi = DateTime.Today;
         }
     }

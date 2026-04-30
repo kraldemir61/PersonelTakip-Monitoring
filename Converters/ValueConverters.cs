@@ -31,7 +31,7 @@ namespace PersonelTakip.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            string rol = value?.ToString();
+            string? rol = value?.ToString();
             return rol == "Admin" ? new SolidColorBrush(Color.FromRgb(59, 130, 246)) : new SolidColorBrush(Color.FromRgb(107, 114, 128));
         }
 
@@ -45,7 +45,7 @@ namespace PersonelTakip.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            string rol = value?.ToString();
+            string? rol = value?.ToString();
             return rol == "Admin" ? "🛡️" : "👤";
         }
 
@@ -59,7 +59,7 @@ namespace PersonelTakip.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return (bool)value ? "Aktif" : "Pasif";
+            return (value is bool b && b) ? "Aktif" : "Pasif";
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -72,7 +72,7 @@ namespace PersonelTakip.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return (bool)value ? new SolidColorBrush(Color.FromRgb(16, 185, 129)) : new SolidColorBrush(Color.FromRgb(239, 68, 68));
+            return (value is bool b && b) ? new SolidColorBrush(Color.FromRgb(16, 185, 129)) : new SolidColorBrush(Color.FromRgb(239, 68, 68));
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

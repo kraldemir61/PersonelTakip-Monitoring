@@ -10,6 +10,7 @@ xmlns:controls="clr-namespace:PersonelTakip.Controls"
 xmlns:helpers="clr-namespace:PersonelTakip.Helpers"
 mc:Ignorable="d"
 Title="{Binding PageTitle}" MinHeight="640" MinWidth="980" Height="640" Width="980"
+Icon="/Resources/PersonelZimmet.ikon.ico"
 WindowStartupLocation="CenterScreen"
 WindowState="Maximized"
 Style="{StaticResource ModernWindowStyle}"
@@ -413,7 +414,7 @@ CommandParameter="{Binding Kod}">
 <Button Content="Sil" Command="{Binding SilPersonelCommand}" Width="60" Height="40" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
 <Button Content="Excel'e Aktar" Command="{Binding ExportExcelCommand}" Width="110" Height="40" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}"/>
 </StackPanel>
-<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="40">
+<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="10" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="40">
 <Grid>
 <Grid.ColumnDefinitions>
 <ColumnDefinition Width="40"/>
@@ -640,7 +641,7 @@ CommandParameter="{Binding Kod}">
 <Button Content="Sil" Command="{Binding SilKullaniciCommand}" Width="60" Height="40" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
 <Button Content="Şifre Sıfırla" Command="{Binding SifreSifirlaCommand}" Width="110" Height="40" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}" Visibility="{Binding IsSuperAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
 </StackPanel>
-<Border Grid.Column="1" Margin="10,0,0,0" CornerRadius="20" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="40">
+<Border Grid.Column="1" Margin="10,0,0,0" CornerRadius="10" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="40">
 <Grid>
 <Grid.ColumnDefinitions>
 <ColumnDefinition Width="40"/>
@@ -775,7 +776,7 @@ Background="Transparent" BorderThickness="0" RowHeight="45">
 <Button Content="Silinenleri Yönet" Command="{Binding OpenPasifSantiyelerCommand}" Width="130" Height="40" Background="#6B7280" Foreground="White" Style="{StaticResource HeaderButton}"
 Visibility="{Binding IsSuperAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
 </StackPanel>
-<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="40">
+<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="10" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="40">
 <Grid>
 <Grid.ColumnDefinitions>
 <ColumnDefinition Width="40"/>
@@ -858,7 +859,7 @@ Background="Transparent" BorderThickness="0" RowHeight="45">
 <Button Content="Düzenle" Command="{Binding DuzenleBolumCommand}" Width="100" Height="40" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
 <Button Content="Sil" Command="{Binding SilBolumCommand}" Width="60" Height="40" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
 </StackPanel>
-<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="40">
+<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="10" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="40">
 <Grid>
 <Grid.ColumnDefinitions>
 <ColumnDefinition Width="40"/>
@@ -939,7 +940,7 @@ Background="Transparent" BorderThickness="0" RowHeight="45">
 <Button Content="Düzenle" Command="{Binding DuzenleGorevCommand}" Width="100" Height="40" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
 <Button Content="Sil" Command="{Binding SilGorevCommand}" Width="60" Height="40" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
 </StackPanel>
-<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="40">
+<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="10" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="40">
 <Grid>
 <Grid.ColumnDefinitions>
 <ColumnDefinition Width="40"/>
@@ -1020,7 +1021,7 @@ Background="Transparent" BorderThickness="0" RowHeight="45">
 <Button Content="Düzenle" Command="{Binding DuzenleUyrukCommand}" Width="100" Height="40" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
 <Button Content="Sil" Command="{Binding SilUyrukCommand}" Width="60" Height="40" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
 </StackPanel>
-<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="40">
+<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="10" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="40">
 <Grid>
 <Grid.ColumnDefinitions>
 <ColumnDefinition Width="40"/>
@@ -1101,7 +1102,7 @@ Background="Transparent" BorderThickness="0" RowHeight="45">
 <Button Content="Düzenle" Command="{Binding DuzenleParaBirimiCommand}" Width="100" Height="40" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
 <Button Content="Sil" Command="{Binding SilParaBirimiCommand}" Width="60" Height="40" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
 </StackPanel>
-<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="40">
+<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="10" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="40">
 <Grid>
 <Grid.ColumnDefinitions>
 <ColumnDefinition Width="40"/>
@@ -1257,7 +1258,7 @@ Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverte
 Visibility="{Binding IsSuperAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
 </StackPanel>
 <!-- Search Box (Dark) -->
-<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="40">
+<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="10" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="40">
 <Grid>
 <Grid.ColumnDefinitions>
 <ColumnDefinition Width="40"/>
@@ -1714,7 +1715,7 @@ ToolTip="{Binding ZimmetliPersonelAd, TargetNullValue='Boşta'}">
 <Button Content="Düzenle" Command="{Binding DuzenleCihazAdCommand}" Width="100" Height="35" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
 <Button Content="Sil" Command="{Binding SilCihazAdCommand}" Width="60" Height="35" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
 </StackPanel>
-<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="35">
+<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="10" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="35">
 <Grid>
 <Grid.ColumnDefinitions>
 <ColumnDefinition Width="35"/>
@@ -1793,7 +1794,7 @@ Background="Transparent" BorderThickness="0" RowHeight="45">
 <Button Content="Düzenle" Command="{Binding DuzenleMarkaCommand}" Width="100" Height="35" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
 <Button Content="Sil" Command="{Binding SilMarkaCommand}" Width="60" Height="35" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
 </StackPanel>
-<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="35">
+<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="10" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="35">
 <Grid>
 <Grid.ColumnDefinitions>
 <ColumnDefinition Width="35"/>
@@ -1872,7 +1873,7 @@ Background="Transparent" BorderThickness="0" RowHeight="45">
 <Button Content="Düzenle" Command="{Binding DuzenleModelCommand}" Width="100" Height="35" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
 <Button Content="Sil" Command="{Binding SilModelCommand}" Width="60" Height="35" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
 </StackPanel>
-<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="35">
+<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="10" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="35">
 <Grid>
 <Grid.ColumnDefinitions>
 <ColumnDefinition Width="35"/>
@@ -1951,7 +1952,7 @@ Background="Transparent" BorderThickness="0" RowHeight="45">
 <Button Content="Düzenle" Command="{Binding DuzenleFirmaCommand}" Width="100" Height="35" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
 <Button Content="Sil" Command="{Binding SilFirmaCommand}" Width="60" Height="35" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}"/>
 </StackPanel>
-<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="20" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="35">
+<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="10" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="35">
 <Grid>
 <Grid.ColumnDefinitions>
 <ColumnDefinition Width="35"/>

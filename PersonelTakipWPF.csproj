@@ -8,6 +8,8 @@
     <UseWPF>true</UseWPF>
     <AssemblyName>PersonelTakip</AssemblyName>
     <RootNamespace>PersonelTakip</RootNamespace>
+    <InterceptorsNamespaces>$(InterceptorsNamespaces);Microsoft.Extensions.Configuration.Binder.SourceGeneration</InterceptorsNamespaces>
+    <ApplicationIcon>Resources\PersonelZimmet.ikon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,6 +30,7 @@
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Resource Include="Resources\PersonelZimmet.ikon.ico" />
   </ItemGroup>
 
   <ItemGroup>

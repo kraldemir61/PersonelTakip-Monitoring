@@ -3,126 +3,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="clr-namespace:PersonelTakip.Views"
         mc:Ignorable="d"
-        Title="Gelişmiş Raporlar" Height="700" Width="1200"
-        WindowStartupLocation="CenterOwner"
+        Title="Gelişmiş Raporlama Sistemi" Height="750" Width="1300"
+        WindowStartupLocation="CenterScreen"
         Background="#0F172A">
+    
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="250"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-
-        <!-- Sidebar -->
-        <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="0,0,1,0">
-            <Grid Margin="20">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <StackPanel>
-                    <TextBlock Text="RAPORLAR" FontSize="20" FontWeight="Bold" Foreground="White" Margin="0,0,0,5"/>
-                    <TextBlock Text="Modül seçimi yapınız" FontSize="12" Foreground="#64748B" Margin="0,0,0,30"/>
-                </StackPanel>
-
-                <ListBox Grid.Row="1" ItemsSource="{Binding ReportTypes}" SelectedItem="{Binding SelectedReportType}"
-                         Background="Transparent" BorderThickness="0" Foreground="White">
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="ListBoxItem">
-                                        <Border x:Name="border" Padding="15,12" Margin="0,0,0,8" CornerRadius="8" Background="Transparent">
-                                            <TextBlock Text="{Binding}" FontSize="14" FontWeight="SemiBold" Foreground="#94A3B8"/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsSelected" Value="True">
-                                                <Setter TargetName="border" Property="Background" Value="#3B82F6"/>
-                                                <Setter Property="Foreground" Value="White"/>
-                                            </Trigger>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="border" Property="Background" Value="#2D3748"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </ListBox.ItemContainerStyle>
-                </ListBox>
-
-                <Button Grid.Row="2" Content="Excel'e Aktar" Command="{Binding ExportToExcelCommand}"
-                        Height="45" Background="#10B981" Foreground="White" FontWeight="Bold">
-                    <Button.Resources>
-                        <Style TargetType="Border">
-                            <Setter Property="CornerRadius" Value="8"/>
-                        </Style>
-                    </Button.Resources>
-                </Button>
-            </Grid>
-        </Border>
-
-        <!-- Main Content -->
-        <Grid Grid.Column="1" Margin="30">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-
-            <!-- Header & Search -->
-            <Grid Margin="0,0,0,25">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="350"/>
-                </Grid.ColumnDefinitions>
-
-                <StackPanel>
-                    <TextBlock Text="{Binding SelectedReportType}" FontSize="28" FontWeight="Bold" Foreground="White"/>
-                    <TextBlock Text="Rapor önizlemesi ve filtreleme" FontSize="13" Foreground="#64748B" Margin="0,5,0,0"/>
-                </StackPanel>
-
-                <Border Grid.Column="1" CornerRadius="20" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="40">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="40"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="🔍" VerticalAlignment="Center" HorizontalAlignment="Center" Opacity="0.5" Foreground="White"/>
-                        <TextBox Grid.Column="1" BorderThickness="0" Background="Transparent" Foreground="White" VerticalContentAlignment="Center" Padding="5,0,15,0"
-                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" CaretBrush="White"/>
-                    </Grid>
-                </Border>
-            </Grid>
-
-            <!-- DataGrid -->
-            <Border Grid.Row="1" CornerRadius="12" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Padding="1">
-                <DataGrid ItemsSource="{Binding ReportDataView}" AutoGenerateColumns="True" IsReadOnly="True" 
-                          Background="Transparent" BorderThickness="0" RowHeight="45"
-                          HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#334155">
-                    <DataGrid.Resources>
-                        <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="Background" Value="#334155"/>
-                            <Setter Property="Foreground" Value="White"/>
-                            <Setter Property="Padding" Value="15,10"/>
-                            <Setter Property="FontWeight" Value="SemiBold"/>
-                        </Style>
-                        <Style TargetType="DataGridRow">
-                            <Setter Property="Background" Value="Transparent"/>
-                            <Setter Property="Foreground" Value="#E2E8F0"/>
-                        </Style>
-                    </DataGrid.Resources>
-                </DataGrid>
-            </Border>
-
-            <!-- Loading Overlay -->
-            <Border Grid.RowSpan="2" Background="#80000000" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" CornerRadius="12">
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <ProgressBar IsIndeterminate="True" Width="200" Height="4"/>
-                    <TextBlock Text="Veriler hazırlanıyor..." Foreground="White" HorizontalAlignment="Center" Margin="0,10,0,0"/>
-                </StackPanel>
-            </Border>
-        </Grid>
+        <views:ReportsView x:Name="ReportControl" DataContext="{Binding}"/>
     </Grid>
 </Window>
