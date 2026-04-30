@@ -57,7 +57,6 @@ public partial class KullaniciEditViewModel : BaseViewModel
         {
             WindowTitle = "Kullanıcı Düzenle";
             KullaniciAdi = kullanici.KullaniciAdi;
-            Email = kullanici.Email;
             Rol = kullanici.Rol;
             SantiyeId = kullanici.SantiyeId;
         }
@@ -129,7 +128,7 @@ public partial class KullaniciEditViewModel : BaseViewModel
             {
                 Id = _kullaniciId ?? Guid.Empty,
                 KullaniciAdi = KullaniciAdi.Trim(),
-                Email = Email.Trim(),
+                Email = string.Empty,
                 Rol = Rol,
                 SantiyeId = SantiyeId
             };
@@ -153,7 +152,6 @@ public partial class KullaniciEditViewModel : BaseViewModel
             else
             {
                 var yeniId = await _databaseService.KullaniciOlusturAsync(kullanici, sifre);
-                await _emailService.KullaniciOlusturmaBildirimiGonderAsync(Email, KullaniciAdi, sifre);
             }
 
             var editWindow = Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w is Views.KullaniciEditWindow);

@@ -118,7 +118,7 @@ d:DataContext="{d:DesignInstance vm:MainViewModel}">
 <Setter Property="Template">
 <Setter.Value>
 <ControlTemplate TargetType="Button">
-<Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8">
+<Border x:Name="border" Height="35" Background="{TemplateBinding Background}" CornerRadius="8">
 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5,0"/>
 </Border>
 <ControlTemplate.Triggers>
@@ -316,6 +316,7 @@ IsHitTestVisible="False">
                 </Border>
             </Popup>
 </Grid>
+<Button Content="Raporlar" Width="80" Height="24" FontSize="11" Padding="0" Command="{Binding OpenReportsCommand}" Margin="0,0,8,0" Background="#3B82F6" Foreground="White" Style="{StaticResource HeaderButton}" WindowChrome.IsHitTestVisibleInChrome="True" Visibility="{Binding IsSuperAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
 <Button Content="Şifre Değiştir" Width="90" Height="24" FontSize="11" Padding="0" Command="{Binding ParolaDegistirCommand}" Margin="0,0,8,0" Background="#FF5D0BF5" Foreground="White" Style="{StaticResource HeaderButton}" WindowChrome.IsHitTestVisibleInChrome="True"/>
 </StackPanel>
 </StackPanel>
@@ -482,7 +483,7 @@ Background="Transparent" BorderThickness="0" RowHeight="45">
 <Border Width="60" Height="60" Background="#3B82F6" CornerRadius="40" Margin="0,0,0,10">
 <TextBlock Text="&#x1F464;" FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
 </Border>
-<TextBlock Text="{Binding SelectedPersonel.AdiSoyadi}" FontSize="20" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+<TextBlock Text="{Binding SelectedPersonel.AdiSoyadi}" FontSize="14" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,5"/>
 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
 <TextBlock Text="{Binding SelectedPersonel.GoreviDisplay}" Foreground="#94A3B8"/>
 <TextBlock Text=" &#x2022; " Foreground="#64748B" Margin="5,0">
@@ -1225,16 +1226,16 @@ SelectedIndex="{Binding SelectedSubTabIndex}">
 <ItemsControl ItemsSource="{Binding SidebarOlcumCihaziSantiyeler}">
 <ItemsControl.ItemTemplate>
 <DataTemplate>
-<Button Content="{Binding Kod}" Style="{StaticResource SidebarFilterButton}"
-Command="{Binding DataContext.OlcumSantiyeFiltreleCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-CommandParameter="{Binding Kod}">
-<Button.Tag>
-<MultiBinding Converter="{StaticResource EqualityConverter}">
-<Binding Path="Kod"/>
-<Binding Path="DataContext.SelectedOlcumFilterSantiye" RelativeSource="{RelativeSource AncestorType=Window}"/>
-</MultiBinding>
-</Button.Tag>
-</Button>
+                        <Button Content="{Binding}" Style="{StaticResource SidebarFilterButton}"
+                                Command="{Binding DataContext.OlcumSantiyeFiltreleCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}">
+                            <Button.Tag>
+                                <MultiBinding Converter="{StaticResource EqualityConverter}">
+                                    <Binding Path="."/>
+                                    <Binding Path="DataContext.SelectedOlcumFilterSantiye" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                </MultiBinding>
+                            </Button.Tag>
+                        </Button>
 </DataTemplate>
 </ItemsControl.ItemTemplate>
 </ItemsControl>
@@ -1359,9 +1360,24 @@ Background="Transparent" BorderThickness="0" RowHeight="45">
 <TextBlock Text="{Binding SelectedOlcumCihazi.SonIslemTarihi, StringFormat=dd.MM.yyyy HH:mm}" FontSize="14" Foreground="#94A3B8" Margin="0,0,0,15"/>
 <TextBlock Text="NOT" FontSize="10" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,4"/>
 <TextBlock Text="{Binding SelectedOlcumCihazi.Not}" FontSize="13" Foreground="#CBD5E1" TextWrapping="Wrap" Opacity="0.9"/>
-</StackPanel>
-</ScrollViewer>
-</StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+            <Button Command="{Binding DataContext.ZimmetleIadeOlcumCihaziCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    CommandParameter="{Binding SelectedOlcumCihazi}" Margin="0,15,0,0">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
+                        <Setter Property="Content" Value="ZİMMETLE"/>
+                        <Setter Property="Background" Value="#10B981"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedOlcumCihazi.ZimmetliMi}" Value="True">
+                                <Setter Property="Content" Value="İADE AL"/>
+                                <Setter Property="Background" Value="#EF4444"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </StackPanel>
 <!-- GENEL DURUM ÖZETİ (Cihaz Seçili Değilse) -->
 <Grid Visibility="{Binding SelectedOlcumCihazi, Converter={StaticResource NullToVisibilityConverter}}">
 <Grid.RowDefinitions>
@@ -1417,16 +1433,16 @@ Background="Transparent" BorderThickness="0" RowHeight="45">
 <ItemsControl ItemsSource="{Binding SidebarOfisCihaziSantiyeler}">
 <ItemsControl.ItemTemplate>
 <DataTemplate>
-<Button Content="{Binding Kod}" Style="{StaticResource SidebarFilterButton}"
-Command="{Binding DataContext.OfisSantiyeFiltreleCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-CommandParameter="{Binding Kod}">
-<Button.Tag>
-<MultiBinding Converter="{StaticResource EqualityConverter}">
-<Binding Path="Kod"/>
-<Binding Path="DataContext.SelectedOfisFilterSantiye" RelativeSource="{RelativeSource AncestorType=Window}"/>
-</MultiBinding>
-</Button.Tag>
-</Button>
+                        <Button Content="{Binding}" Style="{StaticResource SidebarFilterButton}"
+                                Command="{Binding DataContext.OfisSantiyeFiltreleCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}">
+                            <Button.Tag>
+                                <MultiBinding Converter="{StaticResource EqualityConverter}">
+                                    <Binding Path="."/>
+                                    <Binding Path="DataContext.SelectedOfisFilterSantiye" RelativeSource="{RelativeSource AncestorType=Window}"/>
+                                </MultiBinding>
+                            </Button.Tag>
+                        </Button>
 </DataTemplate>
 </ItemsControl.ItemTemplate>
 </ItemsControl>
@@ -1461,6 +1477,7 @@ Style="{StaticResource SidebarFilterToggleButton}"/>
 <ToggleButton Content="Zimmetli" Height="38" Width="100" Margin="5,0,5,0"
 IsChecked="{Binding OfisCihaziFilterAssigned}"
 Style="{StaticResource SidebarFilterToggleButton}"/>
+<Button Content="Transfer / Hareket" Command="{Binding OfisCihaziHareketCommand}" Width="150" Height="38" Background="#3B82F6" Foreground="White" Style="{StaticResource HeaderButton}" Margin="5,0,5,0"/>
 <Button Content="Geçmiş" Command="{Binding OfisCihaziGecmisCommand}" Width="80" Height="38" Background="#6B7280" Foreground="White" Style="{StaticResource HeaderButton}" Margin="5,0,0,0"/>
 </StackPanel>
 <StackPanel Grid.Column="1" Orientation="Horizontal">
@@ -1610,7 +1627,7 @@ ToolTip="{Binding ZimmetliPersonelAd, TargetNullValue='Boşta'}">
 <TextBlock Text="{Binding Not, TargetNullValue='(Not yok)'}" Foreground="#94A3B8" TextWrapping="Wrap" FontSize="13" FontStyle="Italic"/>
 </StackPanel>
 </Border>
-<UniformGrid Columns="2" Margin="0,20,0,0">
+<UniformGrid Columns="2" Margin="0,20,0,0" Visibility="{Binding DataContext.IsAdmin, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}">
 <Button Content="Düzenle" Command="{Binding DataContext.DuzenleOfisCihaziCommand, RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource ActionButton}" Background="#F59E0B" Margin="0,0,5,0"/>
 <Button Content="Sil" Command="{Binding DataContext.SilOfisCihaziCommand, RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource ActionButton}" Background="#EF4444" Margin="5,0,0,0"/>
 </UniformGrid>

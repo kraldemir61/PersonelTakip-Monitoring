@@ -1,0 +1,94 @@
+<Window x:Class="PersonelTakip.Views.CihazZimmetWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Cihaz Zimmetle" Height="500" Width="450"
+        WindowStartupLocation="CenterOwner"
+        Background="#1E293B" BorderBrush="#334155" BorderThickness="1">
+    <Window.Resources>
+        <Style x:Key="ModernTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="#0F172A"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#334155"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="CaretBrush" Value="White"/>
+            <Style.Resources>
+                <Style TargetType="Border">
+                    <Setter Property="CornerRadius" Value="6"/>
+                </Style>
+            </Style.Resources>
+        </Style>
+
+        <Style x:Key="ModernButton" TargetType="Button">
+            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="Background" Value="#3B82F6"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Style.Resources>
+                <Style TargetType="Border">
+                    <Setter Property="CornerRadius" Value="6"/>
+                </Style>
+            </Style.Resources>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="25">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="TxtTitle" Text="Cihaz Zimmetle" FontSize="24" FontWeight="Bold" Foreground="White" Margin="0,0,0,10"/>
+        <TextBlock x:Name="TxtCihaz" Text="Cihaz Bilgisi" FontSize="14" Foreground="#94A3B8" Margin="0,0,0,25" TextWrapping="Wrap"/>
+
+        <StackPanel x:Name="PnlPersonel" Grid.Row="2" Margin="0,0,0,20">
+            <TextBlock Text="Personel Ara" Foreground="#64748B" FontSize="11" FontWeight="Bold" Margin="0,0,0,5"/>
+            <TextBox x:Name="TxtPersonelAra" Style="{StaticResource ModernTextBox}" Margin="0,0,0,10" TextChanged="TxtPersonelAra_TextChanged"/>
+            
+            <Border Background="#0F172A" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Height="150">
+                <ListBox x:Name="LstPersonel" Background="Transparent" BorderThickness="0" Foreground="White" DisplayMemberPath="AdiSoyadi" SelectedValuePath="Id" MouseDoubleClick="LstPersonel_MouseDoubleClick">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="10,8"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#1E293B"/>
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#3B82F6"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                </ListBox>
+            </Border>
+        </StackPanel>
+
+        <StackPanel Grid.Row="3" Margin="0,0,0,20">
+            <TextBlock Text="İşlem Tarihi" Foreground="#64748B" FontSize="11" FontWeight="Bold" Margin="0,0,0,5"/>
+            <DatePicker x:Name="DtTarih" Foreground="White" CalendarOpened="DatePicker_CalendarOpened"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="4" Margin="0,0,0,25">
+            <TextBlock Text="Açıklama" Foreground="#64748B" FontSize="11" FontWeight="Bold" Margin="0,0,0,5"/>
+            <TextBox x:Name="TxtAciklama" Style="{StaticResource ModernTextBox}" Height="60" TextWrapping="Wrap" AcceptsReturn="True"/>
+        </StackPanel>
+
+        <Grid Grid.Row="5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Button Content="İptal" Click="BtnClose_Click" Background="#475569" Margin="0,0,10,0" Style="{StaticResource ModernButton}"/>
+            <Button x:Name="BtnKaydet" Grid.Column="1" Content="Kaydet" Click="BtnKaydet_Click" Background="#3B82F6" Style="{StaticResource ModernButton}"/>
+        </Grid>
+    </Grid>
+</Window>

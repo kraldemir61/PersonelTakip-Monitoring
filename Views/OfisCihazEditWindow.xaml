@@ -13,6 +13,7 @@
     <Window.Resources>
         <ResourceDictionary>
             <conv:FotoPathToImageConverter x:Key="FotoPathToImageConverter"/>
+            <conv:StringToBoolConverter x:Key="StringToBoolConverter"/>
 
             <!-- Dark Theme Design System -->
             <SolidColorBrush x:Key="FieldBackground" Color="#1E293B"/>
@@ -48,6 +49,13 @@
                                 </Grid>
                             </Border>
                             <ControlTemplate.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding Text, RelativeSource={RelativeSource Self}, Converter={StaticResource StringToBoolConverter}}" Value="False"/>
+                                        <Condition Binding="{Binding IsFocused, RelativeSource={RelativeSource Self}}" Value="False"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter TargetName="Placeholder" Property="Visibility" Value="Visible"/>
+                                </MultiDataTrigger>
                                 <Trigger Property="IsFocused" Value="True">
                                     <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource FieldFocusBorder}"/>
                                     <Setter TargetName="border" Property="Background" Value="#0F172A"/>
@@ -96,11 +104,25 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="30"/>
                                     </Grid.ColumnDefinitions>
-                                    <ContentPresenter Grid.Column="0" Margin="12,0,0,0" VerticalAlignment="Center" 
+                                    
+                                    <ContentPresenter x:Name="ContentSite" Grid.Column="0" Margin="12,0,0,0" VerticalAlignment="Center" 
                                                       IsHitTestVisible="False"
                                                       Content="{TemplateBinding SelectionBoxItem}"
                                                       ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                                      ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"/>
+                                                      ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
+                                                      Visibility="Visible"/>
+
+                                    <TextBox x:Name="PART_EditableTextBox" Grid.Column="0" Margin="12,0,0,0"
+                                             VerticalAlignment="Center" HorizontalAlignment="Stretch"
+                                             Focusable="True" Background="Transparent" BorderThickness="0"
+                                             Foreground="{TemplateBinding Foreground}" FontSize="{TemplateBinding FontSize}"
+                                             Visibility="Hidden" IsReadOnly="{TemplateBinding IsReadOnly}"/>
+
+                                    <TextBlock x:Name="Placeholder" Grid.Column="0" Text="{TemplateBinding Tag}"
+                                               Foreground="#64748B" Margin="12,0" 
+                                               VerticalAlignment="Center" IsHitTestVisible="False"
+                                               Visibility="Collapsed"/>
+                                               
                                     <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="#94A3B8" StrokeThickness="2"
                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Grid>
@@ -114,9 +136,21 @@
                                 </Popup>
                             </Grid>
                             <ControlTemplate.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding SelectedItem, RelativeSource={RelativeSource Self}}" Value="{x:Null}"/>
+                                        <Condition Binding="{Binding Text, RelativeSource={RelativeSource Self}, Converter={StaticResource StringToBoolConverter}}" Value="False"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter TargetName="Placeholder" Property="Visibility" Value="Visible"/>
+                                </MultiDataTrigger>
                                 <Trigger Property="IsDropDownOpen" Value="True">
                                     <Setter TargetName="ToggleButton" Property="BorderBrush" Value="{StaticResource FieldFocusBorder}"/>
                                     <Setter TargetName="ToggleButton" Property="Background" Value="#0F172A"/>
+                                </Trigger>
+                                <Trigger Property="IsEditable" Value="True">
+                                    <Setter Property="IsTabStop" Value="False"/>
+                                    <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible"/>
+                                    <Setter TargetName="ContentSite" Property="Visibility" Value="Hidden"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -203,8 +237,7 @@
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <!-- Satır 1: Cihaz Adı -->
-                        <TextBlock Text="Cihaz Adı" Foreground="#3B82F6" FontSize="11" FontWeight="Bold" Margin="5,0,0,5"/>
-                        <ComboBox Text="{Binding CihazAdi, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding CihazAdlari}" 
+                        <ComboBox Tag="Cihaz Adı" Text="{Binding CihazAdi, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding CihazAdlari}" 
                                   DisplayMemberPath="Adi" SelectedValuePath="Adi" IsEditable="True"
                                   Style="{StaticResource ModernComboBox}"/>
 
@@ -216,14 +249,12 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Markası" Foreground="#3B82F6" FontSize="11" FontWeight="Bold" Margin="5,0,0,5"/>
-                                <ComboBox Text="{Binding Marka, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Markalar}" 
+                                <ComboBox Tag="Markası" Text="{Binding Marka, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Markalar}" 
                                           DisplayMemberPath="Adi" SelectedValuePath="Adi" IsEditable="True"
                                           Style="{StaticResource ModernComboBox}"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Modeli" Foreground="#3B82F6" FontSize="11" FontWeight="Bold" Margin="5,0,0,5"/>
-                                <ComboBox Text="{Binding Model, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Modeller}" 
+                                <ComboBox Tag="Modeli" Text="{Binding Model, UpdateSourceTrigger=PropertyChanged}" ItemsSource="{Binding Modeller}" 
                                           DisplayMemberPath="Adi" SelectedValuePath="Adi" IsEditable="True"
                                           Style="{StaticResource ModernComboBox}"/>
                             </StackPanel>
@@ -237,18 +268,21 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Özellikler" Foreground="#3B82F6" FontSize="11" FontWeight="Bold" Margin="5,0,0,5"/>
-                                <TextBox Text="{Binding Ozellik, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                <TextBox Tag="Özellikler" Text="{Binding Ozellik, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Seri Numarası" Foreground="#3B82F6" FontSize="11" FontWeight="Bold" Margin="5,0,0,5"/>
-                                <TextBox Text="{Binding SeriNo, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
+                                <TextBox Tag="Seri Numarası" Text="{Binding SeriNo, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource ModernTextBox}"/>
                             </StackPanel>
                         </Grid>
 
+                        <!-- Satır 4: Bulunduğu Yer (Şantiye) -->
+                        <ComboBox Tag="Bulunduğu Yer (Şantiye)" ItemsSource="{Binding SantiyeList}" 
+                                  SelectedValue="{Binding SantiyeId}" SelectedValuePath="Id" 
+                                  DisplayMemberPath="Kod"
+                                  Style="{StaticResource ModernComboBox}"/>
+
                         <!-- Satır 4: Açıklama -->
-                        <TextBlock Text="Cihaz Notu / Açıklama" Foreground="#3B82F6" FontSize="11" FontWeight="Bold" Margin="5,0,0,5"/>
-                        <TextBox Text="{Binding Not, UpdateSourceTrigger=PropertyChanged}" Height="80" TextWrapping="Wrap" AcceptsReturn="True" 
+                        <TextBox Tag="Cihaz Notu / Açıklama" Text="{Binding Not, UpdateSourceTrigger=PropertyChanged}" Height="80" TextWrapping="Wrap" AcceptsReturn="True" 
                                  VerticalContentAlignment="Top" Padding="12,10" Style="{StaticResource ModernTextBox}"/>
 
                     </StackPanel>

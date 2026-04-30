@@ -53,6 +53,6 @@ public partial class KullaniciEditWindow : Window
         }
     }
 
-    public string Sifre => TxtSifre.Password;
+    public string Sifre => TxtSifreNew.Visibility == Visibility.Visible ? TxtSifreNew.Password : TxtSifre.Password;
     public string SifreTekrar => TxtSifreTekrar.Password;
 }

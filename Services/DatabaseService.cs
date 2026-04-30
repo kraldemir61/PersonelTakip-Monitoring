@@ -368,8 +368,10 @@ public class DatabaseService
         using var conn = CreateConnection();
         await conn.OpenAsync();
         await conn.ExecuteAsync(@"
-            INSERT INTO cihazlar (id, seri_no, cihaz_adi, marka, model, ozellik, sahip_firma, not_text, tur, durum, son_islem_tarihi, foto_path)
-            VALUES (@Id, @SeriNo, @CihazAdi, @Marka, @Model, @Ozellik, NULL, @Not, 1, @Durum, @SonIslemTarihi, @FotoPath)",
+            INSERT INTO cihazlar (id, seri_no, cihaz_adi, marka, model, ozellik, sahip_firma, not_text, tur, durum, son_islem_tarihi, foto_path, santiye_id)
+            VALUES (@Id, @SeriNo, @CihazAdi, @Marka, @Model, @Ozellik, NULL, @Not, 1, 
+                    CASE WHEN @SantiyeId IS NOT NULL THEN 'Şantiyede' ELSE 'Boşta' END, 
+                    @SonIslemTarihi, @FotoPath, @SantiyeId)",
             cihaz);
     }
 
@@ -386,6 +388,10 @@ public class DatabaseService
                 ozellik = @Ozellik,
                 not_text = @Not, 
                 foto_path = @FotoPath,
+                santiye_id = @SantiyeId,
+                durum = CASE WHEN zimmetli_personel_id IS NOT NULL THEN 'Zimmetli' 
+                             WHEN @SantiyeId IS NOT NULL THEN 'Şantiyede' 
+                             ELSE 'Boşta' END,
                 son_islem_tarihi = @SonIslemTarihi
             WHERE id = @Id",
             cihaz);
@@ -464,7 +470,7 @@ public class DatabaseService
                    s.kod as BulunduguSantiyeKod, s.id as SantiyeId
             FROM cihazlar c
             LEFT JOIN personeller p ON c.zimmetli_personel_id = p.id
-            LEFT JOIN santiyeler s ON p.santiye_id = s.id
+            LEFT JOIN santiyeler s ON c.santiye_id = s.id
             WHERE c.tur = 1
             ORDER BY c.son_islem_tarihi DESC")).ToList();
     }
@@ -847,21 +853,44 @@ public class DatabaseService
                 using var conn = CreateConnection();
                 await conn.OpenAsync();
 
-                var tabloAdi = tablo.ToLower() switch
+                string kontrolSql;
+                if (tablo.StartsWith("cihaz_"))
                 {
-                    "bolumler" => "bolumu",
-                    "gorevler" => "gorevi",
-                    "uyruklar" => "uyrugu",
-                    "para_birimleri" => "para_birimi",
-                    _ => tablo.ToLower().TrimEnd('r')
-                };
-
-                var kontrolSql = $"SELECT COUNT(*) FROM personeller WHERE {tabloAdi} = @Id";
-                var sayi = await conn.ExecuteScalarAsync<int>(kontrolSql, new { Id = id });
-
-                if (sayi > 0)
+                    var kolon = tablo switch
+                    {
+                        "cihaz_adlari" => "cihaz_adi",
+                        "cihaz_markalari" => "marka",
+                        "cihaz_modelleri" => "model",
+                        "cihaz_firmalari" => "sahip_firma",
+                        _ => "cihaz_adi"
+                    };
+                    
+                    // Cihazlarda lookup ID yerine direkt isim tutuluyor olabilir (mevcut yapıya göre)
+                    // Eğer isim tutuluyorsa önce ismini alıp sonra cihazlar tablosunda o ismi aramalıyız.
+                    var isim = await conn.ExecuteScalarAsync<string>($"SELECT adi FROM {tablo} WHERE id = @Id", new { Id = id });
+                    kontrolSql = $"SELECT COUNT(*) FROM cihazlar WHERE {kolon} = @Isim";
+                    var sayiCihaz = await conn.ExecuteScalarAsync<int>(kontrolSql, new { Isim = isim });
+                    if (sayiCihaz > 0)
+                        throw new InvalidOperationException($"Bu kayıt {sayiCihaz} cihazda kullanıldığı için silinemez.");
+                }
+                else
                 {
-                    throw new InvalidOperationException($"Bu kayıt {sayi} personelinin başvurusunda kullanıldığı için silinemez.");
+                    var tabloAdi = tablo.ToLower() switch
+                    {
+                        "bolumler" => "bolumu",
+                        "gorevler" => "gorevi",
+                        "uyruklar" => "uyrugu",
+                        "para_birimleri" => "para_birimi",
+                        _ => tablo.ToLower().TrimEnd('r')
+                    };
+
+                    kontrolSql = $"SELECT COUNT(*) FROM personeller WHERE {tabloAdi} = @Id";
+                    var sayi = await conn.ExecuteScalarAsync<int>(kontrolSql, new { Id = id });
+
+                    if (sayi > 0)
+                    {
+                        throw new InvalidOperationException($"Bu kayıt {sayi} personelinin başvurusunda kullanıldığı için silinemez.");
+                    }
                 }
 
                 await conn.ExecuteAsync(

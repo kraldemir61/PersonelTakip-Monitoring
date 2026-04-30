@@ -16,6 +16,8 @@ public partial class CihazHareketGecmisiViewModel : BaseViewModel
 {
     private readonly DatabaseService _databaseService;
     private readonly ExcelService _excelService;
+    private readonly Kullanici _currentUser;
+    private readonly bool _isAdmin;
 
     [ObservableProperty]
     private ObservableCollection<CihazHareket> _hareketler = new();
@@ -28,10 +30,12 @@ public partial class CihazHareketGecmisiViewModel : BaseViewModel
     [ObservableProperty]
     private CihazTuru? _filtreTuru;
 
-    public CihazHareketGecmisiViewModel(DatabaseService databaseService, ExcelService excelService, CihazTuru? filtreTuru = null)
+    public CihazHareketGecmisiViewModel(DatabaseService databaseService, ExcelService excelService, Kullanici currentUser, bool isAdmin, CihazTuru? filtreTuru = null)
     {
         _databaseService = databaseService;
         _excelService = excelService;
+        _currentUser = currentUser;
+        _isAdmin = isAdmin;
         FiltreTuru = filtreTuru;
         
         HareketlerView = CollectionViewSource.GetDefaultView(Hareketler);
@@ -50,6 +54,12 @@ public partial class CihazHareketGecmisiViewModel : BaseViewModel
             
             // Sadece Ölçüm Cihazlarını filtrele (CihazTuru = 0 / Olcum) ve personel zimmeti olmayanları getir
             var filteredResult = result.Where(x => x.CihazTuru == CihazTuru.Olcum && string.IsNullOrEmpty(x.PersonelAd));
+
+            // Eğer admin değilse sadece kendi şantiyesinin hareketlerini görsün
+            if (!_isAdmin && _currentUser.SantiyeId != null)
+            {
+                filteredResult = filteredResult.Where(x => x.NeredenSantiyeId == _currentUser.SantiyeId || x.NereyeSantiyeId == _currentUser.SantiyeId);
+            }
 
             // Eğer cihazId bazlı bir filtre varsa (tekil geçmiş)
             if (FiltreTuru.HasValue)

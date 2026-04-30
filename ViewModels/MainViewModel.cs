@@ -208,9 +208,9 @@ public partial class MainViewModel : BaseViewModel
     [ObservableProperty]
     private bool _ofisCihaziFilterAssigned = false;
 
-    [ObservableProperty] private ObservableCollection<Santiye> _sidebarOfisCihaziSantiyeler;
+    [ObservableProperty] private ObservableCollection<string> _sidebarOfisCihaziSantiyeler = new();
     [ObservableProperty] private string _selectedOfisFilterSantiye;
-    [ObservableProperty] private ObservableCollection<Santiye> _sidebarOlcumCihaziSantiyeler;
+    [ObservableProperty] private ObservableCollection<string> _sidebarOlcumCihaziSantiyeler = new();
     [ObservableProperty] private string _selectedOlcumFilterSantiye;
 
     [RelayCommand]
@@ -232,49 +232,39 @@ public partial class MainViewModel : BaseViewModel
     private void UpdateSidebarOfisCihaziSantiyeler()
     {
         if (OfisCihazlari == null || SantiyeList == null) return;
-
-        // Cihazların zimmetli olduğu personellerin şantiye kodlarını al
-        var aktifSantiyeKodlari = OfisCihazlari
-            .Where(c => c.ZimmetliMi && !string.IsNullOrEmpty(c.BulunduguSantiyeKod))
-            .Select(c => c.BulunduguSantiyeKod)
-            .Distinct()
-            .ToList();
-
-        var filtrelenmişListe = SantiyeList.Where(s => aktifSantiyeKodlari.Contains(s.Kod)).OrderBy(s => s.Kod).ToList();
         
-        var sidebarListe = new ObservableCollection<Santiye>(filtrelenmişListe);
+        var list = new ObservableCollection<string>();
+        
+        var kodlar = OfisCihazlari
+            .Where(c => !string.IsNullOrEmpty(c.BulunduguSantiyeKod))
+            .Select(c => c.BulunduguSantiyeKod!)
+            .Distinct()
+            .OrderBy(k => k);
 
-        // Eğer boşta cihaz varsa "Boşta" butonunu ekle
-        if (OfisCihazlari.Any(c => !c.ZimmetliMi))
+        foreach (var kod in kodlar)
         {
-            sidebarListe.Add(new Santiye { Kod = "Boşta", Adi = "Boşta" });
+            if (kod != "Boşta") list.Add(kod);
         }
 
-        SidebarOfisCihaziSantiyeler = sidebarListe;
+        SidebarOfisCihaziSantiyeler = list;
     }
 
     private void UpdateSidebarOlcumCihaziSantiyeler()
     {
-        if (OlcumCihazlari == null || SantiyeList == null) return;
+        var list = new ObservableCollection<string>();
 
-        // Ölçüm cihazlarının bulunduğu şantiye kodlarını al
-        var aktifSantiyeKodlari = OlcumCihazlari
+        var kodlar = OlcumCihazlari
             .Where(c => !string.IsNullOrEmpty(c.SantiyeKod))
-            .Select(c => c.SantiyeKod)
+            .Select(c => c.SantiyeKod!)
             .Distinct()
-            .ToList();
+            .OrderBy(k => k);
 
-        var filtrelenmişListe = SantiyeList.Where(s => aktifSantiyeKodlari.Contains(s.Kod)).OrderBy(s => s.Kod).ToList();
-        
-        var sidebarListe = new ObservableCollection<Santiye>(filtrelenmişListe);
-
-        // Eğer boşta cihaz varsa "Boşta" butonunu ekle
-        if (OlcumCihazlari.Any(c => c.SantiyeId == null))
+        foreach (var kod in kodlar)
         {
-            sidebarListe.Add(new Santiye { Kod = "Boşta", Adi = "Boşta" });
+            if (kod != "Boşta") list.Add(kod);
         }
 
-        SidebarOlcumCihaziSantiyeler = sidebarListe;
+        SidebarOlcumCihaziSantiyeler = list;
     }
 
     // Cihaz Tanımlamalar
@@ -549,7 +539,26 @@ public partial class MainViewModel : BaseViewModel
     {
         if (CurrentUser == null) return;
         var liste = await _databaseService.GetSonBildirimlerAsync(CurrentUser.Id, 20);
-        BildirimlerListesi = new ObservableCollection<Bildirim>(liste);
+        
+        // FİLTRELEME: Oturum açma bildirimleri kuralı
+        var filtrelenmişListe = liste.Where(b => 
+        {
+            var mesaj = b.Mesaj.ToLower();
+            bool isLoginNotification = mesaj.Contains("oturum açtı") || mesaj.Contains("giriş yaptı");
+
+            if (isLoginNotification)
+            {
+                // Sadece Adminler görebilir
+                if (!IsAdmin) return false;
+                
+                // Kişi kendi oturum açma bildirimini göremez
+                if (b.TetikleyenKullaniciId == CurrentUser.Id) return false;
+            }
+
+            return true;
+        }).ToList();
+
+        BildirimlerListesi = new ObservableCollection<Bildirim>(filtrelenmişListe);
         UnreadBildirimCount = BildirimlerListesi.Count(x => !x.OkunduMu);
         HasUnreadBildirimler = UnreadBildirimCount > 0;
     }
@@ -579,7 +588,16 @@ public partial class MainViewModel : BaseViewModel
 
                 if (Guid.TryParse(tetikleyenIdStr, out var tetikleyenId))
                 {
-                    // Eğer işlemi yapan kişi BEN isem, bildirim gösterme ve verileri zaten ben güncelledim
+                    // OTURUM AÇMA BİLDİRİM FİLTRESİ
+                    var lowerMesaj = mesaj.ToLower();
+                    bool isLoginNotification = lowerMesaj.Contains("oturum açtı") || lowerMesaj.Contains("giriş yaptı");
+                    if (isLoginNotification)
+                    {
+                        if (!IsAdmin) return; // Admin değilse gösterme
+                        if (tetikleyenId == CurrentUser?.Id) return; // Kendisi ise gösterme
+                    }
+
+                    // Eğer işlemi yapan kişi BEN isem ve login değilse, bildirim gösterme
                     if (tetikleyenId == CurrentUser?.Id) return;
 
                     // Tüm güncellemeleri doğrudan UI thread'i üzerinde sırayla yapıyoruz
@@ -1057,32 +1075,33 @@ public partial class MainViewModel : BaseViewModel
         if (obj is not OfisCihazi c) return false;
 
         // Yetki Kontrolü: Süper admin ve admin her şeyi görür, 
-        // normal kullanıcılar sadece kendi şantiyesini ve boştakileri görür
+        // normal kullanıcılar sadece kendi şantiyesini (cihazın olduğu yer) ve boştaki (hiçbir yere atanmamış) cihazları görür
         if (!IsAdmin)
         {
-            // Ofis cihazlarında 'Boşta' durumu ZimmetliMi = false olmasıdır.
-            // 'Kendi Şantiyesi' ise zimmetli olduğu personelin şantiyesidir.
-            bool isIdle = !c.ZimmetliMi;
-            bool isMySantiye = c.ZimmetliMi && c.SantiyeId == CurrentUser?.SantiyeId;
+            // Cihazın şantiyesi kullanıcının şantiyesi mi? Veya cihaz hiçbir şantiyeye atanmamış mı?
+            bool isMySantiye = c.SantiyeId == CurrentUser?.SantiyeId;
+            bool isTrulyIdle = c.SantiyeId == null && !c.ZimmetliMi;
             
-            if (!isIdle && !isMySantiye) return false;
+            if (!isMySantiye && !isTrulyIdle) return false;
         }
 
-        // Şantiye Filtresi (Sol Menü)
+        // Şantiye Filtresi (Sol Menü) - Sadece konuma odaklanır (Metin bazlı)
         if (!string.IsNullOrEmpty(SelectedOfisFilterSantiye))
         {
             if (SelectedOfisFilterSantiye == "Boşta")
             {
-                if (c.ZimmetliMi) return false;
+                // Herhangi bir şantiyeye atanmamış (kod alanı boş) olanlar
+                if (!string.IsNullOrEmpty(c.BulunduguSantiyeKod)) return false;
             }
             else
             {
-                if (!c.ZimmetliMi || c.BulunduguSantiyeKod != SelectedOfisFilterSantiye)
+                // Seçilen şantiye kodu ile tam eşleşenler
+                if (c.BulunduguSantiyeKod != SelectedOfisFilterSantiye)
                     return false;
             }
         }
 
-        // Hızlı Durum Filtreleri (Butonlar)
+        // Hızlı Durum Filtreleri (Üst Butonlar: Boşta / Zimmetli)
         if (OfisCihaziFilterAvailable && c.ZimmetliMi) return false;
         if (OfisCihaziFilterAssigned && !c.ZimmetliMi) return false;
 
@@ -1129,11 +1148,28 @@ public partial class MainViewModel : BaseViewModel
         // Cihaz zimmetliyse iade al modunda, değilse zimmetle modunda aç
         bool isIade = cihaz.ZimmetliMi;
         
-        var window = new Views.OfisCihazZimmetWindow(cihaz, isIade) { Owner = Application.Current.MainWindow };
+        var window = new Views.OfisCihazZimmetWindow(cihaz, isIade, CurrentUser!, IsAdmin) { Owner = Application.Current.MainWindow };
         if (window.ShowDialog() == true)
         {
             await LoadCihazlarAsync();
             OfisCihazlariView?.Refresh();
+            ShowSuccess(isIade ? "Cihaz iade alındı." : "Cihaz zimmetlendi.");
+        }
+    }
+
+    [RelayCommand]
+    private async Task ZimmetleIadeOlcumCihaziAsync(Cihaz? cihaz)
+    {
+        if (cihaz == null) return;
+
+        // Cihaz zimmetliyse iade al modunda, değilse zimmetle modunda aç
+        bool isIade = cihaz.ZimmetliMi;
+        
+        var window = new Views.CihazZimmetWindow(cihaz, isIade, CurrentUser!, IsAdmin) { Owner = Application.Current.MainWindow };
+        if (window.ShowDialog() == true)
+        {
+            await LoadCihazlarAsync();
+            OlcumCihazlariView?.Refresh();
             ShowSuccess(isIade ? "Cihaz iade alındı." : "Cihaz zimmetlendi.");
         }
     }
@@ -1298,7 +1334,7 @@ public partial class MainViewModel : BaseViewModel
     {
         if (SelectedOlcumCihazi == null)
         {
-            var vm = new CihazHareketGecmisiViewModel(_databaseService, _excelService);
+            var vm = new CihazHareketGecmisiViewModel(_databaseService, _excelService, CurrentUser!, IsAdmin);
             var window = new Views.CihazHareketGecmisiWindow(vm);
             window.ShowDialog();
             return;
@@ -1332,7 +1368,10 @@ public partial class MainViewModel : BaseViewModel
     [RelayCommand]
     public async Task YeniOfisCihaziAsync()
     {
-        var vm = new OfisCihazEditViewModel(_databaseService);
+        var vm = new OfisCihazEditViewModel(_databaseService)
+        {
+            SantiyeList = SantiyeList
+        };
 
         var window = new Views.OfisCihazEditWindow { DataContext = vm };
         if (window.ShowDialog() == true)
@@ -1346,7 +1385,10 @@ public partial class MainViewModel : BaseViewModel
     {
         if (SelectedOfisCihazi == null) return;
 
-        var vm = new OfisCihazEditViewModel(_databaseService, SelectedOfisCihazi);
+        var vm = new OfisCihazEditViewModel(_databaseService, SelectedOfisCihazi)
+        {
+            SantiyeList = SantiyeList
+        };
 
         var window = new Views.OfisCihazEditWindow { DataContext = vm };
         if (window.ShowDialog() == true)
@@ -1374,6 +1416,40 @@ public partial class MainViewModel : BaseViewModel
         var vm = new OfisCihazGecmisViewModel(_databaseService, _excelService, SelectedOfisCihazi);
         var window = new Views.OfisCihazGecmisWindow(vm) { Owner = Application.Current.MainWindow };
         window.ShowDialog();
+    }
+
+    [RelayCommand]
+    public async Task OfisCihaziHareketAsync()
+    {
+        if (SelectedOfisCihazi == null) return;
+
+        // Zimmetli cihaz transfer edilemez kontrolü
+        if (SelectedOfisCihazi.ZimmetliMi)
+        {
+            ShowError("Bu cihaz şu an bir personel üzerinde zimmetlidir. Transfer edebilmek için önce zimmet iadesi yapmalısınız.");
+            return;
+        }
+
+        // Admin değilse kontrol et
+        if (!IsAdmin)
+        {
+            if (SelectedOfisCihazi.SantiyeId != null && SelectedOfisCihazi.SantiyeId != CurrentUser?.SantiyeId)
+            {
+                ShowError("Bu cihaz üzerinde işlem yapma yetkiniz bulunmamaktadır.");
+                return;
+            }
+        }
+
+        var vm = new OfisCihazHareketViewModel(_databaseService, CurrentUser!, SelectedOfisCihazi)
+        {
+            SantiyeList = SantiyeList
+        };
+
+        var window = new Views.OfisCihazHareketWindow { DataContext = vm };
+        if (window.ShowDialog() == true)
+        {
+            await LoadCihazlarAsync();
+        }
     }
 
     [RelayCommand]
@@ -1951,6 +2027,14 @@ public partial class MainViewModel : BaseViewModel
         {
             IsBusy = false;
         }
+    }
+
+    [RelayCommand]
+    public void OpenReports()
+    {
+        var vm = new ReportsViewModel(_databaseService, _excelService, CurrentUser!, IsAdmin);
+        var window = new Views.ReportsWindow(vm) { Owner = Application.Current.MainWindow };
+        window.ShowDialog();
     }
 
     [RelayCommand]

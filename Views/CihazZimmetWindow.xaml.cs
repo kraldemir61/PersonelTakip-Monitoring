@@ -11,9 +11,9 @@ using PersonelTakip.Services;
 
 namespace PersonelTakip.Views
 {
-    public partial class OfisCihazZimmetWindow : Window
+    public partial class CihazZimmetWindow : Window
     {
-        private readonly OfisCihazi _cihaz;
+        private readonly Cihaz _cihaz;
         private readonly bool _isIade;
         private readonly DatabaseService _databaseService;
         private readonly Kullanici _currentUser;
@@ -21,7 +21,7 @@ namespace PersonelTakip.Views
         private List<Personel> _tumPersoneller = new();
         private ICollectionView? _personelView;
 
-        public OfisCihazZimmetWindow(OfisCihazi cihaz, bool isIade, Kullanici currentUser, bool isAdmin)
+        public CihazZimmetWindow(Cihaz cihaz, bool isIade, Kullanici currentUser, bool isAdmin)
         {
             InitializeComponent();
             _cihaz = cihaz;
@@ -30,8 +30,8 @@ namespace PersonelTakip.Views
             _isAdmin = isAdmin;
             _databaseService = new DatabaseService();
 
-            TxtTitle.Text = _isIade ? "Ofis Cihazı İade Al" : "Ofis Cihazı Zimmetle";
-            TxtCihaz.Text = $"{_cihaz.CihazAdi} - {_cihaz.Marka} {_cihaz.Model} ({_cihaz.SeriNo})";
+            TxtTitle.Text = _isIade ? "Cihaz İade Al" : "Cihaz Zimmetle";
+            TxtCihaz.Text = $"{_cihaz.CihazAdi} ({_cihaz.SeriNo})";
             DtTarih.SelectedDate = DateTime.Now;
 
             if (_isIade)
@@ -81,7 +81,8 @@ namespace PersonelTakip.Views
 
                 if (_isIade)
                 {
-                    await _databaseService.OfisCihaziIadeAlAsync(_cihaz.Id, tarih, aciklama);
+                    // Ölçüm cihazları için DatabaseService içinde IadeAlAsync metodunu kullanıyoruz
+                    await _databaseService.IadeAlAsync(_cihaz.Id, tarih, aciklama, _currentUser.Id);
                 }
                 else
                 {
@@ -90,7 +91,8 @@ namespace PersonelTakip.Views
                         MessageBox.Show("Personel seçiniz.");
                         return;
                     }
-                    await _databaseService.OfisCihaziZimmetleAsync(_cihaz.Id, (Guid)LstPersonel.SelectedValue, tarih, aciklama);
+                    // Ölçüm cihazları için DatabaseService içinde ZimmetleAsync metodunu kullanıyoruz
+                    await _databaseService.ZimmetleAsync(_cihaz.Id, (Guid)LstPersonel.SelectedValue, tarih, aciklama, _currentUser.Id);
                 }
 
                 DialogResult = true;
@@ -112,6 +114,7 @@ namespace PersonelTakip.Views
             DialogResult = false;
             Close();
         }
+
         private void DatePicker_CalendarOpened(object sender, RoutedEventArgs e)
         {
             Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Render, new Action(() =>
@@ -126,20 +129,9 @@ namespace PersonelTakip.Views
             for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent); i++)
             {
                 var child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i);
-
-                if (child is TextBlock tb)
-                {
-                    tb.Foreground = System.Windows.Media.Brushes.White;
-                }
-                else if (child is System.Windows.Controls.Primitives.CalendarDayButton dayBtn)
-                {
-                    dayBtn.Foreground = System.Windows.Media.Brushes.White;
-                }
-                else if (child is System.Windows.Controls.Primitives.CalendarButton calBtn)
-                {
-                    calBtn.Foreground = System.Windows.Media.Brushes.White;
-                }
-
+                if (child is TextBlock tb) tb.Foreground = System.Windows.Media.Brushes.White;
+                else if (child is System.Windows.Controls.Primitives.CalendarDayButton dayBtn) dayBtn.Foreground = System.Windows.Media.Brushes.White;
+                else if (child is System.Windows.Controls.Primitives.CalendarButton calBtn) calBtn.Foreground = System.Windows.Media.Brushes.White;
                 FixCalendarColors(child);
             }
         }

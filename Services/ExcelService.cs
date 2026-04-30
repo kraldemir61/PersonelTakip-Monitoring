@@ -439,7 +439,8 @@ public class ExcelService
                     worksheet.Cell(row, 4).Value = c.Model;
                     worksheet.Cell(row, 5).Value = c.Ozellik;
                     worksheet.Cell(row, 6).Value = c.SeriNo;
-                    worksheet.Cell(row, 7).Value = c.Not;
+                    worksheet.Cell(row, 7).Value = c.BulunduguSantiyeKod;
+                    worksheet.Cell(row, 8).Value = c.Not;
                     row++;
                 }
 
@@ -467,6 +468,7 @@ public class ExcelService
                 var worksheet = workbook.Worksheet(1);
                 var rows = worksheet.RangeUsed().RowsUsed().Skip(1);
 
+                var santiyeler = await _databaseService.SantiyeleriGetirAsync(aktif: null);
                 var list = new List<OfisCihazi>();
 
                 foreach (var row in rows)
@@ -493,7 +495,25 @@ public class ExcelService
                     c.Model = row.Cell(startCol + 2).GetValue<string>();
                     c.Ozellik = row.Cell(startCol + 3).GetValue<string>();
                     c.SeriNo = row.Cell(startCol + 4).GetValue<string>();
-                    c.Not = row.Cell(startCol + 5).GetValue<string>();
+                    
+                    var santiyeGirdisi = row.Cell(startCol + 5).GetValue<string>()?.Trim();
+                    c.BulunduguSantiyeKod = santiyeGirdisi;
+                    
+                    if (!string.IsNullOrEmpty(santiyeGirdisi))
+                    {
+                        // Önce kod ile, sonra ad ile eşleştirmeyi dene (büyük/küçük harf duyarsız)
+                        var bulunanSantiye = santiyeler.FirstOrDefault(s => 
+                            s.Kod.Equals(santiyeGirdisi, StringComparison.OrdinalIgnoreCase) || 
+                            s.Adi.Equals(santiyeGirdisi, StringComparison.OrdinalIgnoreCase));
+                            
+                        if (bulunanSantiye != null)
+                        {
+                            c.SantiyeId = bulunanSantiye.Id;
+                            c.BulunduguSantiyeKod = bulunanSantiye.Kod; // Orijinal kodu yazalım
+                        }
+                    }
+
+                    c.Not = row.Cell(startCol + 6).GetValue<string>();
 
                     if (string.IsNullOrWhiteSpace(c.SeriNo)) continue;
 
@@ -518,6 +538,7 @@ public class ExcelService
         worksheet.Cell(1, col++).Value = "Model";
         worksheet.Cell(1, col++).Value = "Özellik";
         worksheet.Cell(1, col++).Value = "Seri No";
+        worksheet.Cell(1, col++).Value = "Şantiye Kodu";
         worksheet.Cell(1, col++).Value = "Not";
 
         var headerRange = worksheet.Range(1, 1, 1, col - 1);
@@ -532,9 +553,10 @@ public class ExcelService
         worksheet.Cell(1, 3).Value = "Model";
         worksheet.Cell(1, 4).Value = "Özellik";
         worksheet.Cell(1, 5).Value = "Seri No";
-        worksheet.Cell(1, 6).Value = "Not";
+        worksheet.Cell(1, 6).Value = "Şantiye Kodu";
+        worksheet.Cell(1, 7).Value = "Not";
 
-        var headerRange = worksheet.Range(1, 1, 1, 6);
+        var headerRange = worksheet.Range(1, 1, 1, 7);
         headerRange.Style.Font.Bold = true;
         headerRange.Style.Fill.BackgroundColor = XLColor.Khaki;
     }

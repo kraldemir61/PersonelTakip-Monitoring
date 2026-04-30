@@ -44,6 +44,12 @@ namespace PersonelTakip.ViewModels
         [ObservableProperty]
         private ObservableCollection<LookupItem> _modeller = new();
 
+        [ObservableProperty]
+        private Guid? _santiyeId;
+
+        [ObservableProperty]
+        private ObservableCollection<Santiye> _santiyeList;
+
 
 
         public OfisCihazEditViewModel(DatabaseService databaseService, OfisCihazi? cihaz = null)
@@ -62,6 +68,7 @@ namespace PersonelTakip.ViewModels
                 Model = _cihaz.Model;
                 Ozellik = _cihaz.Ozellik;
                 Not = _cihaz.Not;
+                SantiyeId = _cihaz.SantiyeId;
 
             }
 
@@ -75,8 +82,14 @@ namespace PersonelTakip.ViewModels
                 CihazAdlari = new ObservableCollection<LookupItem>(await _databaseService.LookupGetirAsync("cihaz_adlari"));
                 Markalar = new ObservableCollection<LookupItem>(await _databaseService.LookupGetirAsync("cihaz_markalari"));
                 Modeller = new ObservableCollection<LookupItem>(await _databaseService.LookupGetirAsync("cihaz_modelleri"));
+                
+                var santiyeler = await _databaseService.SantiyeleriGetirAsync();
+                SantiyeList = new ObservableCollection<Santiye>(santiyeler);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Şantiye yükleme hatası: " + ex.Message);
+            }
         }
 
         [RelayCommand]
@@ -96,6 +109,7 @@ namespace PersonelTakip.ViewModels
                 _cihaz.Model = Model;
                 _cihaz.Ozellik = Ozellik;
                 _cihaz.Not = Not;
+                _cihaz.SantiyeId = SantiyeId;
 
                 if (_isEdit)
                     await _databaseService.OfisCihaziGuncelleAsync(_cihaz);
