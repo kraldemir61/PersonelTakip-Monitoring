@@ -59,6 +59,27 @@ public partial class MainViewModel : BaseViewModel
     private Personel? _selectedPersonel;
 
     [ObservableProperty]
+    private ObservableCollection<dynamic> _selectedPersonelDevices = new();
+
+    partial void OnSelectedPersonelChanged(Personel? value)
+    {
+        SelectedPersonelDevices.Clear();
+        if (value == null) return;
+
+        // Ölçüm Cihazları
+        foreach (var c in OlcumCihazlari.Where(x => x.ZimmetliPersonelId == value.Id))
+        {
+            SelectedPersonelDevices.Add(new { Type = "📱", Name = c.CihazAdi, Serial = c.SeriNo });
+        }
+
+        // Ofis Cihazları
+        foreach (var c in OfisCihazlari.Where(x => x.ZimmetliPersonelId == value.Id))
+        {
+            SelectedPersonelDevices.Add(new { Type = "💻", Name = c.CihazAdi, Serial = c.SeriNo });
+        }
+    }
+
+    [ObservableProperty]
     private ObservableCollection<Kullanici> _kullanicilar = new();
 
     [ObservableProperty]
@@ -752,6 +773,7 @@ public partial class MainViewModel : BaseViewModel
             UpdateSidebarOlcumCihaziSantiyeler();
             UpdateSidebarSantiyeler();
             CalculateDashboardStats();
+            SelectedPersonel = null; // Açılışta özet ekranı için seçimi temizle
             OnPropertyChanged(nameof(PersonellerView));
         }
         catch (Exception ex)
@@ -1014,6 +1036,8 @@ public partial class MainViewModel : BaseViewModel
             }
 
             IsDataLoaded = true;
+            SelectedPersonel = null; // Yenileme sonrası seçimi temizle
+            OnSelectedPersonelChanged(SelectedPersonel);
         }
         catch
         {

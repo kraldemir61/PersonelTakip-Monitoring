@@ -1170,13 +1170,20 @@ public class DatabaseService
     {
         using var conn = CreateConnection();
         await conn.OpenAsync();
-        return (await conn.QueryAsync<Bildirim>(@"
+        var result = (await conn.QueryAsync<Bildirim>(@"
             SELECT b.*, COALESCE(bd.okundu_mu, FALSE) as okundu_mu 
             FROM bildirimler b
             LEFT JOIN bildirim_durumlari bd ON b.id = bd.bildirim_id AND bd.kullanici_id = @KullaniciId
             WHERE bd.silindi_mi IS NOT TRUE
             ORDER BY b.tarih DESC LIMIT @Limit", 
             new { KullaniciId = kullaniciId, Limit = limit })).ToList();
+
+        foreach (var b in result)
+        {
+            b.Tarih = b.Tarih.ToLocalTime();
+        }
+
+        return result;
     }
 
     public async Task OkunmadiIseOkunduYapAsync(int bildirimId, Guid kullaniciId)
