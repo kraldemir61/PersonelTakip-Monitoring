@@ -83,6 +83,9 @@ public partial class MainViewModel : BaseViewModel
     private ObservableCollection<Kullanici> _kullanicilar = new();
 
     [ObservableProperty]
+    private bool _showPasifKullanicilar = false;
+
+    [ObservableProperty]
     private Kullanici? _selectedKullanici;
 
     [ObservableProperty]
@@ -227,6 +230,12 @@ public partial class MainViewModel : BaseViewModel
 
     [ObservableProperty]
     private bool _ofisCihaziFilterAssigned = false;
+
+    [ObservableProperty]
+    private bool _olcumCihaziFilterAvailable = false;
+
+    [ObservableProperty]
+    private bool _olcumCihaziFilterAssigned = false;
 
     [ObservableProperty] private ObservableCollection<string> _sidebarOfisCihaziSantiyeler = [];
     [ObservableProperty] private string _selectedOfisFilterSantiye = string.Empty;
@@ -864,13 +873,16 @@ public partial class MainViewModel : BaseViewModel
         IsBusy = true;
         try
         {
-            var liste = await _databaseService.KullanicilariGetirAsync();
+            var liste = await _databaseService.KullanicilariGetirAsync(hepsiniGetir: true);
             Kullanicilar = [.. liste];
 
             KullanicilarView = new ListCollectionView(Kullanicilar);
             KullanicilarView.Filter = (obj) =>
             {
                 if (obj is not Kullanici k) return false;
+
+                // Pasif filtreleme
+                if (!ShowPasifKullanicilar && !k.Aktif) return false;
 
                 if (!string.IsNullOrEmpty(SelectedKullaniciFilterSantiye) && 
                     !string.Equals(k.SantiyeAdi, SantiyeList?.FirstOrDefault(s => s.Kod == SelectedKullaniciFilterSantiye)?.Adi, StringComparison.OrdinalIgnoreCase))
@@ -1098,9 +1110,13 @@ public partial class MainViewModel : BaseViewModel
             if (!isIdle && !isMySantiye) return false;
         }
 
+        // Hızlı Durum Filtreleri (Üst Butonlar: Boşta / Zimmetli)
+        if (OlcumCihaziFilterAvailable && c.ZimmetliMi) return false;
+        if (OlcumCihaziFilterAssigned && !c.ZimmetliMi) return false;
+
         if (string.IsNullOrWhiteSpace(SearchText)) return true;
 
-        var combined = $"{c.CihazAdi} {c.SeriNo} {c.Marka} {c.Model} {c.SantiyeKod} {c.SantiyeAdi} {c.SahipFirma} {c.Durum} {c.Not}";
+        var combined = $"{c.CihazAdi} {c.SeriNo} {c.Marka} {c.Model} {c.SantiyeKod} {c.SantiyeAdi} {c.SahipFirma} {c.Durum} {c.Not} {c.ZimmetliPersonelAd}";
         return StringHelper.SmartSearch(combined, SearchText);
     }
 
@@ -1156,6 +1172,25 @@ public partial class MainViewModel : BaseViewModel
         if (value) OfisCihaziFilterAvailable = false;
         OfisCihazlariView?.Refresh();
         CalculateDeviceStats();
+    }
+
+    partial void OnOlcumCihaziFilterAvailableChanged(bool value)
+    {
+        if (value) OlcumCihaziFilterAssigned = false;
+        OlcumCihazlariView?.Refresh();
+        CalculateDeviceStats();
+    }
+
+    partial void OnOlcumCihaziFilterAssignedChanged(bool value)
+    {
+        if (value) OlcumCihaziFilterAvailable = false;
+        OlcumCihazlariView?.Refresh();
+        CalculateDeviceStats();
+    }
+
+    partial void OnShowPasifKullanicilarChanged(bool value)
+    {
+        KullanicilarView?.Refresh();
     }
 
     [RelayCommand]
@@ -1534,19 +1569,46 @@ public partial class MainViewModel : BaseViewModel
             return;
         }
 
-        if (!Confirm($"'{SelectedKullanici.KullaniciAdi}' kullanıcısı silinecek. Onaylıyor musunuz?")) return;
+        if (!Confirm($"'{SelectedKullanici.KullaniciAdi}' kullanıcısı pasif edilecek. Onaylıyor musunuz?")) return;
 
         IsBusy = true;
         try
         {
             await _databaseService.KullaniciSilAsync(SelectedKullanici.Id, CurrentUser!.Id);
-            ShowSuccess("Kullanıcı silindi.");
+            ShowSuccess("Kullanıcı pasif edildi.");
             await LoadKullanicilarAsync();
             UpdateSidebarKullaniciSantiyeler();
         }
         catch (Exception ex)
         {
-            ShowError($"Silme sırasında hata: {TranslateExceptionMessage(ex.Message)}");
+            ShowError($"İşlem sırasında hata: {TranslateExceptionMessage(ex.Message)}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task AktiflestirKullaniciAsync()
+    {
+        if (!IsAdmin || SelectedKullanici == null) return;
+        
+        if (SelectedKullanici.Aktif) return;
+
+        if (!Confirm($"'{SelectedKullanici.KullaniciAdi}' kullanıcısı tekrar aktifleştirilecek. Onaylıyor musunuz?")) return;
+
+        IsBusy = true;
+        try
+        {
+            await _databaseService.KullaniciAktiflestirAsync(SelectedKullanici.Id, CurrentUser!.Id);
+            ShowSuccess("Kullanıcı tekrar aktifleştirildi.");
+            await LoadKullanicilarAsync();
+            UpdateSidebarKullaniciSantiyeler();
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Aktifleştirme sırasında hata: {TranslateExceptionMessage(ex.Message)}");
         }
         finally
         {

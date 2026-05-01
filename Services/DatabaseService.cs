@@ -487,7 +487,7 @@ public class DatabaseService
         await conn.ExecuteAsync(sql);
     }
 
-    public async Task<List<Kullanici>> KullanicilariGetirAsync(Guid? santiyeId = null, string? rol = null)
+    public async Task<List<Kullanici>> KullanicilariGetirAsync(Guid? santiyeId = null, string? rol = null, bool hepsiniGetir = false)
     {
         using var conn = CreateConnection();
         await conn.OpenAsync();
@@ -495,8 +495,9 @@ public class DatabaseService
         var sql = @"SELECT k.*, s.adi AS SantiyeAdi, s.kod AS SantiyeKod
                     FROM kullanicilar k
                     LEFT JOIN santiyeler s ON k.santiye_id = s.id
-                    WHERE k.aktif = true";
+                    WHERE 1=1";
 
+        if (!hepsiniGetir) sql += " AND k.aktif = true";
         if (santiyeId.HasValue) sql += " AND k.santiye_id = @SantiyeId";
         if (!string.IsNullOrEmpty(rol)) sql += " AND k.rol = @Rol";
 
@@ -632,6 +633,21 @@ public class DatabaseService
             }
         }
         throw lastEx ?? new Exception("Silme işlemi başarısız oldu.");
+    }
+
+    public async Task KullaniciAktiflestirAsync(Guid id, Guid adminId)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        await conn.ExecuteAsync(
+            "UPDATE kullanicilar SET aktif = true WHERE id = @Id",
+            new { Id = id });
+
+        await AuditLogAsync(adminId, "kullanicilar", id.ToString(), "Guncelle",
+            JsonSerializer.Serialize(new { Aktif = false }),
+            JsonSerializer.Serialize(new { Aktif = true }),
+            "Kullanıcı tekrar aktif edildi");
     }
 
     public async Task KullaniciRolGuncelleAsync(Guid adminId, Guid hedefId, string yeniRol)
