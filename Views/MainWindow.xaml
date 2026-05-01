@@ -1365,56 +1365,116 @@ Background="Transparent" BorderThickness="0" RowHeight="45">
 <Border Grid.Row="1" Grid.Column="3" Background="#1E293B" CornerRadius="12" BorderBrush="#334155" BorderThickness="1" Padding="20" Margin="5,0,0,0">
 <Grid>
 <!-- CİHAZ DETAY -->
-<StackPanel Visibility="{Binding SelectedOlcumCihazi, Converter={StaticResource NullToVisibilityConverter}, ConverterParameter=Invert}">
-<Border Width="60" Height="60" Background="#10B981" CornerRadius="40" Margin="0,0,0,15">
-<TextBlock Text="&#x1F4F1;" FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
+            <!-- CİHAZ DETAY (Modern Tasarım) -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding SelectedOlcumCihazi, Converter={StaticResource NullToVisibilityConverter}, ConverterParameter=Invert}">
+                <StackPanel DataContext="{Binding SelectedOlcumCihazi}">
+                    <!-- Başlık Bölümü -->
+                    <Grid Margin="0,0,0,25">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Width="60" Height="60" Background="#10B981" CornerRadius="40" Margin="0,0,15,0">
+                            <TextBlock Text="📱" FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding CihazAdi}" FontSize="22" FontWeight="Bold" Foreground="White"/>
+                            <Border Background="{Binding ZimmetliMi, Converter={StaticResource StatusToColorConverter}}" CornerRadius="4" Padding="8,2" HorizontalAlignment="Left" Margin="0,5,0,0">
+                                <TextBlock Text="{Binding ZimmetliMi, Converter={StaticResource StatusToTextConverter}}" FontSize="10" FontWeight="Bold" Foreground="White"/>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
 
-</Border>
-<TextBlock Text="{Binding SelectedOlcumCihazi.CihazAdi}" FontSize="20" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,25"/>
-<Separator Background="#334155" Margin="0,0,0,20"/>
-<ScrollViewer VerticalScrollBarVisibility="Auto">
-<StackPanel>
-<TextBlock Text="MARKA / MODEL" FontSize="10" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,4"/>
-<StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-<TextBlock Text="{Binding SelectedOlcumCihazi.Marka}" FontSize="15" FontWeight="SemiBold" Foreground="White"/>
-<TextBlock Text=" / " Foreground="#64748B"/>
-<TextBlock Text="{Binding SelectedOlcumCihazi.Model}" FontSize="15" Foreground="#CBD5E1"/>
-</StackPanel>
-<TextBlock Text="SERİ NUMARASI" FontSize="10" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,4"/>
-<TextBlock Text="{Binding SelectedOlcumCihazi.SeriNo}" FontSize="15" Foreground="White" Margin="0,0,0,15"/>
-<TextBlock Text="SAHİP FİRMA" FontSize="10" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,4"/>
-<TextBlock Text="{Binding SelectedOlcumCihazi.SahipFirma}" FontSize="15" Foreground="White" Margin="0,0,0,15"/>
-<TextBlock Text="BULUNDUĞU YER" FontSize="10" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,4"/>
-<StackPanel Margin="0,0,0,15">
-<TextBlock Text="{Binding SelectedOlcumCihazi.SantiyeKod}" FontSize="15" FontWeight="Bold" Foreground="#3B82F6"/>
-<TextBlock Text="{Binding SelectedOlcumCihazi.SantiyeAdi}" FontSize="12" Foreground="#94A3B8"/>
-</StackPanel>
-<TextBlock Text="DURUM" FontSize="10" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,4"/>
-<Border Background="#2D3748" HorizontalAlignment="Left" Padding="12,5" CornerRadius="6" Margin="0,0,0,15">
-<TextBlock Text="{Binding SelectedOlcumCihazi.Durum}" FontSize="13" FontWeight="SemiBold" Foreground="#10B981"/>
-</Border>
-<TextBlock Text="SON İŞLEM" FontSize="10" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,4"/>
-<TextBlock Text="{Binding SelectedOlcumCihazi.SonIslemTarihi, StringFormat=dd.MM.yyyy HH:mm}" FontSize="14" Foreground="#94A3B8" Margin="0,0,0,15"/>
-<TextBlock Text="NOT" FontSize="10" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,4"/>
-<TextBlock Text="{Binding SelectedOlcumCihazi.Not}" FontSize="13" Foreground="#CBD5E1" TextWrapping="Wrap" Opacity="0.9"/>
+                    <!-- Ana Bilgiler Kartı -->
+                    <Border Background="#0F172A" CornerRadius="12" Padding="20" Margin="0,0,0,15" BorderBrush="#334155" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="BİLGİLER" FontWeight="Bold" FontSize="11" Foreground="#10B981" Margin="0,0,0,15"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                
+                                <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,15">
+                                    <TextBlock Text="MARKA" FontSize="10" Foreground="#64748B"/>
+                                    <TextBlock Text="{Binding Marka}" Foreground="White">
+                                        <TextBlock.ContextMenu><ContextMenu><MenuItem Header="Kopyala" Click="CopyMenuItem_Click"/></ContextMenu></TextBlock.ContextMenu>
+                                    </TextBlock>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,15">
+                                    <TextBlock Text="MODEL" FontSize="10" Foreground="#64748B"/>
+                                    <TextBlock Text="{Binding Model}" Foreground="White">
+                                        <TextBlock.ContextMenu><ContextMenu><MenuItem Header="Kopyala" Click="CopyMenuItem_Click"/></ContextMenu></TextBlock.ContextMenu>
+                                    </TextBlock>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,15">
+                                    <TextBlock Text="SERİ NO" FontSize="10" Foreground="#64748B"/>
+                                    <TextBlock Text="{Binding SeriNo}" Foreground="White" TextTrimming="CharacterEllipsis" ToolTipService.InitialShowDelay="0" ToolTip="{Binding SeriNo}">
+                                        <TextBlock.ContextMenu><ContextMenu><MenuItem Header="Kopyala" Click="CopyMenuItem_Click"/></ContextMenu></TextBlock.ContextMenu>
+                                    </TextBlock>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,0,15">
+                                    <TextBlock Text="PERSONEL" FontSize="10" Foreground="#64748B"/>
+                                    <TextBlock Text="{Binding ZimmetliPersonelAd, TargetNullValue='Boşta'}" Foreground="#3B82F6" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding ZimmetliPersonelAd}">
+                                        <TextBlock.ContextMenu><ContextMenu><MenuItem Header="Kopyala" Click="CopyMenuItem_Click"/></ContextMenu></TextBlock.ContextMenu>
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
+                                    <TextBlock Text="SAHİP FİRMA" FontSize="10" Foreground="#64748B"/>
+                                    <TextBlock Text="{Binding SahipFirma}" Foreground="White"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Konum ve Detaylar Kartı -->
+                    <Border Background="#1E293B" CornerRadius="12" Padding="20" Margin="0,0,0,15" BorderBrush="#334155" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="KONUM VE DETAYLAR" FontWeight="Bold" FontSize="11" Foreground="#10B981" Margin="0,0,0,15"/>
+                            <Grid Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <Border Background="#3B82F6" Width="4" CornerRadius="2" Margin="0,2,12,2"/>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="ŞANTİYE / BÖLGE" FontSize="10" Foreground="#64748B"/>
+                                    <TextBlock Text="{Binding SantiyeKod}" Foreground="White" FontSize="16" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding SantiyeAdi}" Foreground="#94A3B8" FontSize="12"/>
+                                </StackPanel>
+                            </Grid>
+                            <Separator Background="#334155" Margin="0,0,0,15"/>
+                            <TextBlock Text="CİHAZ NOTU" FontSize="10" Foreground="#64748B" Margin="0,0,0,5"/>
+                            <TextBlock Text="{Binding Not}" Foreground="#CBD5E1" TextWrapping="Wrap" FontSize="13" FontStyle="Italic"/>
+                            <TextBlock Text="SON İŞLEM" FontSize="10" Foreground="#64748B" Margin="0,15,0,5"/>
+                            <TextBlock Text="{Binding SonIslemTarihi, StringFormat=dd.MM.yyyy HH:mm}" Foreground="#94A3B8" FontSize="12"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- İşlem Butonu -->
+                    <Button Command="{Binding DataContext.ZimmetleIadeOlcumCihaziCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding}" Height="45" Margin="0,5,0,0">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
+                                <Setter Property="Content" Value="ZİMMETLE / TAŞI"/>
+                                <Setter Property="Background" Value="#10B981"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ZimmetliMi}" Value="True">
+                                        <Setter Property="Content" Value="İADE AL"/>
+                                        <Setter Property="Background" Value="#EF4444"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
                 </StackPanel>
             </ScrollViewer>
-            <Button Command="{Binding DataContext.ZimmetleIadeOlcumCihaziCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                    CommandParameter="{Binding SelectedOlcumCihazi}" Margin="0,15,0,0">
-                <Button.Style>
-                    <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
-                        <Setter Property="Content" Value="ZİMMETLE"/>
-                        <Setter Property="Background" Value="#10B981"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding SelectedOlcumCihazi.ZimmetliMi}" Value="True">
-                                <Setter Property="Content" Value="İADE AL"/>
-                                <Setter Property="Background" Value="#EF4444"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Button.Style>
-            </Button>
-        </StackPanel>
 <!-- GENEL DURUM ÖZETİ (Cihaz Seçili Değilse) -->
 <Grid Visibility="{Binding SelectedOlcumCihazi, Converter={StaticResource NullToVisibilityConverter}}">
 <Grid.RowDefinitions>
