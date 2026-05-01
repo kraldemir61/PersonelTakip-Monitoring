@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace PersonelTakip.Views
+namespace PersonelTakip.Monitoring.Views
 {
     public partial class OfisCihazHareketWindow : Window
     {

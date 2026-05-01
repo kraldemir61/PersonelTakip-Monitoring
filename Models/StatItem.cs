@@ -1,4 +1,4 @@
-namespace PersonelTakip.Models;
+namespace PersonelTakip.Monitoring.Models;
 
 public class StatItem
 {

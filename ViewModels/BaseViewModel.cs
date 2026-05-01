@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using System.Windows;
 using System.Windows.Input;
 
-namespace PersonelTakip.ViewModels;
+namespace PersonelTakip.Monitoring.ViewModels;
 
 public abstract partial class BaseViewModel : ObservableObject
 {

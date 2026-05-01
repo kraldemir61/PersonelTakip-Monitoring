@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace PersonelTakip.Models
+namespace PersonelTakip.Monitoring.Models
 {
     public class OfisCihazi : INotifyPropertyChanged
     {

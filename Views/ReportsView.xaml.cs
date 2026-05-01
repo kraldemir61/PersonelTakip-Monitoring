@@ -1,6 +1,6 @@
 using System.Windows.Controls;
 
-namespace PersonelTakip.Views
+namespace PersonelTakip.Monitoring.Views
 {
     public partial class ReportsView : UserControl
     {

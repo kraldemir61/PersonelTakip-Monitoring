@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Windows.Data;
 
-namespace PersonelTakip.Helpers;
+namespace PersonelTakip.Monitoring.Helpers;
 
 public class BooleanInverter : IValueConverter
 {

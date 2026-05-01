@@ -1,13 +1,13 @@
-<Window x:Class="PersonelTakip.Views.MainWindow"
+<Window x:Class="PersonelTakip.Monitoring.Views.MainWindow"
 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-xmlns:local="clr-namespace:PersonelTakip.Views"
-xmlns:vm="clr-namespace:PersonelTakip.ViewModels"
-xmlns:conv="clr-namespace:PersonelTakip.Converters"
-xmlns:controls="clr-namespace:PersonelTakip.Controls"
-xmlns:helpers="clr-namespace:PersonelTakip.Helpers"
+xmlns:local="clr-namespace:PersonelTakip.Monitoring.Views"
+xmlns:vm="clr-namespace:PersonelTakip.Monitoring.ViewModels"
+xmlns:conv="clr-namespace:PersonelTakip.Monitoring.Converters"
+xmlns:controls="clr-namespace:PersonelTakip.Monitoring.Controls"
+xmlns:helpers="clr-namespace:PersonelTakip.Monitoring.Helpers"
 mc:Ignorable="d"
 Title="{Binding PageTitle}" MinHeight="640" MinWidth="980" Height="640" Width="980"
 Icon="/Resources/PersonelZimmet.ikon.ico"
@@ -318,7 +318,7 @@ IsHitTestVisible="False">
             </Popup>
 </Grid>
 <Button Content="Raporlar" Width="80" Height="24" FontSize="11" Padding="0" Command="{Binding OpenReportsCommand}" Margin="0,0,8,0" Background="#3B82F6" Foreground="White" Style="{StaticResource HeaderButton}" WindowChrome.IsHitTestVisibleInChrome="True" Visibility="{Binding IsSuperAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
-<Button Content="Şifre Değiştir" Width="90" Height="24" FontSize="11" Padding="0" Command="{Binding ParolaDegistirCommand}" Margin="0,0,8,0" Background="#FF5D0BF5" Foreground="White" Style="{StaticResource HeaderButton}" WindowChrome.IsHitTestVisibleInChrome="True"/>
+<Button Content="Şifre Değiştir" Width="90" Height="24" FontSize="11" Padding="0" Command="{Binding ParolaDegistirCommand}" Margin="0,0,8,0" Background="#FF5D0BF5" Foreground="White" Style="{StaticResource HeaderButton}" WindowChrome.IsHitTestVisibleInChrome="True" Visibility="{Binding IsNotMonitoringMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
 </StackPanel>
 </StackPanel>
 </Grid>
@@ -408,13 +408,13 @@ CommandParameter="{Binding Kod}">
 <ColumnDefinition Width="Auto"/>
 <ColumnDefinition Width="*"/>
 </Grid.ColumnDefinitions>
-<StackPanel Grid.Column="0" Orientation="Horizontal">
-<Button Content="Ekle" Command="{Binding YeniPersonelCommand}" Width="100" Height="40" Background="#3B82F6" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
-<Button Content="Düzenle" Command="{Binding DuzenlePersonelCommand}" Width="100" Height="40" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
-<Button Content="Sil" Command="{Binding SilPersonelCommand}" Width="60" Height="40" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
-<Button Content="Excel'e Aktar" Command="{Binding ExportExcelCommand}" Width="110" Height="40" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}"/>
-</StackPanel>
-<Border Grid.Column="1" Margin="20,0,0,0" CornerRadius="10" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="40">
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Visibility="{Binding IsNotMonitoringMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <Button Content="Ekle" Command="{Binding YeniPersonelCommand}" Width="100" Height="40" Background="#3B82F6" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                            <Button Content="Düzenle" Command="{Binding DuzenlePersonelCommand}" Width="100" Height="40" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                            <Button Content="Sil" Command="{Binding SilPersonelCommand}" Width="60" Height="40" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                            <Button Content="Excel'e Aktar" Command="{Binding ExportExcelCommand}" Width="110" Height="40" Background="#10B981" Foreground="White" Style="{StaticResource HeaderButton}"/>
+                        </StackPanel>
+<Border Grid.Column="1" Margin="0,0,0,0" CornerRadius="10" Background="#1E293B" BorderBrush="#334155" BorderThickness="1" Height="40">
 <Grid>
 <Grid.ColumnDefinitions>
 <ColumnDefinition Width="40"/>
@@ -634,7 +634,7 @@ Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" CaretBrush="Whi
 </Grid>
 </TabItem>
 <!-- 2. KULLANICILAR -->
-<TabItem Header="Kullanıcılar" Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}">
+<TabItem Header="Kullanıcılar" Visibility="{Binding IsNotMonitoringMode, Converter={StaticResource BoolToVisibilityConverter}}">
 <Grid>
 <Grid.ColumnDefinitions>
 <ColumnDefinition Width="Auto"/> <!-- Sidebar -->
@@ -671,8 +671,8 @@ CommandParameter="{Binding Kod}">
 <ColumnDefinition Width="Auto"/>
 <ColumnDefinition Width="*"/>
 </Grid.ColumnDefinitions>
-<StackPanel Grid.Column="0" Orientation="Horizontal">
-<Button Content="Ekle" Command="{Binding YeniKullaniciCommand}" Width="100" Height="40" Background="#3B82F6" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Visibility="{Binding IsNotMonitoringMode, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <Button Content="Ekle" Command="{Binding YeniKullaniciCommand}" Width="100" Height="40" Background="#3B82F6" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
 <Button Content="Düzenle" Command="{Binding DuzenleKullaniciCommand}" Width="100" Height="40" Background="#F59E0B" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                             <Button Content="Sil" Command="{Binding SilKullaniciCommand}" Width="60" Height="40" Background="#EF4444" Foreground="White" Style="{StaticResource HeaderButton}" Margin="0,0,10,0"/>
                             <Button Content="Aktif Et" Command="{Binding AktiflestirKullaniciCommand}" Width="80" Height="40" Background="#10B981" Foreground="White" Margin="0,0,10,0">
@@ -767,7 +767,7 @@ Background="Transparent" BorderThickness="0" RowHeight="45">
 </Grid>
 </TabItem>
 <!-- 3. TANIMLAMALAR -->
-<TabItem Header="Tanımlamalar" Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}">
+                <TabItem Header="Tanımlamalar" Visibility="{Binding IsNotMonitoringMode, Converter={StaticResource BoolToVisibilityConverter}}">
 <TabControl Background="Transparent" BorderThickness="0" Margin="0">
 <TabControl.Resources>
 <Style TargetType="TabItem">
@@ -1321,11 +1321,11 @@ SelectedIndex="{Binding SelectedSubTabIndex}">
                                   IsChecked="{Binding OlcumCihaziFilterAssigned}"
                                   Style="{StaticResource SidebarFilterToggleButton}"/>
 
-                    <Button Content="Transfer / Hareket" Command="{Binding OlcumCihaziHareketCommand}" Width="150" Height="38" Background="#3B82F6" Foreground="White" Style="{StaticResource HeaderButton}" Margin="5,0,5,0"/>
+                    <Button Content="Transfer / Hareket" Command="{Binding OlcumCihaziHareketCommand}" Width="150" Height="38" Background="#3B82F6" Foreground="White" Style="{StaticResource HeaderButton}" Margin="5,0,5,0" Visibility="{Binding IsNotMonitoringMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
                     <Button Content="Geçmiş" Command="{Binding OlcumCihaziGecmisCommand}" Width="80" Height="38" Background="#6B7280" Foreground="White" Style="{StaticResource HeaderButton}" Margin="5,0,0,0"/>
                 </StackPanel>
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Visibility="{Binding IsNotMonitoringMode, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Button Command="{Binding YeniOlcumCihaziCommand}" Style="{StaticResource ActionButton}" Background="#10B981"
                             Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}">
                         <StackPanel Orientation="Horizontal">
@@ -1487,7 +1487,7 @@ Background="Transparent" BorderThickness="0" RowHeight="45">
 
                     <!-- İşlem Butonu -->
                     <Button Command="{Binding DataContext.ZimmetleIadeOlcumCihaziCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                            CommandParameter="{Binding}" Height="45" Margin="0,5,0,0">
+                            CommandParameter="{Binding}" Height="45" Margin="0,5,0,0" Visibility="{Binding DataContext.IsNotMonitoringMode, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
                                 <Setter Property="Content" Value="ZİMMETLE / TAŞI"/>
@@ -1602,10 +1602,10 @@ Style="{StaticResource SidebarFilterToggleButton}"/>
 <ToggleButton Content="Zimmetli" Height="38" Width="100" Margin="5,0,5,0"
 IsChecked="{Binding OfisCihaziFilterAssigned}"
 Style="{StaticResource SidebarFilterToggleButton}"/>
-<Button Content="Transfer / Hareket" Command="{Binding OfisCihaziHareketCommand}" Width="150" Height="38" Background="#3B82F6" Foreground="White" Style="{StaticResource HeaderButton}" Margin="5,0,5,0"/>
+                    <Button Content="Transfer / Hareket" Command="{Binding OfisCihaziHareketCommand}" Width="150" Height="38" Background="#3B82F6" Foreground="White" Style="{StaticResource HeaderButton}" Margin="5,0,5,0" Visibility="{Binding IsNotMonitoringMode, Converter={StaticResource BoolToVisibilityConverter}}"/>
 <Button Content="Geçmiş" Command="{Binding OfisCihaziGecmisCommand}" Width="80" Height="38" Background="#6B7280" Foreground="White" Style="{StaticResource HeaderButton}" Margin="5,0,0,0"/>
 </StackPanel>
-<StackPanel Grid.Column="1" Orientation="Horizontal">
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Visibility="{Binding IsNotMonitoringMode, Converter={StaticResource BoolToVisibilityConverter}}">
 <Button Command="{Binding YeniOfisCihaziCommand}" Style="{StaticResource ActionButton}" Background="#10B981"
 Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}">
 <StackPanel Orientation="Horizontal">
@@ -1752,12 +1752,26 @@ ToolTip="{Binding ZimmetliPersonelAd, TargetNullValue='Boşta'}">
 <TextBlock Text="{Binding Not, TargetNullValue='(Not yok)'}" Foreground="#94A3B8" TextWrapping="Wrap" FontSize="13" FontStyle="Italic"/>
 </StackPanel>
 </Border>
-<UniformGrid Columns="2" Margin="0,20,0,0" Visibility="{Binding DataContext.IsAdmin, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}">
-<Button Content="Düzenle" Command="{Binding DataContext.DuzenleOfisCihaziCommand, RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource ActionButton}" Background="#F59E0B" Margin="0,0,5,0"/>
-<Button Content="Sil" Command="{Binding DataContext.SilOfisCihaziCommand, RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource ActionButton}" Background="#EF4444" Margin="5,0,0,0"/>
-</UniformGrid>
+                    <UniformGrid Columns="2" Margin="0,20,0,0">
+                        <UniformGrid.Style>
+                            <Style TargetType="UniformGrid">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding DataContext.IsAdmin, RelativeSource={RelativeSource AncestorType=Window}}" Value="True"/>
+                                            <Condition Binding="{Binding DataContext.IsNotMonitoringMode, RelativeSource={RelativeSource AncestorType=Window}}" Value="True"/>
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </UniformGrid.Style>
+                        <Button Content="Düzenle" Command="{Binding DataContext.DuzenleOfisCihaziCommand, RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource ActionButton}" Background="#F59E0B" Margin="0,0,5,0"/>
+                        <Button Content="Sil" Command="{Binding DataContext.SilOfisCihaziCommand, RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource ActionButton}" Background="#EF4444" Margin="5,0,0,0"/>
+                    </UniformGrid>
                             <Button Command="{Binding DataContext.ZimmetleIadeOfisCihaziCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                    CommandParameter="{Binding}" Margin="0,10,0,0">
+                                    CommandParameter="{Binding}" Margin="0,10,0,0" Visibility="{Binding DataContext.IsNotMonitoringMode, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <Button.Style>
                                     <Style TargetType="Button" BasedOn="{StaticResource ActionButton}">
                                         <Setter Property="Content" Value="ZİMMETLE"/>
@@ -1781,7 +1795,7 @@ ToolTip="{Binding ZimmetliPersonelAd, TargetNullValue='Boşta'}">
 </Border>
 </TabItem>
 <!-- CİHAZ TANIMLAMALARI -->
-<TabItem Header="Cihaz Tanımlamalar" Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}">
+            <TabItem Header="Cihaz Tanımlamalar" Visibility="{Binding IsNotMonitoringMode, Converter={StaticResource BoolToVisibilityConverter}}">
 <Border Background="#0F172A" CornerRadius="0,12,12,12" Padding="0">
 <TabControl Background="Transparent" BorderThickness="0" Margin="0,0,0,0">
 <TabControl.Resources>
@@ -2144,7 +2158,7 @@ Background="Transparent" BorderThickness="0" RowHeight="45">
 </TabControl>
 </TabItem>
 <!-- 8. TOPLU İŞLEMLER (Excel) -->
-<TabItem Header="Toplu İşlemler" Visibility="{Binding IsSuperAdmin, Converter={StaticResource BoolToVisibilityConverter}}">
+            <TabItem Header="Toplu İşlemler" Visibility="{Binding IsNotMonitoringMode, Converter={StaticResource BoolToVisibilityConverter}}">
 <Border Background="#0F172A" CornerRadius="12,12,12,12" Padding="30">
 <ScrollViewer VerticalScrollBarVisibility="Auto">
 <StackPanel MaxWidth="1000" HorizontalAlignment="Left">
@@ -2238,10 +2252,6 @@ Style="{StaticResource HeaderButton}" HorizontalAlignment="Left"/>
 </Border>
 </TabItem>
 </TabControl>
-<Button Grid.Row="1" Content="Oturumu Kapat" Height="28" Width="100" FontSize="11" FontWeight="SemiBold"
-Command="{Binding LogoutCommand}" Background="#EF4444" Foreground="White"
-Style="{StaticResource HeaderButton}" HorizontalAlignment="Right" VerticalAlignment="Top"
-Margin="0,15,15,0" Panel.ZIndex="10"/>
 <!-- Status Bar Removed -->
 <!-- Global Notification Snackbar -->
 <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,20,40"

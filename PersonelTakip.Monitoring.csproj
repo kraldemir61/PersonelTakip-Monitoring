@@ -6,8 +6,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <AssemblyName>PersonelTakip</AssemblyName>
-    <RootNamespace>PersonelTakip</RootNamespace>
+    <AssemblyName>PersonelTakipMonitoring</AssemblyName>
+    <RootNamespace>PersonelTakip.Monitoring</RootNamespace>
     <InterceptorsNamespaces>$(InterceptorsNamespaces);Microsoft.Extensions.Configuration.Binder.SourceGeneration</InterceptorsNamespaces>
     <ApplicationIcon>Resources\PersonelZimmet.ikon.ico</ApplicationIcon>
   </PropertyGroup>

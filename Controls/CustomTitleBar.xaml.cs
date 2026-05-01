@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 
-namespace PersonelTakip.Controls;
+namespace PersonelTakip.Monitoring.Controls;
 
 public partial class CustomTitleBar : UserControl
 {

@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace PersonelTakip.Services
+namespace PersonelTakip.Monitoring.Services
 {
     public class RaporService
     {

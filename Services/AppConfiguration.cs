@@ -4,7 +4,7 @@ using System.Text.Json;
 
 using System.Text.Json.Serialization;
 
-namespace PersonelTakip.Services;
+namespace PersonelTakip.Monitoring.Services;
 
 public class AppConfiguration
 {

@@ -1,4 +1,4 @@
-<UserControl x:Class="PersonelTakip.Controls.CustomTitleBar"
+<UserControl x:Class="PersonelTakip.Monitoring.Controls.CustomTitleBar"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Height="35">

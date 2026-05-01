@@ -1,6 +1,6 @@
 using System;
 
-namespace PersonelTakip.Helpers;
+namespace PersonelTakip.Monitoring.Helpers;
 
 public static class StringHelper
 {

@@ -1,11 +1,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using PersonelTakip.Services;
+using PersonelTakip.Monitoring.Services;
 using System.Windows;
 using Microsoft.Win32;
 using System.IO;
 
-namespace PersonelTakip.ViewModels;
+namespace PersonelTakip.Monitoring.ViewModels;
 
 public partial class DatabaseSettingsViewModel : ObservableObject
 {

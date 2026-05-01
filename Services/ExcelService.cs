@@ -1,9 +1,9 @@
 using ClosedXML.Excel;
 using Microsoft.Win32;
-using PersonelTakip.Models;
+using PersonelTakip.Monitoring.Models;
 using System.IO;
 
-namespace PersonelTakip.Services;
+namespace PersonelTakip.Monitoring.Services;
 
 public class ExcelService
 {

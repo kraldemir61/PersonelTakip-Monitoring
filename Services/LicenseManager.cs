@@ -7,7 +7,7 @@ using System.Windows;
 using Microsoft.Win32;
 using System.Threading.Tasks;
 
-namespace PersonelTakip.Services
+namespace PersonelTakip.Monitoring.Services
 {
     public static class LicenseManager
     {

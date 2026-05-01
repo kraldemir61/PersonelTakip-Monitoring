@@ -5,11 +5,11 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using PersonelTakip.Helpers;
-using PersonelTakip.Models;
-using PersonelTakip.Services;
+using PersonelTakip.Monitoring.Helpers;
+using PersonelTakip.Monitoring.Models;
+using PersonelTakip.Monitoring.Services;
 
-namespace PersonelTakip.Views
+namespace PersonelTakip.Monitoring.Views
 {
     public partial class CihazZimmetWindow : Window
     {

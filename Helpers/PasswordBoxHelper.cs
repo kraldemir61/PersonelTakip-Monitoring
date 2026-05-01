@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 
-namespace PersonelTakip.Helpers
+namespace PersonelTakip.Monitoring.Helpers
 {
     public static class PasswordBoxHelper
     {

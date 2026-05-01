@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using PersonelTakip.Models;
-using PersonelTakip.Services;
+using PersonelTakip.Monitoring.Models;
+using PersonelTakip.Monitoring.Services;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Globalization;
 
-namespace PersonelTakip.ViewModels
+namespace PersonelTakip.Monitoring.ViewModels
 {
     public partial class ModuleItem : ObservableObject
     {

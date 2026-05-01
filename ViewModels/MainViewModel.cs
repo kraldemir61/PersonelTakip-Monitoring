@@ -1,18 +1,18 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using PersonelTakip.Models;
-using PersonelTakip.Services;
+using PersonelTakip.Monitoring.Models;
+using PersonelTakip.Monitoring.Services;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Data;
-using PersonelTakip.Helpers;
+using PersonelTakip.Monitoring.Helpers;
 using ClosedXML.Excel;
 using Microsoft.Win32;
 using System.Linq;
 using System.IO;
 
-namespace PersonelTakip.ViewModels;
+namespace PersonelTakip.Monitoring.ViewModels;
 
 public partial class MainViewModel : BaseViewModel
 {
@@ -23,7 +23,12 @@ public partial class MainViewModel : BaseViewModel
     private Kullanici? _currentUser;
 
     [ObservableProperty]
-    private string _pageTitle = "Personel Takip Sistemi";
+    private bool _isMonitoringMode;
+
+    public bool IsNotMonitoringMode => !IsMonitoringMode;
+
+    [ObservableProperty]
+    private string _pageTitle = "Personel ve Zimmet Takibi (Monitoring Mode)";
 
     [ObservableProperty]
     private bool _isAdmin;
@@ -404,6 +409,9 @@ public partial class MainViewModel : BaseViewModel
         // 'Admin' kullanıcı adına sahip olan kişi Süper Admin kabul edilir (büyük/küçük harf duyarsız)
         IsSuperAdmin = IsAdmin && CurrentUser?.KullaniciAdi?.Equals("Admin", StringComparison.OrdinalIgnoreCase) == true;
 
+        // İzleme Modu Kontrolü: Eğer rol "Monitor" ise izleme modunu aktif et
+        IsMonitoringMode = CurrentUser?.Rol == "Monitor";
+
         OlcumCihazlariView = new ListCollectionView(OlcumCihazlari);
         OlcumCihazlariView.Filter = FilterOlcumCihazlari;
 
@@ -502,7 +510,7 @@ public partial class MainViewModel : BaseViewModel
     [RelayCommand]
     private void OpenDatabaseSettings()
     {
-        var win = new PersonelTakip.Views.DatabaseSettingsWindow();
+        var win = new PersonelTakip.Monitoring.Views.DatabaseSettingsWindow();
         // Aktif pencereyi owner olarak belirle
         win.Owner = System.Linq.Enumerable.FirstOrDefault(System.Windows.Application.Current.Windows.Cast<System.Windows.Window>(), w => w.IsActive);
         win.ShowDialog();
@@ -1040,6 +1048,13 @@ public partial class MainViewModel : BaseViewModel
             await LoadBildirimlerAsync();
             await LoadCihazlarAsync();
             
+            if (IsMonitoringMode)
+            {
+                IsAdmin = true;
+                IsSuperAdmin = true;
+                _databaseService.IsReadOnlyMode = true;
+            }
+
             StartNotificationListener();
 
             if (IsAdmin)

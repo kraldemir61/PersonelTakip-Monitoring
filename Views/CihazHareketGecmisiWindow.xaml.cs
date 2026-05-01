@@ -1,7 +1,7 @@
 using System.Windows;
-using PersonelTakip.ViewModels;
+using PersonelTakip.Monitoring.ViewModels;
 
-namespace PersonelTakip.Views
+namespace PersonelTakip.Monitoring.Views
 {
     public partial class CihazHareketGecmisiWindow : Window
     {

@@ -1,6 +1,6 @@
 using System;
 
-namespace PersonelTakip.Models
+namespace PersonelTakip.Monitoring.Models
 {
     public class CihazHareket
     {

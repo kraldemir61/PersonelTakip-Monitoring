@@ -1,14 +1,14 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using PersonelTakip.Models;
-using PersonelTakip.Services;
+using PersonelTakip.Monitoring.Models;
+using PersonelTakip.Monitoring.Services;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace PersonelTakip.ViewModels
+namespace PersonelTakip.Monitoring.ViewModels
 {
     public partial class OfisCihazHareketViewModel : ObservableObject
     {

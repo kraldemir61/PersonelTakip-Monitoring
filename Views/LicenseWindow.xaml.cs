@@ -1,8 +1,8 @@
 using System;
 using System.Windows;
-using PersonelTakip.Services;
+using PersonelTakip.Monitoring.Services;
 
-namespace PersonelTakip.Views
+namespace PersonelTakip.Monitoring.Views
 {
     public partial class LicenseWindow : Window
     {

@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace PersonelTakip.Helpers;
+namespace PersonelTakip.Monitoring.Helpers;
 
 public static class CredentialHelper
 {

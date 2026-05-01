@@ -6,7 +6,7 @@ using System.Windows.Media;
 using System.IO;
 using System.Windows.Media.Imaging;
 
-namespace PersonelTakip.Converters
+namespace PersonelTakip.Monitoring.Converters
 {
     public class NullToVisibilityConverter : IValueConverter
     {

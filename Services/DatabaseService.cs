@@ -4,9 +4,9 @@ using System.Linq;
 using System.Collections.Generic;
 using Dapper;
 using Npgsql;
-using PersonelTakip.Models;
+using PersonelTakip.Monitoring.Models;
 
-namespace PersonelTakip.Services;
+namespace PersonelTakip.Monitoring.Services;
 
 public class DatabaseService
 {
@@ -14,6 +14,8 @@ public class DatabaseService
     {
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
     }
+
+    public bool IsReadOnlyMode { get; set; } = true; // Monitoring sürümü için varsayılan olarak true
 
     public DatabaseService()
     {
@@ -268,6 +270,12 @@ public class DatabaseService
 
                 -- Tip Onarımları
                 DO $$ BEGIN 
+                    -- Rol kısıtlamasını güncelle (Monitor ekle)
+                    IF EXISTS (SELECT 1 FROM information_schema.constraint_column_usage WHERE table_name = 'kullanicilar' AND constraint_name = 'kullanicilar_rol_check') THEN
+                        ALTER TABLE kullanicilar DROP CONSTRAINT kullanicilar_rol_check;
+                    END IF;
+                    ALTER TABLE kullanicilar ADD CONSTRAINT kullanicilar_rol_check CHECK (rol IN ('Admin', 'User', 'Monitor'));
+
                     IF (SELECT data_type FROM information_schema.columns WHERE table_name='personeller' AND column_name='para_birimi') = 'text' THEN 
                         ALTER TABLE personeller ALTER COLUMN para_birimi TYPE INTEGER USING para_birimi::integer; 
                     END IF;
@@ -482,6 +490,7 @@ public class DatabaseService
 
     public async Task ExecuteSqlAsync(string sql)
     {
+        if (IsReadOnlyMode) return;
         using var conn = CreateConnection();
         await conn.OpenAsync();
         await conn.ExecuteAsync(sql);
@@ -518,8 +527,26 @@ public class DatabaseService
 
     public async Task<Guid> KullaniciOlusturAsync(Kullanici kullanici, string sifre)
     {
+        // Kayıt işlemine izleme modunda bile izin verilmeli
         using var conn = CreateConnection();
         await conn.OpenAsync();
+
+        // İzleyici için otomatik şantiye ataması
+        if (kullanici.Rol == "Monitor" && !kullanici.SantiyeId.HasValue)
+        {
+            // Hem isme hem koda göre kontrol et
+            var izleyiciSantiyeId = await conn.ExecuteScalarAsync<Guid?>(
+                "SELECT id FROM santiyeler WHERE LOWER(adi) = 'izleyici' OR LOWER(kod) = 'izl'");
+            
+            if (!izleyiciSantiyeId.HasValue)
+            {
+                izleyiciSantiyeId = Guid.NewGuid();
+                await conn.ExecuteAsync(
+                    "INSERT INTO santiyeler (id, adi, kod, aktif) VALUES (@Id, 'İzleyici', 'IZL', true)",
+                    new { Id = izleyiciSantiyeId });
+            }
+            kullanici.SantiyeId = izleyiciSantiyeId;
+        }
 
         // 1. Mükerrer kullanıcı adı kontrolü (Büyük-küçük harf duyarsız)
         var varMi = await conn.ExecuteScalarAsync<bool>(
@@ -531,7 +558,7 @@ public class DatabaseService
             throw new InvalidOperationException($"'{kullanici.KullaniciAdi}' kullanıcı adı zaten alınmış. Lütfen başka bir kullanıcı adı seçin.");
         }
 
-        if (kullanici.SantiyeId.HasValue)
+        if (kullanici.SantiyeId.HasValue && kullanici.Rol != "Monitor")
         {
             var sayi = await GetSantiyeKullaniciSayisiAsync(kullanici.SantiyeId.Value);
             if (sayi >= 1)
@@ -563,8 +590,25 @@ public class DatabaseService
         }
     }
 
+    public async Task KullaniciDurumGuncelleByNameAsync(string kullaniciAdi, bool aktif)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await conn.ExecuteAsync("UPDATE kullanicilar SET aktif = @Aktif WHERE LOWER(kullanici_adi) = LOWER(@KullaniciAdi)", 
+            new { KullaniciAdi = kullaniciAdi, Aktif = aktif });
+    }
+
+    public async Task KullaniciTamamenSilByNameAsync(string kullaniciAdi)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await conn.ExecuteAsync("DELETE FROM kullanicilar WHERE LOWER(kullanici_adi) = LOWER(@KullaniciAdi)", 
+            new { KullaniciAdi = kullaniciAdi });
+    }
+
     public async Task KullaniciGuncelleAsync(Kullanici kullanici, Guid adminId)
     {
+        if (IsReadOnlyMode) return;
         if (kullanici.SantiyeId.HasValue)
         {
             var sayi = await GetSantiyeKullaniciSayisiAsync(kullanici.SantiyeId.Value, kullanici.Id);
@@ -588,6 +632,7 @@ public class DatabaseService
 
     public async Task KullaniciSilAsync(Guid id, Guid adminId)
     {
+        if (IsReadOnlyMode) return;
         Exception? lastEx = null;
         for (int i = 0; i < 3; i++)
         {
@@ -842,6 +887,7 @@ public class DatabaseService
 
     public async Task<int> LookupOlusturAsync(string tablo, string adi)
     {
+        if (IsReadOnlyMode) return 0;
         using var conn = CreateConnection();
         await conn.OpenAsync();
 
@@ -982,6 +1028,7 @@ public class DatabaseService
 
     public async Task<Guid> PersonelOlusturAsync(Personel personel)
     {
+        if (IsReadOnlyMode) return Guid.Empty;
         using var conn = CreateConnection();
         await conn.OpenAsync();
 
@@ -1303,6 +1350,7 @@ public class DatabaseService
 
     public async Task CihazEkleAsync(Cihaz cihaz)
     {
+        if (IsReadOnlyMode) return;
         using var conn = CreateConnection();
         await conn.OpenAsync();
 
@@ -1329,6 +1377,7 @@ public class DatabaseService
 
     public async Task ZimmetleAsync(Guid cihazId, Guid personelId, DateTime tarih, string aciklama, Guid kullaniciId)
     {
+        if (IsReadOnlyMode) return;
         using var conn = CreateConnection();
         await conn.OpenAsync();
         using var trans = conn.BeginTransaction();

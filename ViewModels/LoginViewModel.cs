@@ -1,13 +1,13 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using PersonelTakip.Helpers;
-using PersonelTakip.Models;
-using PersonelTakip.Services;
+using PersonelTakip.Monitoring.Helpers;
+using PersonelTakip.Monitoring.Models;
+using PersonelTakip.Monitoring.Services;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Threading;
 
-namespace PersonelTakip.ViewModels;
+namespace PersonelTakip.Monitoring.ViewModels;
 
 public partial class LoginViewModel : BaseViewModel
 {
@@ -28,7 +28,7 @@ public partial class LoginViewModel : BaseViewModel
     private string _registerKullaniciAdi = string.Empty;
 
     [ObservableProperty]
-    private string _registerRol = "User";
+    private string _registerRol = "Monitor";
 
     [ObservableProperty]
     private Guid? _registerSantiyeId;
@@ -212,11 +212,6 @@ public partial class LoginViewModel : BaseViewModel
             return;
         }
 
-        if (!RegisterSantiyeId.HasValue)
-        {
-            ShowError("Şantiye seçimi gereklidir.");
-            return;
-        }
 
         IsBusy = true;
         try
@@ -263,7 +258,7 @@ public partial class LoginViewModel : BaseViewModel
     [RelayCommand]
     private void OpenDatabaseSettings()
     {
-        var win = new PersonelTakip.Views.DatabaseSettingsWindow();
+        var win = new PersonelTakip.Monitoring.Views.DatabaseSettingsWindow();
         win.Owner = Application.Current.Windows.Cast<Window>().FirstOrDefault(w => w.IsActive);
         win.ShowDialog();
     }
@@ -273,7 +268,7 @@ public partial class LoginViewModel : BaseViewModel
         LoginKullaniciAdi = string.Empty;
         Password = string.Empty;
         RegisterKullaniciAdi = string.Empty;
-        RegisterRol = "User";
+        RegisterRol = "Monitor";
         IsBusy = false;
     }
 }

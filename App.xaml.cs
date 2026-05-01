@@ -1,11 +1,15 @@
 using System.Windows;
 using System.IO;
 using System;
+using System.Linq;
+using System.Threading.Tasks;
+using PersonelTakip.Monitoring.Models;
 
-namespace PersonelTakip;
+namespace PersonelTakip.Monitoring;
 
 public partial class App : Application
 {
+    private string? _monitorName;
     public App()
     {
         AppDomain.CurrentDomain.UnhandledException += (s, ex) =>
@@ -33,7 +37,7 @@ public partial class App : Application
         {
             // Veritabanı ön yükleme (Tablo kontrolü)
             var db = new Services.DatabaseService();
-            _ = db.InitializeDatabaseAsync();
+            await db.InitializeDatabaseAsync();
 
             // LİSANS KONTROLÜ: Eğer program zaten lisanslıysa pencereyi hiç açma
             bool isLicensed = await Task.Run(async () => await Services.LicenseManager.IsLicensedAsync());
@@ -64,11 +68,49 @@ public partial class App : Application
                 settingsWindow.ShowDialog();
             }
 
-            // Giriş ekranına geçiyoruz
-            var loginWindow = new Views.LoginWindow();
-            this.MainWindow = loginWindow;
-            this.ShutdownMode = ShutdownMode.OnMainWindowClose; // Artık login/main kapanınca uygulama kapansın
-            loginWindow.Show();
+            // İzleyici Modu: Giriş ekranı olmadan doğrudan başlat
+            var machineName = Environment.MachineName;
+            _monitorName = $"Izleyici_{machineName}";
+            
+            try 
+            {
+                // Veritabanında bu isimde kullanıcı var mı kontrol et
+                var allMonitors = await db.KullanicilariGetirAsync(rol: "Monitor", hepsiniGetir: true);
+                var existing = allMonitors.FirstOrDefault(u => u.KullaniciAdi.Equals(_monitorName, StringComparison.OrdinalIgnoreCase));
+                
+                if (existing == null)
+                {
+                    // Yoksa oluştur (Varsayılan olarak aktif=true olur)
+                    var newUser = new Kullanici { 
+                        KullaniciAdi = _monitorName, 
+                        Rol = "Monitor",
+                        Email = $"{_monitorName}@system.local"
+                    };
+                    await db.KullaniciOlusturAsync(newUser, "123456");
+                }
+                else
+                {
+                    // Varsa sadece Aktif hale getir
+                    await db.KullaniciDurumGuncelleByNameAsync(_monitorName, true);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogException(ex, "AutoLogin/Registration Error");
+            }
+
+            Application.Current.Properties["Kullanici"] = new Kullanici 
+            { 
+                KullaniciAdi = _monitorName, 
+                Rol = "Monitor",
+                SantiyeAdi = "İzleyici"
+            };
+
+            // Doğrudan ana ekrana geçiyoruz
+            var mainWindow = new Views.MainWindow();
+            this.MainWindow = mainWindow;
+            this.ShutdownMode = ShutdownMode.OnMainWindowClose;
+            mainWindow.Show();
         }
         catch (Exception ex)
         {
@@ -76,6 +118,20 @@ public partial class App : Application
             MessageBox.Show($"Uygulama başlatılamadı:\n{ex.Message}", "Başlatma Hatası", MessageBoxButton.OK, MessageBoxImage.Error);
             Application.Current.Shutdown();
         }
+    }
+
+    protected override async void OnExit(ExitEventArgs e)
+    {
+        if (!string.IsNullOrEmpty(_monitorName))
+        {
+            try
+            {
+                var db = new Services.DatabaseService();
+                await db.KullaniciTamamenSilByNameAsync(_monitorName);
+            }
+            catch { /* Sessizce çık */ }
+        }
+        base.OnExit(e);
     }
 
     private void LogException(Exception? ex, string source)

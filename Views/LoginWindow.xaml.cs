@@ -1,8 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
-using PersonelTakip.ViewModels;
+using PersonelTakip.Monitoring.ViewModels;
 
-namespace PersonelTakip.Views;
+namespace PersonelTakip.Monitoring.Views;
 
 public partial class LoginWindow : Window
 {
@@ -51,6 +51,7 @@ public partial class LoginWindow : Window
         _viewModel.Password = TxtPassword.Password;
         await _viewModel.LoginCommand.ExecuteAsync(null);
     }
+
 
     private async void BtnKayit_Click(object sender, RoutedEventArgs e)
     {
