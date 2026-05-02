@@ -18,6 +18,7 @@ public partial class MainViewModel : BaseViewModel
 {
     private readonly DatabaseService _databaseService;
     private readonly ExcelService _excelService;
+    private System.Windows.Threading.DispatcherTimer? _heartbeatTimer;
 
     [ObservableProperty]
     private Kullanici? _currentUser;
@@ -435,10 +436,47 @@ public partial class MainViewModel : BaseViewModel
         // Veritabanı veya ayarlar değiştiğinde tüm verileri otomatik tazele
         AppConfiguration.Instance.ConfigurationChanged += (s, e) => 
         {
-            Application.Current.Dispatcher.Invoke(async () => {
+            Application.Current?.Dispatcher.Invoke(async () => {
                 await LoadAllDataAsync();
             });
         };
+
+        StartUserHeartbeat();
+    }
+
+    private void StartUserHeartbeat()
+    {
+        if (CurrentUser == null) return;
+
+        // Hemen bir kez güncelle
+        _ = Task.Run(async () => {
+            try { await _databaseService.UpdateSonHareketAsync(CurrentUser.Id); } catch { }
+        });
+
+        // Mevcut timer varsa durdur
+        _heartbeatTimer?.Stop();
+
+        // Her 1 dakikada bir güncelle
+        _heartbeatTimer = new System.Windows.Threading.DispatcherTimer
+        {
+            Interval = TimeSpan.FromMinutes(1)
+        };
+        _heartbeatTimer.Tick += async (s, e) =>
+        {
+            if (CurrentUser != null)
+            {
+                try 
+                { 
+                    await _databaseService.UpdateSonHareketAsync(CurrentUser.Id); 
+                } 
+                catch (Exception ex)
+                {
+                    // Hata durumunda log yaz
+                    LogException(ex, "Heartbeat/UpdateSonHareket Error");
+                }
+            }
+        };
+        _heartbeatTimer.Start();
     }
 
     [RelayCommand]
@@ -625,10 +663,10 @@ public partial class MainViewModel : BaseViewModel
                     var targetIdStr = tetikleyenIdStr.Replace("RESTART_TARGET:", "");
                     if (Guid.TryParse(targetIdStr, out var targetId) && targetId == CurrentUser?.Id)
                     {
-                        Application.Current.Dispatcher.Invoke(() => 
+                        Application.Current?.Dispatcher.Invoke(() => 
                         {
                             MessageBox.Show("Sistem yöneticisi tarafından yetkileriniz güncellendi.\nDeğişikliklerin aktif olması için program şimdi kapatılacaktır.", "Yetki Güncellemesi", MessageBoxButton.OK, MessageBoxImage.Information);
-                            Application.Current.Shutdown();
+                            Application.Current?.Shutdown();
                         });
                     }
                     return;
@@ -649,7 +687,7 @@ public partial class MainViewModel : BaseViewModel
                     if (tetikleyenId == CurrentUser?.Id) return;
 
                     // Tüm güncellemeleri doğrudan UI thread'i üzerinde sırayla yapıyoruz
-                    Application.Current.Dispatcher.InvokeAsync(async () => 
+                    Application.Current?.Dispatcher.InvokeAsync(async () => 
                     {
                         try
                         {
@@ -697,7 +735,7 @@ public partial class MainViewModel : BaseViewModel
                         var ok = await _databaseService.CheckConnectionAsync();
                         sw.Stop();
 
-                        Application.Current.Dispatcher.Invoke(() =>
+                        Application.Current?.Dispatcher.Invoke(() =>
                         {
                             if (!ok)
                             {
@@ -717,7 +755,7 @@ public partial class MainViewModel : BaseViewModel
                     }
                     catch
                     {
-                        Application.Current.Dispatcher.Invoke(() =>
+                        Application.Current?.Dispatcher.Invoke(() =>
                         {
                             IsConnected = false;
                             IsSlowConnection = false;
@@ -735,7 +773,7 @@ public partial class MainViewModel : BaseViewModel
                     // Eğer yeni okunmamış bildirim varsa ve liste açılmadıysa bilgilendir
                     if (UnreadBildirimCount > oldUnread && !IsBildirimPopupOpen)
                     {
-                        Application.Current.Dispatcher.Invoke(() => 
+                        Application.Current?.Dispatcher.Invoke(() => 
                         {
                             ShowSnackbarNotification("Yeni bildirimleriniz var.");
                         });
@@ -1042,18 +1080,19 @@ public partial class MainViewModel : BaseViewModel
                 : "Bağlantı hazır";
 
             await _databaseService.InitializeDatabaseAsync();
+            if (IsMonitoringMode)
+            {
+                // İzleme modunda her şeyi görebilmeli ama işlem yapamamalı
+                IsAdmin = true;
+                IsSuperAdmin = false; // Maaşları görmemesi için false olmalı
+                _databaseService.IsReadOnlyMode = true;
+            }
+
             await LoadPersonellerAsync();
             await LoadLookupsAsync();
             await LoadSantiyelerAsync();
             await LoadBildirimlerAsync();
             await LoadCihazlarAsync();
-            
-            if (IsMonitoringMode)
-            {
-                IsAdmin = true;
-                IsSuperAdmin = true;
-                _databaseService.IsReadOnlyMode = true;
-            }
 
             StartNotificationListener();
 
@@ -2189,8 +2228,13 @@ public partial class MainViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    public void Logout()
+    public async Task Logout()
     {
+        if (CurrentUser != null)
+        {
+            try { await _databaseService.LogoutAsync(CurrentUser.Id); } catch { }
+        }
+
         var loginWindow = new Views.LoginWindow();
         Application.Current.MainWindow = loginWindow;
         loginWindow.Show();
@@ -2647,4 +2691,14 @@ public partial class MainViewModel : BaseViewModel
     }
 
     #endregion
+    private void LogException(Exception ex, string source)
+    {
+        try
+        {
+            string logPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "crash_log.txt");
+            string message = $"[{DateTime.Now}] VM-Source: {source}\nMessage: {ex.Message}\nStack Trace:\n{ex.StackTrace}\nInner: {ex.InnerException?.Message}\n{new string('-', 50)}\n";
+            System.IO.File.AppendAllText(logPath, message);
+        }
+        catch { }
+    }
 }

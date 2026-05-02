@@ -101,21 +101,33 @@ public partial class MainWindow : Window
     protected override void OnClosed(EventArgs e)
     {
         base.OnClosed(e);
-        // Eğer açık olan başka "Ana" pencere yoksa uygulamayı tamamen kapat
-        bool hasOtherMainWindow = false;
-        foreach (Window window in Application.Current.Windows)
-        {
-            if (window is MainWindow || window is LoginWindow)
-            {
-                hasOtherMainWindow = true;
-                break;
-            }
-        }
-
-        if (!hasOtherMainWindow)
+        
+        // Eğer açık olan başka pencereler yoksa (veya bu ana pencereyse) uygulamayı kapat
+        if (Application.Current != null && Application.Current.Windows.Count == 0)
         {
             Application.Current.Shutdown();
         }
+    }
+
+    private bool _isClosingWorkDone = false;
+    protected override async void OnClosing(System.ComponentModel.CancelEventArgs e)
+    {
+        if (!_isClosingWorkDone && DataContext is MainViewModel vm && vm.CurrentUser != null)
+        {
+            e.Cancel = true; // Kapanmayı geçici olarak durdur
+            try 
+            {
+                var db = new Services.DatabaseService();
+                await db.LogoutAsync(vm.CurrentUser.Id);
+                await db.BildirimEkleAsync($"{vm.CurrentUser.KullaniciAdi} oturumu kapattı.", vm.CurrentUser.Id);
+            } 
+            catch { }
+            
+            _isClosingWorkDone = true;
+            this.Close(); // İşlem bitince tekrar kapat
+            return;
+        }
+        base.OnClosing(e);
     }
 
     private void CopyMenuItem_Click(object sender, RoutedEventArgs e)

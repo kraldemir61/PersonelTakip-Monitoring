@@ -72,45 +72,70 @@ public partial class App : Application
             var machineName = Environment.MachineName;
             _monitorName = $"Izleyici_{machineName}";
             
+            Kullanici? actualUser = null;
             try 
             {
                 // Veritabanında bu isimde kullanıcı var mı kontrol et
-                var allMonitors = await db.KullanicilariGetirAsync(rol: "Monitor", hepsiniGetir: true);
-                var existing = allMonitors.FirstOrDefault(u => u.KullaniciAdi.Equals(_monitorName, StringComparison.OrdinalIgnoreCase));
+                actualUser = await db.KullaniciGetirByNameAsync(_monitorName);
                 
-                if (existing == null)
+                if (actualUser == null)
                 {
-                    // Yoksa oluştur (Varsayılan olarak aktif=true olur)
+                    // Yoksa oluştur
                     var newUser = new Kullanici { 
                         KullaniciAdi = _monitorName, 
                         Rol = "Monitor",
                         Email = $"{_monitorName}@system.local"
                     };
-                    await db.KullaniciOlusturAsync(newUser, "123456");
+                    var newId = await db.KullaniciOlusturAsync(newUser, "123456");
+                    
+                    // Oluşturulan kullanıcıyı ID'si ile birlikte tekrar çek
+                    actualUser = await db.KullaniciGetirIdAsync(newId);
                 }
                 else
                 {
                     // Varsa sadece Aktif hale getir
                     await db.KullaniciDurumGuncelleByNameAsync(_monitorName, true);
                 }
+
+                if (actualUser != null)
+                {
+                    Application.Current.Properties["Kullanici"] = actualUser;
+                }
+                else
+                {
+                    // Kritik hata: Kullanıcı ne bulundu ne oluşturulabildi
+                    throw new Exception("Kullanıcı kimliği doğrulanamadı.");
+                }
             }
             catch (Exception ex)
             {
                 LogException(ex, "AutoLogin/Registration Error");
+                // Fallback (En azından uygulama açılmaya çalışsın ama heartbeat muhtemelen çalışmayacaktır)
+                actualUser = new Kullanici 
+                { 
+                    KullaniciAdi = _monitorName, 
+                    Rol = "Monitor",
+                    SantiyeAdi = "İzleyici"
+                };
+                Application.Current.Properties["Kullanici"] = actualUser;
             }
-
-            Application.Current.Properties["Kullanici"] = new Kullanici 
-            { 
-                KullaniciAdi = _monitorName, 
-                Rol = "Monitor",
-                SantiyeAdi = "İzleyici"
-            };
 
             // Doğrudan ana ekrana geçiyoruz
             var mainWindow = new Views.MainWindow();
             this.MainWindow = mainWindow;
             this.ShutdownMode = ShutdownMode.OnMainWindowClose;
             mainWindow.Show();
+
+            // Giriş bildirimi gönder (Admin ekranını anlık tetiklemek için)
+            try
+            {
+                if (actualUser != null && actualUser.Id != Guid.Empty)
+                {
+                    var mesaj = $"{_monitorName} (İzleyici) oturum açtı.";
+                    await db.BildirimEkleAsync(mesaj, actualUser.Id);
+                }
+            }
+            catch { }
         }
         catch (Exception ex)
         {
@@ -118,20 +143,6 @@ public partial class App : Application
             MessageBox.Show($"Uygulama başlatılamadı:\n{ex.Message}", "Başlatma Hatası", MessageBoxButton.OK, MessageBoxImage.Error);
             Application.Current.Shutdown();
         }
-    }
-
-    protected override async void OnExit(ExitEventArgs e)
-    {
-        if (!string.IsNullOrEmpty(_monitorName))
-        {
-            try
-            {
-                var db = new Services.DatabaseService();
-                await db.KullaniciTamamenSilByNameAsync(_monitorName);
-            }
-            catch { /* Sessizce çık */ }
-        }
-        base.OnExit(e);
     }
 
     private void LogException(Exception? ex, string source)

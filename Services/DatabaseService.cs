@@ -221,6 +221,7 @@ public class DatabaseService
                 ALTER TABLE santiyeler ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
 
                 ALTER TABLE kullanicilar ADD COLUMN IF NOT EXISTS son_giris TIMESTAMPTZ;
+                ALTER TABLE kullanicilar ADD COLUMN IF NOT EXISTS son_hareket TIMESTAMPTZ;
                 ALTER TABLE kullanicilar ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT now();
 
                 ALTER TABLE personeller ADD COLUMN IF NOT EXISTS bolumu INTEGER;
@@ -305,13 +306,34 @@ public class DatabaseService
         }
     }
 
+    public async Task UpdateSonHareketAsync(Guid kullaniciId)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        // UTC zaman damgası kullanarak güncelle
+        await conn.ExecuteAsync("UPDATE kullanicilar SET son_hareket = timezone('utc', now()) WHERE id = @Id", 
+            new { Id = kullaniciId });
+    }
+
+    public async Task LogoutAsync(Guid kullaniciId)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        // Online durumunu hemen kapatmak için son_hareket'i çok eski bir tarihe çek
+        await conn.ExecuteAsync("UPDATE kullanicilar SET son_hareket = @OldDate WHERE id = @Id", 
+            new { Id = kullaniciId, OldDate = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc) });
+    }
+
     public async Task<Kullanici?> KullaniciGirisAsync(string kullaniciAdi, string sifre)
     {
         using var conn = CreateConnection();
         await conn.OpenAsync();
 
         var kullanici = await conn.QueryFirstOrDefaultAsync<Kullanici>(
-            @"SELECT k.id, k.kullanici_adi, k.email, k.sifre_hash AS SifreHash, k.rol, k.santiye_id, k.aktif, k.son_giris, k.created_at, s.adi AS SantiyeAdi, s.kod AS SantiyeKod
+            @"SELECT k.id, k.kullanici_adi AS KullaniciAdi, k.email, k.sifre_hash AS SifreHash, 
+                     k.rol, k.santiye_id AS SantiyeId, k.aktif, k.son_giris AS SonGiris, 
+                     k.son_hareket AS SonHareket, k.created_at AS CreatedAt, 
+                     s.adi AS SantiyeAdi, s.kod AS SantiyeKod
               FROM kullanicilar k 
               LEFT JOIN santiyeler s ON k.santiye_id = s.id 
               WHERE k.kullanici_adi = @KullaniciAdi AND k.aktif = true",
@@ -324,8 +346,8 @@ public class DatabaseService
             if (!string.IsNullOrEmpty(kullanici.SifreHash) && BCrypt.Net.BCrypt.Verify(sifre, kullanici.SifreHash))
             {
                 await conn.ExecuteAsync(
-                    "UPDATE kullanicilar SET son_giris = @Now WHERE id = @Id",
-                    new { kullanici.Id, Now = DateTime.UtcNow });
+                    "UPDATE kullanicilar SET son_giris = timezone('utc', now()), son_hareket = timezone('utc', now()) WHERE id = @Id",
+                    new { kullanici.Id });
                 return kullanici;
             }
         }
@@ -341,7 +363,7 @@ public class DatabaseService
 
         // 1. Veritabanına kaydet
         await conn.ExecuteAsync(
-            "INSERT INTO bildirimler (mesaj, tetikleyen_kullanici_id, tarih) VALUES (@Mesaj, @TetikleyenId, NOW())",
+            "INSERT INTO bildirimler (mesaj, tetikleyen_kullanici_id, tarih) VALUES (@Mesaj, @TetikleyenId, timezone('utc', now()))",
             new { Mesaj = mesaj, TetikleyenId = tetikleyenKullaniciId });
 
         // 2. LISTEN/NOTIFY ile kanala gönder
@@ -596,6 +618,20 @@ public class DatabaseService
         await conn.OpenAsync();
         await conn.ExecuteAsync("UPDATE kullanicilar SET aktif = @Aktif WHERE LOWER(kullanici_adi) = LOWER(@KullaniciAdi)", 
             new { KullaniciAdi = kullaniciAdi, Aktif = aktif });
+    }
+
+    public async Task<Kullanici?> KullaniciGetirByNameAsync(string kullaniciAdi)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        return await conn.QueryFirstOrDefaultAsync<Kullanici>(
+            @"SELECT k.id, k.kullanici_adi AS KullaniciAdi, k.email, k.sifre_hash AS SifreHash, 
+                     k.rol, k.santiye_id AS SantiyeId, k.aktif, k.son_giris AS SonGiris, 
+                     k.son_hareket AS SonHareket, k.created_at AS CreatedAt, 
+                     s.adi AS SantiyeAdi, s.kod AS SantiyeKod
+              FROM kullanicilar k
+              LEFT JOIN santiyeler s ON k.santiye_id = s.id
+              WHERE LOWER(k.kullanici_adi) = LOWER(@KullaniciAdi)", new { KullaniciAdi = kullaniciAdi });
     }
 
     public async Task KullaniciTamamenSilByNameAsync(string kullaniciAdi)
