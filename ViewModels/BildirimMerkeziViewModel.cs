@@ -36,8 +36,41 @@ public partial class BildirimMerkeziViewModel : ObservableObject
         IsBusy = true;
         try
         {
+            var user = await _databaseService.KullaniciGetirIdAsync(_kullaniciId);
+            bool isAdmin = string.Equals(user?.Rol, "Admin", StringComparison.OrdinalIgnoreCase) || 
+                           string.Equals(user?.Rol, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
+            Guid? userSantiyeId = user?.SantiyeId;
+
             var list = await _localService.GetLocalBildirimlerAsync();
-            Bildirimler = new ObservableCollection<Bildirim>(list);
+            
+            // UI SEVİYESİNDE SON KİLİT:
+            var filtrelenmiş = list.Where(b => 
+            {
+                var lowerMsg = b.Mesaj.ToLower();
+                bool isLogin = lowerMsg.Contains("oturum açtı") || lowerMsg.Contains("giriş yaptı");
+                bool isTransfer = lowerMsg.Contains("sevk") || lowerMsg.Contains("onay") || lowerMsg.Contains("red");
+
+                // Adminler her şeyi görebilir (Kendi girişi hariç)
+                if (isAdmin)
+                {
+                    if (isLogin && b.TetikleyenKullaniciId == _kullaniciId) return false;
+                    return true;
+                }
+
+                // İzleyici/User ise:
+                if (isLogin) return false; // Giriş bildirimlerini ASLA görmezler
+
+                // Transfer bildirimleri: Her zaman görsünler
+                if (isTransfer) return true;
+
+                // Hedef Şantiye Kontrolü
+                Guid target = b.HedefSantiyeId ?? Guid.Empty;
+                if (target == userSantiyeId) return true;
+
+                return false;
+            }).ToList();
+
+            Bildirimler = new ObservableCollection<Bildirim>(filtrelenmiş);
         }
         finally
         {
@@ -88,6 +121,27 @@ public partial class BildirimMerkeziViewModel : ObservableObject
             await _databaseService.OkunmadiIseOkunduYapAsync(bildirim.Id, _kullaniciId);
             await _localService.MarkAsReadAsync(bildirim.Id);
             bildirim.OkunduMu = true;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Hata: {ex.Message}");
+        }
+    }
+
+    [RelayCommand]
+    private async Task TumunuOkunduYapAsync()
+    {
+        if (Bildirimler.Count == 0 || !Bildirimler.Any(x => !x.OkunduMu)) return;
+
+        try
+        {
+            await _databaseService.TumunuOkunduYapAsync(_kullaniciId);
+            await _localService.MarkAllAsReadAsync();
+            
+            foreach (var bildirim in Bildirimler)
+            {
+                bildirim.OkunduMu = true;
+            }
         }
         catch (Exception ex)
         {

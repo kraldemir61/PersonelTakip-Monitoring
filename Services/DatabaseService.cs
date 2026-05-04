@@ -272,6 +272,7 @@ public class DatabaseService
                 ALTER TABLE bildirim_durumlari ADD COLUMN IF NOT EXISTS okundu_mu BOOLEAN DEFAULT false;
                 ALTER TABLE bildirim_durumlari ADD COLUMN IF NOT EXISTS silindi_mi BOOLEAN DEFAULT false;
 
+                ALTER TABLE bildirimler ADD COLUMN IF NOT EXISTS hedef_santiye_id UUID;
                 ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS kullanici_adi TEXT;
                 ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS ip_adresi TEXT;
                 ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS aciklama TEXT;
@@ -1253,18 +1254,20 @@ public class DatabaseService
         }
     }
 
-    public async Task BildirimEkleAsync(string mesaj, Guid tetikleyenKullaniciId)
+    public async Task BildirimEkleAsync(string mesaj, Guid tetikleyenKullaniciId, Guid? hedefSantiyeId = null)
     {
+        // Varsayılan olarak hedefSantiyeId belirtilmemişse Adminlere (Guid.Empty) gönder
+        Guid finalTarget = hedefSantiyeId ?? Guid.Empty;
+
         using var conn = CreateConnection();
         await conn.OpenAsync();
         
         await conn.ExecuteAsync(@"
-            INSERT INTO bildirimler (mesaj, tetikleyen_kullanici_id, tarih) 
-            VALUES (@Mesaj, @TetikleyenId, @Tarih)", 
-            new { Mesaj = mesaj, TetikleyenId = tetikleyenKullaniciId, Tarih = DateTime.UtcNow });
+            INSERT INTO bildirimler (mesaj, tetikleyen_kullanici_id, hedef_santiye_id, tarih) 
+            VALUES (@Mesaj, @TetikleyenId, @HedefSantiyeId, @Tarih)", 
+            new { Mesaj = mesaj, TetikleyenId = tetikleyenKullaniciId, HedefSantiyeId = finalTarget, Tarih = DateTime.UtcNow });
             
-        // Postgres pub/sub - NOTIFY komutu parametre desteklemez. 
-        // Dapper bazen string içindeki karakterleri parametre sanabildiği için doğrudan NpgsqlCommand kullanıyoruz.
+        // Postgres pub/sub
         var payload = $"{tetikleyenKullaniciId}|{mesaj}".Replace("'", "''");
         using var cmd = new NpgsqlCommand($"NOTIFY personel_bildirim, '{payload}';", conn);
         await cmd.ExecuteNonQueryAsync();
@@ -1284,13 +1287,36 @@ public class DatabaseService
     {
         using var conn = CreateConnection();
         await conn.OpenAsync();
-        var result = (await conn.QueryAsync<Bildirim>(@"
+
+        var user = await conn.QueryFirstOrDefaultAsync<Kullanici>("SELECT rol, santiye_id FROM kullanicilar WHERE id = @Id", new { Id = kullaniciId });
+        if (user == null) return new List<Bildirim>();
+
+        // Büyük/küçük harf duyarsız rol kontrolü
+        bool isAdmin = string.Equals(user.Rol, "Admin", StringComparison.OrdinalIgnoreCase) || 
+                       string.Equals(user.Rol, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
+        Guid? userSantiyeId = user.SantiyeId;
+
+        string sql = @"
             SELECT b.*, COALESCE(bd.okundu_mu, FALSE) as okundu_mu 
             FROM bildirimler b
             LEFT JOIN bildirim_durumlari bd ON b.id = bd.bildirim_id AND bd.kullanici_id = @KullaniciId
-            WHERE bd.silindi_mi IS NOT TRUE
-            ORDER BY b.tarih DESC LIMIT @Limit", 
-            new { KullaniciId = kullaniciId, Limit = limit })).ToList();
+            WHERE bd.silindi_mi IS NOT TRUE ";
+
+        if (!isAdmin)
+        {
+            sql += @" AND (b.hedef_santiye_id = @SantiyeId 
+                      OR (b.hedef_santiye_id = '00000000-0000-0000-0000-000000000000' 
+                          AND (b.mesaj ILIKE '%sevk%' OR b.mesaj ILIKE '%onay%' OR b.mesaj ILIKE '%red%'))) ";
+        }
+        else
+        {
+            sql += " AND (b.hedef_santiye_id = '00000000-0000-0000-0000-000000000000' OR b.hedef_santiye_id IS NULL) ";
+        }
+
+        sql += " ORDER BY b.tarih DESC LIMIT @Limit";
+
+        var result = (await conn.QueryAsync<Bildirim>(sql, 
+            new { KullaniciId = kullaniciId, SantiyeId = userSantiyeId, Limit = limit })).ToList();
 
         foreach (var b in result)
         {
@@ -1309,6 +1335,17 @@ public class DatabaseService
             VALUES (@KullaniciId, @BildirimId, TRUE)
             ON CONFLICT (kullanici_id, bildirim_id) DO UPDATE SET okundu_mu = TRUE", 
             new { KullaniciId = kullaniciId, BildirimId = bildirimId });
+    }
+
+    public async Task TumunuOkunduYapAsync(Guid kullaniciId)
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await conn.ExecuteAsync(@"
+            INSERT INTO bildirim_durumlari (kullanici_id, bildirim_id, okundu_mu)
+            SELECT @KullaniciId, id, TRUE FROM bildirimler
+            ON CONFLICT (kullanici_id, bildirim_id) DO UPDATE SET okundu_mu = TRUE",
+            new { KullaniciId = kullaniciId });
     }
 
     public async Task BildirimSilAsync(int bildirimId, Guid kullaniciId)

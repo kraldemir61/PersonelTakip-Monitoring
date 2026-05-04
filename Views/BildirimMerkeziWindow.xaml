@@ -11,6 +11,97 @@
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- Red Hover Button Style -->
+        <Style x:Key="RedHoverButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="Red"/>
+                                <Setter Property="Foreground" Value="Red"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="GreenHoverButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="Green"/>
+                                <Setter Property="Foreground" Value="Blue"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Tümü Okundu Style -->
+        <Style x:Key="TumuOkunduButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="#3B82F6"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}">
+                            <TextBlock x:Name="text" Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}" 
+                                       FontSize="12" FontWeight="SemiBold"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="#60A5FA"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Tumunu Sil Style -->
+        <Style x:Key="TumunuSilButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="Red"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}">
+                            <TextBlock x:Name="text" Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}" 
+                                       FontSize="12" FontWeight="SemiBold"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="Transparent"/>
+                                <Setter Property="Foreground" Value="Maroon"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Border Background="#0F172A" CornerRadius="15" BorderBrush="#1E293B" BorderThickness="1">
@@ -29,15 +120,34 @@
                               Stretch="Uniform" Fill="#3B82F6" Width="18" Height="18" Margin="0,0,12,0"/>
                         <TextBlock Text="Bildirim Merkezi" Foreground="White" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
-                    
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Command="{Binding TumunuSilCommand}" Background="Transparent" BorderThickness="0" Cursor="Hand" Margin="0,0,15,0">
-                            <TextBlock Text="Tümünü Sil" Foreground="#EF4444" FontSize="12" FontWeight="SemiBold"/>
+
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button Content="Tümü Okundu" Command="{Binding TumunuOkunduYapCommand}" HorizontalAlignment="Right" Margin="0,0,40,10">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource TumuOkunduButton}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Bildirimler.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
                         </Button>
-                        <Button Click="Close_Click" Background="Transparent" BorderThickness="0" Cursor="Hand">
-                            <TextBlock Text="✕" Foreground="#94A3B8" FontSize="18" FontWeight="Bold"/>
+                        <Button Content="Tümünü Sil" Command="{Binding TumunuSilCommand}" HorizontalAlignment="Right" Margin="0,0,48,0">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource TumunuSilButton}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Bildirimler.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
                         </Button>
                     </StackPanel>
+                    <!-- Üstteki X butonu kaldırıldı -->
                 </Grid>
             </Border>
 
@@ -83,7 +193,7 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        
+
                                         <StackPanel>
                                             <TextBlock Text="{Binding Mesaj}" Foreground="White" FontSize="13" TextWrapping="Wrap" Margin="0,0,0,8"/>
                                             <TextBlock Text="{Binding Tarih, StringFormat='dd.MM.yyyy HH:mm'}" Foreground="#64748B" FontSize="11"/>
@@ -91,9 +201,9 @@
 
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
                                             <Button Command="{Binding DataContext.OkunduİsaretleCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
-                                                    CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Cursor="Hand" Margin="0,0,10,0">
+                                                    CommandParameter="{Binding}" Width="24" Height="24" Margin="0,0,10,0">
                                                 <Button.Style>
-                                                    <Style TargetType="Button">
+                                                    <Style TargetType="Button" BasedOn="{StaticResource GreenHoverButton}">
                                                         <Setter Property="Visibility" Value="Visible"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding OkunduMu}" Value="True">
@@ -102,10 +212,10 @@
                                                         </Style.Triggers>
                                                     </Style>
                                                 </Button.Style>
-                                                <Path Data="M5 13l4 4L19 7" Stretch="Uniform" Fill="#10B981" Width="14" Height="14"/>
+                                                <Path Data="M5 13l4 4L19 7" Stretch="Uniform" Fill="White" Width="14" Height="14"/>
                                             </Button>
                                             <Button Command="{Binding DataContext.BildirimSilCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
-                                                    CommandParameter="{Binding}" Background="Transparent" BorderThickness="0" Cursor="Hand">
+                                                    CommandParameter="{Binding}" Style="{StaticResource RedHoverButton}" Width="24" Height="24">
                                                 <TextBlock Text="✕" Foreground="#64748B" FontSize="14" FontWeight="Bold"/>
                                             </Button>
                                         </StackPanel>
@@ -119,13 +229,31 @@
 
             <!-- Footer -->
             <Border Grid.Row="2" Background="#1E293B" CornerRadius="0,0,15,15" Padding="15">
-                <Button Content="Kapat" Click="Close_Click" Background="#334155" Foreground="White" 
-                        Padding="25,8" BorderThickness="0" Cursor="Hand">
-                    <Button.Resources>
-                        <Style TargetType="Border">
-                            <Setter Property="CornerRadius" Value="6"/>
+                <Button Content="Kapat" Click="Close_Click" HorizontalAlignment="Stretch" Height="40" Foreground="White" FontSize="14" FontWeight="Bold">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="#334155"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="border" Property="Background" Value="#EF4444"/> <!-- Kırmızı Hover -->
+                                            </Trigger>
+                                            <Trigger Property="IsPressed" Value="True">
+                                                <Setter TargetName="border" Property="Background" Value="#B91C1C"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
                         </Style>
-                    </Button.Resources>
+                    </Button.Style>
                 </Button>
             </Border>
         </Grid>

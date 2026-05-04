@@ -407,10 +407,14 @@ public partial class MainViewModel : BaseViewModel
         _excelService = new ExcelService(_databaseService);
 
         CurrentUser = Application.Current.Properties["Kullanici"] as Kullanici;
-        IsAdmin = CurrentUser?.Rol == "Admin";
-        // 'Admin' kullanıcı adına sahip olan kişi Süper Admin kabul edilir (büyük/küçük harf duyarsız)
-        IsSuperAdmin = IsAdmin && CurrentUser?.KullaniciAdi?.Equals("Admin", StringComparison.OrdinalIgnoreCase) == true;
-
+        
+        // YETKİ KONTROLÜ: Admin veya SuperAdmin rolüne sahip olanlar IsAdmin sayılır
+        IsAdmin = CurrentUser?.Rol == "Admin" || CurrentUser?.Rol == "SuperAdmin";
+        
+        // 'Admin' kullanıcı adına sahip olan kişi veya rolü 'SuperAdmin' olanlar Süper Admin kabul edilir
+        IsSuperAdmin = CurrentUser?.Rol == "SuperAdmin" || 
+                       (IsAdmin && CurrentUser?.KullaniciAdi?.Equals("Admin", StringComparison.OrdinalIgnoreCase) == true);
+        
         // İzleme Modu Kontrolü: Eğer rol "Monitor" ise izleme modunu aktif et
         IsMonitoringMode = CurrentUser?.Rol == "Monitor";
 
@@ -644,53 +648,57 @@ public partial class MainViewModel : BaseViewModel
     private async Task LoadBildirimlerAsync()
     {
         if (CurrentUser == null) return;
-        var liste = await _databaseService.GetSonBildirimlerAsync(CurrentUser.Id, 20);
         
-        // FİLTRELEME: Oturum açma bildirimleri kuralı
-        var filtrelenmişListe = liste.Where(b => 
+        // ÖNCE YEREL ARŞİV TEMİZLİĞİ (Geri gelen mesajları engellemek için)
+        // Eğer kullanıcı admin değilse, yerel veritabanındaki oturum açma bildirimlerini zorla sil
+        if (!IsAdmin && !IsSuperAdmin)
         {
-            var mesaj = b.Mesaj.ToLower();
-            bool isLoginNotification = mesaj.Contains("oturum açtı") || mesaj.Contains("giriş yaptı");
-
-            if (isLoginNotification)
+            var localList = await _localNotificationService.GetLocalBildirimlerAsync();
+            foreach (var lb in localList)
             {
-                // Sadece Adminler görebilir
-                if (!IsAdmin) return false;
-                
-                // Kişi kendi oturum açma bildirimini göremez
-                if (b.TetikleyenKullaniciId == CurrentUser.Id) return false;
-            }
-
-            // HEDEF ŞANTİYE FİLTRESİ: Eğer bildirim bir şantiyeye özel ise
-            if (b.HedefSantiyeId.HasValue)
-            {
-                // Monitor ve Admin her şeyi görebilir
-                if (CurrentUser.Rol != "Monitor" && !IsAdmin && !IsSuperAdmin)
+                var lowerMsg = lb.Mesaj.ToLower();
+                if (lowerMsg.Contains("oturum açtı") || lowerMsg.Contains("giriş yaptı"))
                 {
-                    // Kullanıcının şantiyesi ile eşleşmeli
-                    if (b.HedefSantiyeId != CurrentUser.SantiyeId) return false;
-                }
-            }
-
-            return true;
-        }).ToList();
-
-        // ÖZEL MESAJ GÜNCELLEME (Kullanıcının kendi şantiyesine gelen sevkler için)
-        // Admin, SuperAdmin ve Monitor rolleri detaylı mesajı görmeli
-        if (CurrentUser.Rol != "Monitor" && !IsAdmin && !IsSuperAdmin && CurrentUser?.SantiyeId != null)
-        {
-            foreach (var b in filtrelenmişListe)
-            {
-                // Eğer bildirim bu kullanıcıya ait şantiyeye geliyorsa ve bir sevk işlemiyse
-                if (b.HedefSantiyeId == CurrentUser.SantiyeId && 
-                    (b.Mesaj.Contains("->") || b.Mesaj.Contains("sevk edildi")))
-                {
-                    b.Mesaj = "Şantiyenize gelen transferler var, Onay Bekleyen Sevkleri Kontrol Edin";
+                    await _localNotificationService.DeleteBildirimAsync(lb.Id);
                 }
             }
         }
 
-        BildirimlerListesi = new ObservableCollection<Bildirim>(filtrelenmişListe);
+        var liste = await _databaseService.GetSonBildirimlerAsync(CurrentUser.Id, 20);
+        
+        // Veritabanı seviyesinde filtreleme yapıldı ancak son bir güvenlik kontrolü yapıyoruz
+        var filtrelenmişListe = liste.Where(b => 
+        {
+            var lowerMsg = b.Mesaj.ToLower();
+            bool isLogin = lowerMsg.Contains("oturum açtı") || lowerMsg.Contains("giriş yaptı");
+            bool isTransfer = lowerMsg.Contains("sevk") || lowerMsg.Contains("onay") || lowerMsg.Contains("red");
+
+            // Admin ve SuperAdmin rol kontrolünü sağlamlaştır
+            bool isAdminSafe = string.Equals(CurrentUser.Rol, "Admin", StringComparison.OrdinalIgnoreCase) || 
+                               string.Equals(CurrentUser.Rol, "SuperAdmin", StringComparison.OrdinalIgnoreCase);
+
+            if (isAdminSafe)
+            {
+                if (isLogin && b.TetikleyenKullaniciId == CurrentUser.Id) return false;
+                return true;
+            }
+
+            // İzleyici/User ise:
+            if (isLogin) return false; // Girişleri göremezler
+            if (isTransfer) return true; // Transferleri HER ZAMAN görürler
+
+            // Hedef Şantiye Kontrolü
+            Guid target = b.HedefSantiyeId ?? Guid.Empty;
+            return target == CurrentUser.SantiyeId;
+        }).ToList();
+
+        // UI Güncelleme
+        BildirimlerListesi.Clear();
+        foreach (var item in filtrelenmişListe)
+        {
+            BildirimlerListesi.Add(item);
+        }
+        
         UnreadBildirimCount = BildirimlerListesi.Count(x => !x.OkunduMu);
         HasUnreadBildirimler = UnreadBildirimCount > 0;
     }
@@ -717,7 +725,7 @@ public partial class MainViewModel : BaseViewModel
                         var ok = await _databaseService.CheckConnectionAsync();
                         sw.Stop();
 
-                        Application.Current?.Dispatcher.Invoke(() =>
+                        Application.Current?.Dispatcher?.Invoke(() =>
                         {
                             if (!ok)
                             {
@@ -737,7 +745,7 @@ public partial class MainViewModel : BaseViewModel
                     }
                     catch
                     {
-                        Application.Current?.Dispatcher.Invoke(() =>
+                        Application.Current?.Dispatcher?.Invoke(() =>
                         {
                             IsConnected = false;
                             IsSlowConnection = false;
@@ -751,7 +759,7 @@ public partial class MainViewModel : BaseViewModel
                         var guncelKullanici = await _databaseService.KullaniciGetirIdAsync(CurrentUser.Id);
                         if (guncelKullanici != null && (guncelKullanici.Rol != CurrentUser.Rol || guncelKullanici.Aktif != CurrentUser.Aktif))
                         {
-                            Application.Current?.Dispatcher.Invoke(() => {
+                            Application.Current?.Dispatcher?.Invoke(() => {
                                 MessageBox.Show("Sistem yöneticisi tarafından yetkileriniz güncellendi.\nDeğişikliklerin aktif olması için program şimdi kapatılacaktır.", "Yetki Güncellemesi", MessageBoxButton.OK, MessageBoxImage.Information);
                                 Application.Current?.Shutdown();
                             });
@@ -780,7 +788,7 @@ public partial class MainViewModel : BaseViewModel
                     
                     if (newNotifications.Any())
                     {
-                        _ = Application.Current?.Dispatcher.InvokeAsync(async () => 
+                        _ = Application.Current?.Dispatcher?.InvokeAsync(async () => 
                         {
                             // Bildirim mesajını pop-up olarak göster
                             var gosterilecekMesajlar = newNotifications.Where(n => 
