@@ -18,6 +18,7 @@ public partial class MainViewModel : BaseViewModel
 {
     private readonly DatabaseService _databaseService;
     private readonly ExcelService _excelService;
+    private readonly LocalNotificationService _localNotificationService = new();
     private System.Windows.Threading.DispatcherTimer? _heartbeatTimer;
 
     [ObservableProperty]
@@ -489,8 +490,9 @@ public partial class MainViewModel : BaseViewModel
         
         if (IsBildirimPopupOpen && HasUnreadBildirimler && CurrentUser != null)
         {
-            // Okundu işaretle
-            foreach (var b in BildirimlerListesi.Where(x => !x.OkunduMu))
+            // Okundu işaretle (Snapshot alarak koleksiyon hatasını önle)
+            var unreadList = BildirimlerListesi.Where(x => !x.OkunduMu).ToList();
+            foreach (var b in unreadList)
             {
                 await _databaseService.OkunmadiIseOkunduYapAsync(b.Id, CurrentUser.Id);
                 b.OkunduMu = true;
@@ -498,6 +500,21 @@ public partial class MainViewModel : BaseViewModel
             HasUnreadBildirimler = false;
             UnreadBildirimCount = 0;
         }
+    }
+
+    [RelayCommand]
+    private void OpenBildirimMerkezi()
+    {
+        IsBildirimPopupOpen = false;
+        if (CurrentUser == null) return;
+        
+        var vm = new BildirimMerkeziViewModel(_databaseService, _localNotificationService, CurrentUser.Id);
+        var win = new Views.BildirimMerkeziWindow(vm);
+        win.Owner = Application.Current.MainWindow;
+        win.ShowDialog();
+        
+        // Kapandıktan sonra ana listedeki bildirimleri tazele
+        _ = LoadBildirimlerAsync();
     }
 
     [RelayCommand]
@@ -743,9 +760,16 @@ public partial class MainViewModel : BaseViewModel
                     }
 
                     // Bildirimleri almadan önce eski okunmamış bildirim id'lerini kaydet
-                    var oldUnreadIds = BildirimlerListesi.Where(x => !x.OkunduMu).Select(x => x.Id).ToList();
+                    // ToList() kullanarak koleksiyon çakışmasını (Collection modified hatası) önle
+                    var oldUnreadIds = BildirimlerListesi.ToList().Where(x => !x.OkunduMu).Select(x => x.Id).ToList();
                     
                     await LoadBildirimlerAsync();
+                    
+                    // YENİ: Bildirimleri yerel arşive senkronize et
+                    foreach (var b in BildirimlerListesi)
+                    {
+                        await _localNotificationService.SaveBildirimAsync(b);
+                    }
                     
                     // Kullanıcı listesini periyodik tazele (Süper Admin için)
                     if (IsAdmin)

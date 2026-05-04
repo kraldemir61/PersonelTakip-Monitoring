@@ -1332,6 +1332,13 @@ public class DatabaseService
             ON CONFLICT (kullanici_id, bildirim_id) DO UPDATE SET silindi_mi = TRUE", 
             new { KullaniciId = kullaniciId });
     }
+
+    public async Task TemizleEskiBildirimlerAsync()
+    {
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await conn.ExecuteAsync("DELETE FROM bildirimler WHERE tarih < timezone('utc', now()) - INTERVAL '24 hours'");
+    }
     
     public async Task StartListeningNotifications(Action<string, string> onNotificationReceived, CancellationToken cancellationToken)
     {

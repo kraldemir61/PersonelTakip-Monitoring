@@ -7,7 +7,7 @@
         xmlns:vm="clr-namespace:PersonelTakip.Monitoring.ViewModels"
         xmlns:h="clr-namespace:PersonelTakip.Monitoring.Helpers"
         mc:Ignorable="d"
-        Title="Veritabanı Bağlantı Ayarları" Height="650" Width="400"
+        Title="Veritabanı Bağlantı Ayarları" Height="575" Width="400"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         WindowStartupLocation="CenterScreen" MouseLeftButtonDown="Window_MouseLeftButtonDown">
 
@@ -152,26 +152,34 @@
             <!-- Content -->
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20,15">
                 <StackPanel>
-                    <TextBlock Text="SUNUCU ADRESİ (HOST)" FontSize="11" FontWeight="Bold" Foreground="#3B82F6" Margin="0,0,0,8"/>
-                    <TextBox Style="{StaticResource ModernTextBox}" Text="{Binding Host}" Margin="0,0,0,20"/>
+                    <TextBlock Text="SUNUCU ADRESİ (HOST)" FontSize="11" FontWeight="Bold" Foreground="#3B82F6" Margin="0,0,0,2"/>
+                    <TextBox Style="{StaticResource ModernTextBox}" Text="{Binding Host}" Margin="0,0,0,10"/>
 
-                    <TextBlock Text="PORT" FontSize="11" FontWeight="Bold" Foreground="#3B82F6" Margin="0,0,0,8"/>
-                    <TextBox Style="{StaticResource ModernTextBox}" Text="{Binding Port}" Margin="0,0,0,20"/>
+                    <TextBlock Text="PORT" FontSize="11" FontWeight="Bold" Foreground="#3B82F6" Margin="0,0,0,2"/>
+                    <TextBox Style="{StaticResource ModernTextBox}" Text="{Binding Port}" Margin="0,0,0,10"/>
 
-                    <TextBlock Text="VERİTABANI ADI (DATABASE)" FontSize="11" FontWeight="Bold" Foreground="#3B82F6" Margin="0,0,0,8"/>
-                    <TextBox Style="{StaticResource ModernTextBox}" Text="{Binding Database}" Margin="0,0,0,20"/>
+                    <TextBlock Text="VERİTABANI ADI (DATABASE)" FontSize="11" FontWeight="Bold" Foreground="#3B82F6" Margin="0,0,0,2"/>
+                    <TextBox Style="{StaticResource ModernTextBox}" Text="{Binding Database}" Margin="0,0,0,10"/>
 
-                    <TextBlock Text="KULLANICI ADI (USERNAME)" FontSize="11" FontWeight="Bold" Foreground="#3B82F6" Margin="0,0,0,8"/>
-                    <TextBox Style="{StaticResource ModernTextBox}" Text="{Binding Username}" Margin="0,0,0,20"/>
+                    <TextBlock Text="KULLANICI ADI (USERNAME)" FontSize="11" FontWeight="Bold" Foreground="#3B82F6" Margin="0,0,0,2"/>
+                    <TextBox Style="{StaticResource ModernTextBox}" Text="{Binding Username}" Margin="0,0,0,10"/>
 
-                    <TextBlock Text="ŞİFRE (PASSWORD)" FontSize="11" FontWeight="Bold" Foreground="#3B82F6" Margin="0,0,0,8"/>
+                    <TextBlock Text="ŞİFRE (PASSWORD)" FontSize="11" FontWeight="Bold" Foreground="#3B82F6" Margin="0,0,0,2"/>
                     <PasswordBox Style="{StaticResource ModernPasswordBox}" h:PasswordBoxHelper.BindPassword="True" 
-                                 h:PasswordBoxHelper.BoundPassword="{Binding Password, Mode=TwoWay}" Margin="0,0,0,25"/>
+                                 h:PasswordBoxHelper.BoundPassword="{Binding Password, Mode=TwoWay}" Margin="0,0,0,15"/>
 
-                    <Button Style="{StaticResource ModernButton}" Content="Bağlantıyı Test Et" Background="#3B82F6" Foreground="White" 
-                            Command="{Binding TestConnectionCommand}" Visibility="{Binding IsTesting, Converter={StaticResource InverseBoolToVis}}" Height="45"/>
+                    <Grid Visibility="{Binding IsTesting, Converter={StaticResource InverseBoolToVis}}" Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Style="{StaticResource ModernButton}" Content="Bağlantıyı Test Et" Background="#3B82F6" Foreground="White" 
+                                Command="{Binding TestConnectionCommand}" Height="45" Margin="0,0,5,0"/>
+                        <Button Grid.Column="1" Style="{StaticResource ModernButton}" Content="Veritabanını Yükle" Background="#F59E0B" Foreground="White" 
+                                Command="{Binding RestoreDatabaseCommand}" Height="45" Margin="5,0,0,0"/>
+                    </Grid>
 
-                    <ProgressBar IsIndeterminate="True" Height="4" Margin="0,15,0,0" Visibility="{Binding IsTesting, Converter={StaticResource BoolToVis}}" Background="#0F172A" Foreground="#3B82F6" BorderThickness="0"/>
+                    <ProgressBar IsIndeterminate="True" Height="10" Margin="0,10,0,0" Visibility="{Binding IsTesting, Converter={StaticResource BoolToVis}}" Background="#0F172A" Foreground="#3B82F6" BorderThickness="0"/>
                 </StackPanel>
             </ScrollViewer>
 

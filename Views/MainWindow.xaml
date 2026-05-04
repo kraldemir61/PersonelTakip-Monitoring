@@ -294,7 +294,10 @@ IsHitTestVisible="False">
                             <ItemsControl ItemsSource="{Binding BildirimlerListesi}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border BorderBrush="#334155" BorderThickness="0,0,0,1" Padding="5,10" Background="Transparent">
+                                        <Border BorderBrush="#334155" BorderThickness="0,0,0,1" Padding="5,10" Background="Transparent" Cursor="Hand">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.OpenBildirimMerkeziCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                            </Border.InputBindings>
                                             <Grid>
                                                 <Grid.RowDefinitions>
                                                     <RowDefinition Height="Auto"/>
