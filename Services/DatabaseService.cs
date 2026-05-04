@@ -321,9 +321,11 @@ public class DatabaseService
 
     public async Task UpdateSonHareketAsync(Guid kullaniciId)
     {
+        if (kullaniciId == Guid.Empty) return;
+
         using var conn = CreateConnection();
         await conn.OpenAsync();
-        // UTC zaman damgası kullanarak güncelle
+        // Sunucu saati kullanarak güncelle (En güvenilir senkronizasyon yöntemi)
         await conn.ExecuteAsync("UPDATE kullanicilar SET son_hareket = timezone('utc', now()) WHERE id = @Id", 
             new { Id = kullaniciId });
     }
@@ -359,8 +361,8 @@ public class DatabaseService
             if (!string.IsNullOrEmpty(kullanici.SifreHash) && BCrypt.Net.BCrypt.Verify(sifre, kullanici.SifreHash))
             {
                 await conn.ExecuteAsync(
-                    "UPDATE kullanicilar SET son_giris = timezone('utc', now()), son_hareket = timezone('utc', now()) WHERE id = @Id",
-                    new { kullanici.Id });
+                    "UPDATE kullanicilar SET son_giris = @Now, son_hareket = @Now WHERE id = @Id",
+                    new { Id = kullanici.Id, Now = DateTime.UtcNow });
                 return kullanici;
             }
         }
@@ -610,8 +612,8 @@ public class DatabaseService
             var sifreHash = BCrypt.Net.BCrypt.HashPassword(sifre);
 
             await conn.ExecuteAsync(
-                @"INSERT INTO kullanicilar (id, kullanici_adi, email, sifre_hash, rol, santiye_id, aktif, created_at)
-                  VALUES (@Id, @KullaniciAdi, @Email, @SifreHash, @Rol, @SantiyeId, true, @Now)",
+                @"INSERT INTO kullanicilar (id, kullanici_adi, email, sifre_hash, rol, santiye_id, aktif, created_at, son_giris, son_hareket)
+                  VALUES (@Id, @KullaniciAdi, @Email, @SifreHash, @Rol, @SantiyeId, true, @Now, @Now, @Now)",
                 new { Id = id, kullanici.KullaniciAdi, Email = string.IsNullOrWhiteSpace(kullanici.Email) ? $"{kullanici.KullaniciAdi}@system.local" : kullanici.Email, SifreHash = sifreHash, kullanici.Rol, kullanici.SantiyeId, Now = DateTime.UtcNow },
                 transaction);
 
@@ -629,8 +631,8 @@ public class DatabaseService
     {
         using var conn = CreateConnection();
         await conn.OpenAsync();
-        await conn.ExecuteAsync("UPDATE kullanicilar SET aktif = @Aktif WHERE LOWER(kullanici_adi) = LOWER(@KullaniciAdi)", 
-            new { KullaniciAdi = kullaniciAdi, Aktif = aktif });
+        await conn.ExecuteAsync("UPDATE kullanicilar SET aktif = @Aktif, son_hareket = @Now WHERE LOWER(kullanici_adi) = LOWER(@KullaniciAdi)", 
+            new { KullaniciAdi = kullaniciAdi, Aktif = aktif, Now = DateTime.UtcNow });
     }
 
     public async Task<Kullanici?> KullaniciGetirByNameAsync(string kullaniciAdi)
@@ -1565,11 +1567,15 @@ public class DatabaseService
                 await conn2.OpenAsync();
                 var cihaz = (await conn2.QueryAsync<Cihaz>("SELECT * FROM cihazlar WHERE id = @Id", new { Id = hareket.CihazId })).FirstOrDefault();
                 var santiye = (await conn2.QueryAsync<Santiye>("SELECT * FROM santiyeler WHERE id = @Id", new { Id = hareket.NereyeSantiyeId })).FirstOrDefault();
+                var neredenSantiye = (await conn2.QueryAsync<Santiye>("SELECT * FROM santiyeler WHERE id = @Id", new { Id = hareket.NeredenSantiyeId })).FirstOrDefault();
+                
                 if (cihaz != null && santiye != null)
                 {
-                    string msg = $"{cihaz.CihazAdi} ({cihaz.SeriNo}) cihazı {santiye.Adi} şantiyesine sevk edildi.";
-                    await conn2.ExecuteAsync("INSERT INTO bildirimler (mesaj, tetikleyen_kullanici_id, tarih) VALUES (@Mesaj, @KullaniciId, @Tarih)", 
-                        new { Mesaj = msg, KullaniciId = hareket.KullaniciId, Tarih = DateTime.Now });
+                    string neredenSantiyeAdi = neredenSantiye != null ? neredenSantiye.Adi : "Merkez";
+                    string msg = $"{cihaz.CihazAdi} ({cihaz.SeriNo}) cihazı {neredenSantiyeAdi} -> {santiye.Adi} sevk edildi.";
+                    
+                    await conn2.ExecuteAsync("INSERT INTO bildirimler (mesaj, tetikleyen_kullanici_id, hedef_santiye_id, tarih) VALUES (@Mesaj, @KullaniciId, @HedefSantiyeId, @Tarih)", 
+                        new { Mesaj = msg, KullaniciId = hareket.KullaniciId, HedefSantiyeId = hareket.NereyeSantiyeId, Tarih = DateTime.Now });
                     
                     // Canlı bildirim gönder (Başında KullaniciId olmalı ki dinleyici tanısın)
                     await conn2.ExecuteAsync($"NOTIFY personel_bildirim, '{hareket.KullaniciId}|{msg}';");

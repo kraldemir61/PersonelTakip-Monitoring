@@ -48,8 +48,10 @@ public class Kullanici : INotifyPropertyChanged
 
             var fark = DateTime.UtcNow - sonHareketUtc;
             
-            // 10 dakikadan az ise online kabul et
-            return Math.Abs(fark.TotalMinutes) < 10;
+            // Saat farklarına karşı toleranslı kontrol:
+            // 1. Gelecek zamanlı ise (sinyali gönderen bilgisayarın saati ilerideyse) 1 saate kadar online kabul et
+            // 2. Geçmiş zamanlı ise (sinyal gecikmişse) 10 dakikaya kadar online kabul et
+            return fark.TotalMinutes < 10 && fark.TotalMinutes > -60;
         }
     }
 

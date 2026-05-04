@@ -100,6 +100,13 @@ public partial class App : Application
                 if (actualUser != null)
                 {
                     Application.Current.Properties["Kullanici"] = actualUser;
+                    
+                    // ÖNEMLİ: Başlangıçta son_hareket ve son_giris bilgilerini hemen güncelle
+                    // Bu sayede Admin ekranında anında çevrimiçi görünür.
+                    try 
+                    { 
+                        await db.UpdateSonHareketAsync(actualUser.Id);
+                    } catch { }
                 }
                 else
                 {

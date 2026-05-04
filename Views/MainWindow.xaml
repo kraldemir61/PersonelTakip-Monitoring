@@ -747,19 +747,44 @@ Background="Transparent" BorderThickness="0" RowHeight="45">
 <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#334155"/>
 <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#334155"/>
 </DataGrid.Resources>
-<DataGrid.Columns>
-<DataGridTextColumn Header="Kullanıcı Adı" Binding="{Binding KullaniciAdi}" Width="200"/>
-<DataGridTextColumn Header="Rol" Binding="{Binding Rol}" Width="100"/>
-<DataGridTextColumn Header="Şantiye" Binding="{Binding SantiyeKod}" Width="150"/>
-<DataGridCheckBoxColumn Header="Aktif" Binding="{Binding Aktif}" Width="80">
-<DataGridCheckBoxColumn.ElementStyle>
-<Style TargetType="CheckBox">
-<Setter Property="HorizontalAlignment" Value="Center"/>
-<Setter Property="VerticalAlignment" Value="Center"/>
-</Style>
-</DataGridCheckBoxColumn.ElementStyle>
-</DataGridCheckBoxColumn>
-</DataGrid.Columns>
+                    <DataGrid.Columns>
+                        <!-- Online Durumu -->
+                        <DataGridTemplateColumn Width="40" CanUserSort="False">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Ellipse Width="10" Height="10" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <Ellipse.Style>
+                                            <Style TargetType="Ellipse">
+                                                <Setter Property="Fill" Value="#4B5563"/> <!-- Çevrimdışı (Gri) -->
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsOnline}" Value="True">
+                                                        <Setter Property="Fill" Value="#10B981"/> <!-- Çevrimiçi (Yeşil) -->
+                                                        <Setter Property="Effect">
+                                                            <Setter.Value>
+                                                                <DropShadowEffect Color="#10B981" BlurRadius="8" ShadowDepth="0" Opacity="0.7"/>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Ellipse.Style>
+                                    </Ellipse>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTextColumn Header="Kullanıcı Adı" Binding="{Binding KullaniciAdi}" Width="200" CanUserSort="False"/>
+                        <DataGridTextColumn Header="Rol" Binding="{Binding Rol}" Width="100" CanUserSort="False"/>
+                        <DataGridTextColumn Header="Şantiye" Binding="{Binding SantiyeKod}" Width="150" CanUserSort="False"/>
+                        <DataGridCheckBoxColumn Header="Aktif" Binding="{Binding Aktif}" Width="80" CanUserSort="False">
+                            <DataGridCheckBoxColumn.ElementStyle>
+                                <Style TargetType="CheckBox">
+                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridCheckBoxColumn.ElementStyle>
+                        </DataGridCheckBoxColumn>
+                    </DataGrid.Columns>
 </DataGrid>
 </Border>
 </Grid>

@@ -447,9 +447,9 @@ public partial class MainViewModel : BaseViewModel
 
     private void StartUserHeartbeat()
     {
-        if (CurrentUser == null) return;
+        if (CurrentUser == null || CurrentUser.Id == Guid.Empty) return;
 
-        // Hemen bir kez güncelle
+        // Hemen bir kez güncelle (UI thread'i yormadan arka planda)
         _ = Task.Run(async () => {
             try { await _databaseService.UpdateSonHareketAsync(CurrentUser.Id); } catch { }
         });
@@ -457,22 +457,24 @@ public partial class MainViewModel : BaseViewModel
         // Mevcut timer varsa durdur
         _heartbeatTimer?.Stop();
 
-        // Her 1 dakikada bir güncelle
+        // Daha sık güncelleme: Her 30 saniyede bir (Admin ekranında daha hızlı tepki için)
         _heartbeatTimer = new System.Windows.Threading.DispatcherTimer
         {
-            Interval = TimeSpan.FromMinutes(1)
+            Interval = TimeSpan.FromSeconds(30)
         };
         _heartbeatTimer.Tick += async (s, e) =>
         {
-            if (CurrentUser != null)
+            if (CurrentUser != null && CurrentUser.Id != Guid.Empty)
             {
                 try 
                 { 
                     await _databaseService.UpdateSonHareketAsync(CurrentUser.Id); 
+                    
+                    // Geçici Tanı: Sinyalin ulaşıp ulaşmadığını görmek için (Sadece bir kez veya seyrek yapılabilir)
+                    // await _databaseService.BildirimEkleAsync("Heartbeat OK: " + CurrentUser.KullaniciAdi, CurrentUser.Id);
                 } 
                 catch (Exception ex)
                 {
-                    // Hata durumunda log yaz
                     LogException(ex, "Heartbeat/UpdateSonHareket Error");
                 }
             }
@@ -642,8 +644,34 @@ public partial class MainViewModel : BaseViewModel
                 if (b.TetikleyenKullaniciId == CurrentUser.Id) return false;
             }
 
+            // HEDEF ŞANTİYE FİLTRESİ: Eğer bildirim bir şantiyeye özel ise
+            if (b.HedefSantiyeId.HasValue)
+            {
+                // Monitor ve Admin her şeyi görebilir
+                if (CurrentUser.Rol != "Monitor" && !IsAdmin && !IsSuperAdmin)
+                {
+                    // Kullanıcının şantiyesi ile eşleşmeli
+                    if (b.HedefSantiyeId != CurrentUser.SantiyeId) return false;
+                }
+            }
+
             return true;
         }).ToList();
+
+        // ÖZEL MESAJ GÜNCELLEME (Kullanıcının kendi şantiyesine gelen sevkler için)
+        // Admin, SuperAdmin ve Monitor rolleri detaylı mesajı görmeli
+        if (CurrentUser.Rol != "Monitor" && !IsAdmin && !IsSuperAdmin && CurrentUser?.SantiyeId != null)
+        {
+            foreach (var b in filtrelenmişListe)
+            {
+                // Eğer bildirim bu kullanıcıya ait şantiyeye geliyorsa ve bir sevk işlemiyse
+                if (b.HedefSantiyeId == CurrentUser.SantiyeId && 
+                    (b.Mesaj.Contains("->") || b.Mesaj.Contains("sevk edildi")))
+                {
+                    b.Mesaj = "Şantiyenize gelen transferler var, Onay Bekleyen Sevkleri Kontrol Edin";
+                }
+            }
+        }
 
         BildirimlerListesi = new ObservableCollection<Bildirim>(filtrelenmişListe);
         UnreadBildirimCount = BildirimlerListesi.Count(x => !x.OkunduMu);
@@ -898,7 +926,14 @@ public partial class MainViewModel : BaseViewModel
         try
         {
             var liste = await _databaseService.KullanicilariGetirAsync(hepsiniGetir: true);
-            Kullanicilar = [.. liste];
+            
+            // Manuel Sıralama: Önce çevrimiçi olanlar, sonra alfabetik
+            var siraliListe = liste
+                .OrderByDescending(k => k.IsOnline)
+                .ThenBy(k => k.KullaniciAdi)
+                .ToList();
+                
+            Kullanicilar = new ObservableCollection<Kullanici>(siraliListe);
 
             KullanicilarView = new ListCollectionView(Kullanicilar);
             KullanicilarView.Filter = (obj) =>
@@ -915,6 +950,13 @@ public partial class MainViewModel : BaseViewModel
                 var combined = $"{k.KullaniciAdi} {k.Email} {k.Rol} {k.SantiyeAdi}";
                 return StringHelper.SmartSearch(combined, SearchText ?? string.Empty);
             };
+
+            // Sıralama: Önce çevrimiçi olanlar (IsOnline: true (1) > false (0)), sonra Alfabetik
+            KullanicilarView.SortDescriptions.Clear();
+            KullanicilarView.SortDescriptions.Add(new SortDescription("IsOnline", ListSortDirection.Descending));
+            KullanicilarView.SortDescriptions.Add(new SortDescription("KullaniciAdi", ListSortDirection.Ascending));
+            KullanicilarView.Refresh();
+
             OnPropertyChanged(nameof(KullanicilarView));
             UpdateSidebarKullaniciSantiyeler();
         }
@@ -1397,6 +1439,13 @@ public partial class MainViewModel : BaseViewModel
     public async Task OlcumCihaziHareketAsync()
     {
         if (SelectedOlcumCihazi == null) return;
+
+        // Zimmetli cihaz sevk edilemez kontrolü
+        if (SelectedOlcumCihazi.ZimmetliMi)
+        {
+            ShowError("Bu cihaz şu an bir personel üzerinde zimmetlidir. Sevk veya hareket işlemi yapabilmek için önce zimmet iadesi yapmalısınız.");
+            return;
+        }
 
         // Admin değilse kontrol et
         if (!IsAdmin)

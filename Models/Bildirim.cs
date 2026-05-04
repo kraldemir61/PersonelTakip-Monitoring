@@ -9,4 +9,5 @@ public class Bildirim
     public Guid TetikleyenKullaniciId { get; set; }
     public DateTime Tarih { get; set; }
     public bool OkunduMu { get; set; }
+    public Guid? HedefSantiyeId { get; set; }
 }
