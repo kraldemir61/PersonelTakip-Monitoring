@@ -53,7 +53,7 @@ public class DatabaseConfig
 
     [JsonIgnore]
     public string ConnectionString =>
-        $"Host={Host};Port={Port};Database={Database};Username={Username};Password={Password};SSL Mode=Require;Trust Server Certificate=true;Timeout=15;Connection Idle Lifetime=60;";
+        $"Host={Host};Port={Port};Database={Database};Username={Username};Password={Password};SSL Mode=Require;Trust Server Certificate=true;Timeout=15;Connection Idle Lifetime=60;Pooling=false;";
 }
 
 

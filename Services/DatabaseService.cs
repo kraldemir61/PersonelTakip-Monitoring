@@ -50,8 +50,15 @@ public class DatabaseService
             using var conn = CreateConnection();
             await conn.OpenAsync();
             
-            // Tek bir dev işlemde tüm şemayı ve onarımları yapıyoruz
-            await conn.ExecuteAsync(@"
+            // Veritabanı başlatma ve tablo oluşturma işlemleri DDL (Data Definition Language) olduğu için
+            // birden fazla bilgisayarda aynı anda açıldığında 'Deadlock' (kilitlenme) yaratabilir.
+            // Bunu önlemek için işlemi sıraya sokan bir PostgreSQL Advisory kilit alıyoruz:
+            await conn.ExecuteAsync("SELECT pg_advisory_lock(123456789);");
+            
+            try 
+            {
+                // Tek bir dev işlemde tüm şemayı ve onarımları yapıyoruz
+                await conn.ExecuteAsync(@"
                 -- 1. TEMEL LOOKUP TABLOLARI
                 CREATE TABLE IF NOT EXISTS bolumler (id SERIAL PRIMARY KEY, adi TEXT UNIQUE NOT NULL);
                 CREATE TABLE IF NOT EXISTS gorevler (id SERIAL PRIMARY KEY, adi TEXT UNIQUE NOT NULL);
@@ -295,6 +302,12 @@ public class DatabaseService
                     INSERT INTO kullanicilar (id, kullanici_adi, email, sifre_hash, rol, aktif) 
                     VALUES (@Id, 'Admin', 'admin@system.local', @Hash, 'Admin', true)",
                     new { Id = Guid.NewGuid(), Hash = adminHash });
+            }
+
+            }
+            finally
+            {
+                await conn.ExecuteAsync("SELECT pg_advisory_unlock(123456789);");
             }
 
             return true;

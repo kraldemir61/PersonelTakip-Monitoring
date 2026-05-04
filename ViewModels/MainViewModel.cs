@@ -431,7 +431,7 @@ public partial class MainViewModel : BaseViewModel
         SantiyeListView = new ListCollectionView(SantiyeList);
         PersonellerView = new ListCollectionView(Personeller);
 
-        LoadAllDataAsync().ConfigureAwait(false);
+        _ = LoadAllDataAsync();
         
         // Veritabanı veya ayarlar değiştiğinde tüm verileri otomatik tazele
         AppConfiguration.Instance.ConfigurationChanged += (s, e) => 
@@ -442,6 +442,7 @@ public partial class MainViewModel : BaseViewModel
         };
 
         StartUserHeartbeat();
+        StartNotificationListener();
     }
 
     private void StartUserHeartbeat()
@@ -654,79 +655,15 @@ public partial class MainViewModel : BaseViewModel
         _notificationCts?.Cancel();
         _notificationCts = new CancellationTokenSource();
         
-        _ = Task.Run(async () =>
-        {
-            await _databaseService.StartListeningNotifications((tetikleyenIdStr, mesaj) => 
-            {
-                if (tetikleyenIdStr != null && tetikleyenIdStr.StartsWith("RESTART_TARGET:"))
-                {
-                    var targetIdStr = tetikleyenIdStr.Replace("RESTART_TARGET:", "");
-                    if (Guid.TryParse(targetIdStr, out var targetId) && targetId == CurrentUser?.Id)
-                    {
-                        Application.Current?.Dispatcher.Invoke(() => 
-                        {
-                            MessageBox.Show("Sistem yöneticisi tarafından yetkileriniz güncellendi.\nDeğişikliklerin aktif olması için program şimdi kapatılacaktır.", "Yetki Güncellemesi", MessageBoxButton.OK, MessageBoxImage.Information);
-                            Application.Current?.Shutdown();
-                        });
-                    }
-                    return;
-                }
-
-                if (Guid.TryParse(tetikleyenIdStr, out var tetikleyenId))
-                {
-                    // OTURUM AÇMA BİLDİRİM FİLTRESİ
-                    var lowerMesaj = mesaj.ToLower();
-                    bool isLoginNotification = lowerMesaj.Contains("oturum açtı") || lowerMesaj.Contains("giriş yaptı");
-                    if (isLoginNotification)
-                    {
-                        if (!IsAdmin) return; // Admin değilse gösterme
-                        if (tetikleyenId == CurrentUser?.Id) return; // Kendisi ise gösterme
-                    }
-
-                    // Eğer işlemi yapan kişi BEN isem ve login değilse, bildirim gösterme
-                    if (tetikleyenId == CurrentUser?.Id) return;
-
-                    // Tüm güncellemeleri doğrudan UI thread'i üzerinde sırayla yapıyoruz
-                    Application.Current?.Dispatcher.InvokeAsync(async () => 
-                    {
-                        try
-                        {
-                            // 1. Snack bar göster
-                            ShowSnackbarNotification(mesaj);
-                            
-                            // 2. Bildirimleri tazele
-                            await LoadBildirimlerAsync();
-
-                            // 3. Verileri tazele (Cihazlar ve Personeller)
-                            await LoadCihazlarAsync();
-                            OlcumCihazlariView?.Refresh();
-                            OfisCihazlariView?.Refresh();
-                            CalculateDeviceStats();
-
-                            await LoadPersonellerAsync();
-
-                            // 4. Kullanıcı listesini tazele (Süper Admin için)
-                            if (IsAdmin)
-                                await LoadKullanicilarAsync();
-                        }
-                        catch (Exception ex)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"Gerçek zamanlı güncelleme hatası: {ex.Message}");
-                        }
-                    });
-                }
-            }, _notificationCts.Token);
-        });
-
-        // YEDEK MEKANİZMA (Polling): LISTEN/NOTIFY bazen ağ/firewall nedeniyle takılabilir.
-        // Her 30 saniyede bir listeyi manuel olarak da yenileyelim + bağlantı durumunu kontrol edelim.
+        // DİKKAT: Veritabanı sınırlarına (pool_size=15) takılmamak için 'LISTEN' komutu tamamen İPTAL edilmiştir.
+        // Artık tüm gerçek zamanlı bildirimler ve yetki kontrolleri 5 saniyelik Polling sistemi üzerinden SIFIR kilitli bağlantı ile yapılmaktadır.
         _ = Task.Run(async () =>
         {
             while (!_notificationCts.Token.IsCancellationRequested)
             {
                 try
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(10), _notificationCts.Token);
+                    await Task.Delay(TimeSpan.FromSeconds(5), _notificationCts.Token);
                     
                     // Bağlantı durumu kontrolü
                     try
@@ -763,19 +700,60 @@ public partial class MainViewModel : BaseViewModel
                         });
                     }
 
-                    var oldUnread = UnreadBildirimCount;
+                    // Kullanıcı yetki ve aktiflik kontrolü
+                    if (CurrentUser != null)
+                    {
+                        var guncelKullanici = await _databaseService.KullaniciGetirIdAsync(CurrentUser.Id);
+                        if (guncelKullanici != null && (guncelKullanici.Rol != CurrentUser.Rol || guncelKullanici.Aktif != CurrentUser.Aktif))
+                        {
+                            Application.Current?.Dispatcher.Invoke(() => {
+                                MessageBox.Show("Sistem yöneticisi tarafından yetkileriniz güncellendi.\nDeğişikliklerin aktif olması için program şimdi kapatılacaktır.", "Yetki Güncellemesi", MessageBoxButton.OK, MessageBoxImage.Information);
+                                Application.Current?.Shutdown();
+                            });
+                            return;
+                        }
+                    }
+
+                    // Bildirimleri almadan önce eski okunmamış bildirim id'lerini kaydet
+                    var oldUnreadIds = BildirimlerListesi.Where(x => !x.OkunduMu).Select(x => x.Id).ToList();
+                    
                     await LoadBildirimlerAsync();
                     
                     // Kullanıcı listesini periyodik tazele (Süper Admin için)
                     if (IsAdmin)
                         await LoadKullanicilarAsync();
 
-                    // Eğer yeni okunmamış bildirim varsa ve liste açılmadıysa bilgilendir
-                    if (UnreadBildirimCount > oldUnread && !IsBildirimPopupOpen)
+                    // Yeni gelen bildirimleri bul
+                    var newNotifications = BildirimlerListesi.Where(x => !x.OkunduMu && !oldUnreadIds.Contains(x.Id)).ToList();
+                    
+                    if (newNotifications.Any())
                     {
-                        Application.Current?.Dispatcher.Invoke(() => 
+                        _ = Application.Current?.Dispatcher.InvokeAsync(async () => 
                         {
-                            ShowSnackbarNotification("Yeni bildirimleriniz var.");
+                            // Bildirim mesajını pop-up olarak göster
+                            var gosterilecekMesajlar = newNotifications.Where(n => 
+                            {
+                                var lowerMsg = n.Mesaj.ToLower();
+                                bool isLogin = lowerMsg.Contains("oturum açtı") || lowerMsg.Contains("giriş yaptı");
+                                if (isLogin && (!IsAdmin || n.TetikleyenKullaniciId == CurrentUser?.Id)) return false;
+                                if (n.TetikleyenKullaniciId == CurrentUser?.Id) return false;
+                                return true;
+                            }).ToList();
+
+                            if (gosterilecekMesajlar.Any())
+                            {
+                                if (gosterilecekMesajlar.Count == 1)
+                                    ShowSnackbarNotification(gosterilecekMesajlar.First().Mesaj);
+                                else
+                                    ShowSnackbarNotification($"{gosterilecekMesajlar.Count} yeni bildiriminiz var.");
+                            }
+                            
+                            // Yeni bildirim varsa verileri de tazeleyelim ki ekran anında güncellensin
+                            await LoadCihazlarAsync();
+                            OlcumCihazlariView?.Refresh();
+                            OfisCihazlariView?.Refresh();
+                            CalculateDeviceStats();
+                            await LoadPersonellerAsync();
                         });
                     }
                 }
@@ -1093,8 +1071,6 @@ public partial class MainViewModel : BaseViewModel
             await LoadSantiyelerAsync();
             await LoadBildirimlerAsync();
             await LoadCihazlarAsync();
-
-            StartNotificationListener();
 
             if (IsAdmin)
             {

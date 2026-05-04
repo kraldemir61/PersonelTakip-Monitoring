@@ -140,6 +140,8 @@ public partial class LoginViewModel : BaseViewModel
     [RelayCommand]
     private async Task LoginAsync()
     {
+        if (IsBusy) return;
+
         if (string.IsNullOrWhiteSpace(LoginKullaniciAdi) || string.IsNullOrWhiteSpace(Password))
         {
             ShowError("Kullanıcı adı ve parola gereklidir.");
@@ -194,6 +196,8 @@ public partial class LoginViewModel : BaseViewModel
     [RelayCommand]
     private async Task RegisterAsync()
     {
+        if (IsBusy) return;
+
         if (string.IsNullOrWhiteSpace(RegisterKullaniciAdi))
         {
             ShowError("Kullanıcı adı gereklidir.");
